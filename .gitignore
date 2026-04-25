@@ -1,0 +1,80 @@
+# ============================================================
+#  WP Passkey — .gitignore
+# ============================================================
+
+# ── Composer ────────────────────────────────────────────────
+# vendor/ is intentionally excluded; run `composer install`
+# after cloning to restore all PHP dependencies.
+/vendor/
+
+# ── OS & editor noise ────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+Desktop.ini
+
+# JetBrains (PhpStorm / WebStorm)
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ── Node (if tooling is ever added) ──────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log
+package-lock.json
+yarn.lock
+.npm
+
+# ── Build artefacts (if a build step is added) ───────────────
+/build/
+/dist/
+
+# ── PHP / WordPress ─────────────────────────────────────────
+# Local-WP, MAMP, XAMPP, Valet, etc.
+wp-config.php
+wp-config-local.php
+local-config.php
+.env
+.env.*
+!.env.example
+
+# WordPress debug log (sometimes lands in the plugin folder
+# if WP_DEBUG_LOG is set to a relative path)
+debug.log
+error.log
+*.log
+
+# WordPress generated cache / upload artefacts
+cache/
+uploads/
+
+# ── Test & QA ────────────────────────────────────────────────
+/tests/coverage/
+/tests/_output/
+.phpunit.result.cache
+phpunit.xml.bak
+
+# PHPStan / Psalm caches
+.phpstan/
+.psalm/
+
+# ── Packaging ────────────────────────────────────────────────
+# Zip created by `composer archive` or a release script
+*.zip
+*.tar.gz
+
+# ── Secrets / credentials ────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.p12
+auth.json

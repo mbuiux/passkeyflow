@@ -3,7 +3,7 @@
  * Plugin Name: WP Passkey
  * Plugin URI:  https://wppasskey.com
  * Description: Passwordless passkey login for WordPress (free / Lite). Supports Face ID, Touch ID, Windows Hello, YubiKey, and more. Upgrade to WP Passkey Pro for unlimited passkeys, WooCommerce support, audit logs, and advanced access controls.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      Mark Best
  * Author URI:  https://lakeviewcc.net
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPK_VERSION',     '1.0.0' );
+define( 'WPK_VERSION',     '1.1.0' );
 define( 'WPK_PLUGIN_FILE', __FILE__ );
 define( 'WPK_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'WPK_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
@@ -51,6 +51,7 @@ unset( $_wpk_autoload );
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-settings.php';
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-login-form.php';
+require_once WPK_PLUGIN_DIR . 'includes/class-wpk-shortcodes.php';
 
 // ──────────────────────────────────────────────────────────────
 // Bootstrap
@@ -60,6 +61,7 @@ function wpk_init() {
 
     new WPK_Passkeys();
     new WPK_Login_Form();
+    new WPK_Shortcodes();
 
     if ( is_admin() ) {
         new WPK_Settings();
@@ -76,11 +78,14 @@ register_deactivation_hook( __FILE__, 'wpk_deactivate' );
 function wpk_activate() {
     require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
     WPK_Passkeys::create_tables();
+    WPK_Passkeys::schedule_cron();
     flush_rewrite_rules();
 }
 
 function wpk_deactivate() {
-    // Nothing to tear down on deactivation; tables are preserved until uninstall.
+    require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
+    WPK_Passkeys::unschedule_cron();
+    // Nothing else to tear down on deactivation; tables are preserved until uninstall.
 }
 
 // ──────────────────────────────────────────────────────────────

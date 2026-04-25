@@ -3,7 +3,7 @@ Contributors: markbest
 Tags: passkeys, webauthn, fido2, passwordless, authentication, login, security, biometric
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -123,6 +123,16 @@ Yes — add `define( 'WPK_RP_ID', 'example.com' );` to `wp-config.php`.
 4. The WP Passkey settings page
 
 == Changelog ==
+
+= 1.1.0 =
+* Added: dismissible "set up your passkey" nudge notice for eligible users
+* Added: Passkeys column in the admin Users list showing count per user
+* Added: Scheduled daily cleanup of expired rate-limit rows and old log entries
+* Added: Challenge timeout setting in Settings > WP Passkey > Advanced
+* Added: Login redirect URL field in settings (fallback after passkey login)
+* Added: `[wpk_login_button]` and `[wpk_register_button]` shortcodes
+* Added: Log retention period setting (days)
+* Improved: `get_challenge_ttl()` now reads from the settings UI
 
 = 1.0.0 =
 * Initial release

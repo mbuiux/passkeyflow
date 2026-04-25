@@ -42,6 +42,19 @@ class WPK_Passkeys {
         return (int) get_option( 'wpk_enabled', 1 ) === 1;
     }
 
+    /**
+     * Public static wrapper so shortcodes and external code can check eligibility
+     * without instantiating the full class.
+     */
+    public static function user_is_eligible( WP_User $user ): bool {
+        $allowed_roles = (array) get_option( 'wpk_eligible_roles', array( 'administrator' ) );
+        $eligible      = apply_filters( 'wpk_is_eligible_user', null, $user );
+        if ( $eligible !== null ) {
+            return (bool) $eligible;
+        }
+        return ! empty( array_intersect( (array) $user->roles, $allowed_roles ) );
+    }
+
     public function __construct() {
         if ( ! self::is_enabled() ) {
             return;
@@ -59,6 +72,18 @@ class WPK_Passkeys {
 
         // Login hooks
         add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_assets' ) );
+
+        // Admin: Users list column
+        add_filter( 'manage_users_columns',       array( $this, 'users_column_header' ) );
+        add_filter( 'manage_users_custom_column', array( $this, 'users_column_content' ), 10, 3 );
+        add_filter( 'manage_users_sortable_columns', array( $this, 'users_column_sortable' ) );
+
+        // Admin: passkey setup nudge notice
+        add_action( 'admin_notices', array( $this, 'render_setup_notice' ) );
+        add_action( 'wp_ajax_wpk_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
+
+        // Cron: scheduled cleanup
+        add_action( 'wpk_scheduled_cleanup', array( $this, 'run_scheduled_cleanup' ) );
 
         // AJAX — authenticated (registration + revocation)
         add_action( 'wp_ajax_wpk_begin_registration',   array( $this, 'ajax_begin_registration' ) );
@@ -150,6 +175,157 @@ class WPK_Passkeys {
         echo '<div class="notice notice-error"><p>' .
             esc_html__( 'WP Passkeys: The WebAuthn library is missing. Run composer install in the wp-passkeys plugin directory.', 'wp-passkeys' ) .
             '</p></div>';
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Admin: passkey setup nudge notice
+    // ──────────────────────────────────────────────────────────
+
+    public function render_setup_notice(): void {
+        if ( ! (int) get_option( 'wpk_show_setup_notice', 1 ) ) {
+            return;
+        }
+
+        $user = wp_get_current_user();
+        if ( ! $this->is_eligible_user( $user ) ) {
+            return;
+        }
+
+        $dismissed_key = 'wpk_notice_dismissed_' . (int) $user->ID;
+        if ( get_user_meta( (int) $user->ID, $dismissed_key, true ) ) {
+            return;
+        }
+
+        if ( $this->count_user_credentials( (int) $user->ID ) > 0 ) {
+            return;
+        }
+
+        $profile_url = admin_url( 'profile.php#wpk-profile-section' );
+        $nonce       = wp_create_nonce( 'wpk_dismiss_notice' );
+        ?>
+        <div class="notice notice-info is-dismissible wpk-setup-notice" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+            <p>
+                <strong><?php esc_html_e( 'Set up a passkey for faster, more secure sign-ins.', 'wp-passkeys' ); ?></strong>
+                <?php
+                printf(
+                    wp_kses(
+                        /* translators: %s profile URL */
+                        __( ' <a href="%s">Register a passkey now</a> — sign in with Face ID, Touch ID, or a security key, no password needed.', 'wp-passkeys' ),
+                        array( 'a' => array( 'href' => array() ) )
+                    ),
+                    esc_url( $profile_url )
+                );
+                ?>
+            </p>
+        </div>
+        <script>
+        (function(){
+            var notice = document.querySelector('.wpk-setup-notice');
+            if ( ! notice ) return;
+            notice.addEventListener('click', function(e){
+                if ( ! e.target.classList.contains('notice-dismiss') ) return;
+                var fd = new FormData();
+                fd.append('action', 'wpk_dismiss_notice');
+                fd.append('nonce',  notice.dataset.nonce);
+                fetch(<?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>, {
+                    method: 'POST', credentials: 'same-origin', body: fd
+                });
+            });
+        })();
+        </script>
+        <?php
+    }
+
+    public function ajax_dismiss_notice(): void {
+        if ( ! check_ajax_referer( 'wpk_dismiss_notice', 'nonce', false ) ) {
+            wp_send_json_error( null, 403 );
+        }
+        $user_id = get_current_user_id();
+        if ( $user_id ) {
+            update_user_meta( $user_id, 'wpk_notice_dismissed_' . $user_id, 1 );
+        }
+        wp_send_json_success();
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Admin: Users list passkey column
+    // ──────────────────────────────────────────────────────────
+
+    public function users_column_header( array $columns ): array {
+        $columns['wpk_passkeys'] = __( 'Passkeys', 'wp-passkeys' );
+        return $columns;
+    }
+
+    public function users_column_content( string $output, string $column_name, int $user_id ): string {
+        if ( $column_name !== 'wpk_passkeys' ) {
+            return $output;
+        }
+
+        $user  = get_user_by( 'id', $user_id );
+        if ( ! $user || ! $this->is_eligible_user( $user ) ) {
+            return '<span style="color:#aaa;">—</span>';
+        }
+
+        $count = $this->count_user_credentials( $user_id );
+        if ( $count === 0 ) {
+            return '<span style="color:#aaa;">0</span>';
+        }
+
+        $url = add_query_arg(
+            array( 'user_id' => $user_id, 'anchor' => 'wpk-profile-section' ),
+            admin_url( 'user-edit.php' )
+        );
+        return sprintf(
+            '<a href="%s" title="%s">%d</a>',
+            esc_url( $url ),
+            esc_attr( sprintf(
+                /* translators: %d passkey count, %s username */
+                __( '%1$d passkey(s) for %2$s — click to manage', 'wp-passkeys' ),
+                $count,
+                $user->user_login
+            ) ),
+            $count
+        );
+    }
+
+    public function users_column_sortable( array $columns ): array {
+        $columns['wpk_passkeys'] = 'wpk_passkeys';
+        return $columns;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Cron: scheduled cleanup
+    // ──────────────────────────────────────────────────────────
+
+    public static function schedule_cron(): void {
+        if ( ! wp_next_scheduled( 'wpk_scheduled_cleanup' ) ) {
+            wp_schedule_event( time(), 'daily', 'wpk_scheduled_cleanup' );
+        }
+    }
+
+    public static function unschedule_cron(): void {
+        $timestamp = wp_next_scheduled( 'wpk_scheduled_cleanup' );
+        if ( $timestamp ) {
+            wp_unschedule_event( $timestamp, 'wpk_scheduled_cleanup' );
+        }
+    }
+
+    public function run_scheduled_cleanup(): void {
+        global $wpdb;
+
+        // Purge expired rate-limit rows.
+        $rate_table = $wpdb->prefix . self::TABLE_RATE_LIMITS;
+        $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            "DELETE FROM {$rate_table} WHERE (lock_expires_at IS NULL OR lock_expires_at <= UTC_TIMESTAMP()) AND (window_expires_at IS NULL OR window_expires_at <= UTC_TIMESTAMP())" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        );
+
+        // Purge log rows older than the configured retention window.
+        $keep_days = max( 7, (int) get_option( 'wpk_log_retention_days', 90 ) );
+        $log_table = $wpdb->prefix . 'wpk_logs';
+        $wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            "DELETE FROM {$log_table} WHERE log_timestamp < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $keep_days
+        ) );
     }
 
     // ──────────────────────────────────────────────────────────
@@ -871,6 +1047,14 @@ class WPK_Passkeys {
 
             $this->clear_redirect_cookie();
 
+            // Fall back to the settings-page redirect URL.
+            if ( $redirect === '' ) {
+                $settings_redirect = (string) get_option( 'wpk_login_redirect', '' );
+                if ( $settings_redirect !== '' ) {
+                    $redirect = $this->safe_redirect( $settings_redirect );
+                }
+            }
+
             if ( $redirect === '' ) {
                 $default  = apply_filters( 'login_redirect', admin_url(), '', $user );
                 $redirect = $this->safe_redirect( $default, admin_url() );
@@ -927,6 +1111,10 @@ class WPK_Passkeys {
     private function get_challenge_ttl(): int {
         if ( defined( 'WPK_CHALLENGE_TTL' ) && (int) WPK_CHALLENGE_TTL > 30 ) {
             return (int) WPK_CHALLENGE_TTL;
+        }
+        $opt = (int) get_option( 'wpk_challenge_ttl', 0 );
+        if ( $opt >= 30 ) {
+            return min( 600, $opt );
         }
         return 300;
     }

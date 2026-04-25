@@ -48,9 +48,9 @@
 .wpk-settings-wrap > h1:first-child { display: none; }
 
 .wpk-page-header {
-    padding: 4px 0 22px;
-    border-bottom: 1px solid var(--wpk-border);
-    margin-bottom: 26px;
+    padding: 4px 0 20px;
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .wpk-page-header h1 {
@@ -219,60 +219,150 @@
     gap: 8px;
     max-width: 560px;
 }
+
+/* Pill label */
 .wpk-settings-card fieldset label {
     display: flex !important;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin: 0 !important;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border: 1px solid var(--wpk-border);
     border-radius: var(--wpk-radius-sm);
     background: #fff;
     font-size: 13px;
+    font-weight: 500;
     color: var(--wpk-ink);
     cursor: pointer;
-    transition: border-color .15s, background .15s;
+    transition: border-color .15s ease, background .15s ease;
+    user-select: none;
 }
+
+/* Custom checkbox box — hide native, draw our own */
+.wpk-settings-card fieldset label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #c0c4c8;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: background .15s ease, border-color .15s ease;
+    margin: 0;
+}
+
+/* Kill WP admin's ::before SVG tick on both states */
+.wpk-settings-card fieldset label input[type="checkbox"]::before,
+.wpk-settings-card fieldset label input[type="checkbox"]:checked::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* Our checkmark via ::after */
+.wpk-settings-card fieldset label input[type="checkbox"]::after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 5px;
+    height: 9px;
+    border: 2px solid transparent;
+    border-top: none;
+    border-left: none;
+    transform: translate(-50%, -50%) rotate(45deg);
+    transition: border-color .1s ease;
+}
+
+/* Checked state — filled box + white mark; kill WP admin's SVG background */
+.wpk-settings-card fieldset label input[type="checkbox"]:checked {
+    background: var(--wpk-ink) !important;
+    background-image: none !important;
+    border-color: var(--wpk-ink);
+    box-shadow: none !important;
+}
+.wpk-settings-card fieldset label input[type="checkbox"]:checked::after {
+    border-color: #fff;
+}
+
+/* Pill hover */
 .wpk-settings-card fieldset label:hover {
-    border-color: var(--wpk-border-strong);
+    border-color: var(--wpk-ink);
     background: var(--wpk-surface-alt);
 }
-.wpk-settings-card fieldset input[type="checkbox"]:checked + ,
+.wpk-settings-card fieldset label:hover input[type="checkbox"]:not(:checked) {
+    border-color: var(--wpk-ink);
+}
+
+/* Pill checked state */
 .wpk-settings-card fieldset label:has(input:checked) {
     border-color: var(--wpk-ink);
     background: rgba(29,35,39,.04);
 }
 
-/* Submit row — override WP's default negative margins so the grey bg spans full width */
-.wpk-settings-card p.submit {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 16px 28px;
+/* Submit row */
+.wpk-submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 28px;
     background: var(--wpk-surface-alt);
-    border-top: 1px solid var(--wpk-border) !important;
-    padding-top: 16px !important;
-    text-align: right;
+    border-top: 1px solid var(--wpk-border);
+    margin: 0;
 }
 
-.wpk-settings-card .button-primary,
-.wpk-settings-card #submit {
+/* Reset link */
+.wpk-reset-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--wpk-muted);
+    text-decoration: none;
+    padding: 6px 0;
+    transition: color .15s ease;
+    white-space: nowrap;
+}
+.wpk-reset-link:hover {
+    color: var(--wpk-ink);
+    text-decoration: none;
+}
+.wpk-reset-link svg {
+    flex-shrink: 0;
+}
+
+/* Save button */
+.wpk-save-btn.button {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 7px;
     background: var(--wpk-ink) !important;
     border-color: var(--wpk-ink) !important;
     color: #fff !important;
-    border-radius: var(--wpk-radius-sm) !important;
-    padding: 0 18px !important;
-    height: 36px !important;
-    line-height: 34px !important;
-    font-weight: 500 !important;
+    border-radius: 999px !important;
+    padding: 0 20px !important;
+    height: 40px !important;
+    line-height: 38px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
     text-shadow: none !important;
     box-shadow: none !important;
+    cursor: pointer;
+    transition: background .15s ease !important;
 }
-.wpk-settings-card .button-primary:hover,
-.wpk-settings-card #submit:hover {
+.wpk-save-btn.button:hover,
+.wpk-save-btn.button:focus {
     background: var(--wpk-ink-soft) !important;
     border-color: var(--wpk-ink-soft) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+.wpk-save-btn svg {
+    flex-shrink: 0;
 }
 
 /* ── Sidebar cards ─────────────────────────────────────────────────────── */
@@ -307,38 +397,114 @@
 
 /* PRO card */
 .wpk-card-pro {
-    border-color: rgba(126,91,239,.4);
-    background: linear-gradient(180deg, var(--wpk-pro-soft) 0%, #fff 60%);
+    border-color: rgba(126,91,239,.35);
+    background: linear-gradient(160deg, #f3f0ff 0%, #fff 55%);
+    padding: 20px;
 }
-.wpk-card-pro h3 { color: var(--wpk-pro-deep); }
+
+/* Header row: icon + title/subtitle */
+.wpk-pro-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.wpk-pro-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #9b72f5 0%, #6c3fd4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(108,63,212,.35);
+}
+
+.wpk-pro-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--wpk-pro-deep);
+    line-height: 1.2;
+}
+
+.wpk-pro-subtitle {
+    display: block;
+    font-size: 11.5px;
+    color: var(--wpk-pro);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.wpk-pro-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #3c434a;
+    margin: 0 0 16px;
+}
+
+/* Feature list */
 .wpk-pro-features {
-    margin: 0 0 14px;
+    margin: 0 0 18px;
     padding: 0;
     list-style: none;
 }
 .wpk-pro-features li {
-    padding: 4px 0;
-    font-size: 12.5px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 0;
+    font-size: 13px;
     color: var(--wpk-ink);
+    line-height: 1.4;
 }
+.wpk-pro-check {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--wpk-pro);
+}
+
+/* CTA button */
 .wpk-btn-pro {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 38px;
+    height: 42px;
     background: var(--wpk-pro) !important;
     border-color: var(--wpk-pro) !important;
     color: #fff !important;
-    border-radius: var(--wpk-radius-sm) !important;
-    font-weight: 500 !important;
+    border-radius: 999px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
     text-shadow: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 10px rgba(126,91,239,.4) !important;
+    text-decoration: none !important;
+    transition: background .15s ease, box-shadow .15s ease !important;
 }
-.wpk-btn-pro:hover, .wpk-btn-pro:focus {
+.wpk-btn-pro:hover,
+.wpk-btn-pro:focus {
     background: var(--wpk-pro-deep) !important;
     border-color: var(--wpk-pro-deep) !important;
     color: #fff !important;
+    box-shadow: 0 4px 14px rgba(74,46,196,.45) !important;
+}
+
+/* Guarantee link */
+.wpk-pro-guarantee {
+    text-align: center;
+    margin: 10px 0 0;
+    font-size: 11.5px;
+}
+.wpk-pro-guarantee a {
+    color: var(--wpk-pro);
+    text-decoration: none;
+}
+.wpk-pro-guarantee a:hover {
+    text-decoration: underline;
 }
 
 /* Setup steps */
@@ -818,4 +984,153 @@
 @media (max-width: 782px) {
     .wpk-settings-card .form-table th { width: 100%; display: block; padding-bottom: 4px; }
     .wpk-settings-card .form-table td { display: block; padding-top: 4px; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TABS  — override WP native .nav-tab-wrapper to match the design system
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Wrapper: acts as the page-header bottom border and provides spacing below */
+.wpk-settings-wrap .nav-tab-wrapper {
+    border-bottom: 1px solid var(--wpk-border);
+    margin: 0 0 28px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TOGGLE SWITCH
+   ────────────────────────────────────────────────────────────────────────── */
+
+.wpk-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.4;
+}
+
+.wpk-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+.wpk-toggle__track {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    border-radius: 13px;
+    background: var(--wpk-border-strong);
+    flex-shrink: 0;
+    transition: background .2s ease;
+}
+
+.wpk-toggle__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    transition: transform .2s ease;
+}
+
+.wpk-toggle:has(input:checked) .wpk-toggle__track {
+    background: var(--wpk-ink);
+}
+
+.wpk-toggle:has(input:checked) .wpk-toggle__thumb {
+    transform: translateX(20px);
+}
+
+.wpk-toggle__label {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--wpk-ink);
+}
+
+/* All tabs */
+.wpk-settings-wrap .nav-tab {
+    border: 1px solid transparent;
+    border-bottom: none;
+    margin: 0 4px -1px 0;
+    padding: 9px 16px;
+    background: transparent;
+    color: var(--wpk-muted);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    border-radius: var(--wpk-radius-sm) var(--wpk-radius-sm) 0 0;
+    transition: color .15s ease, background .15s ease;
+}
+
+.wpk-settings-wrap .nav-tab:hover,
+.wpk-settings-wrap .nav-tab:focus {
+    color: var(--wpk-ink);
+    background: var(--wpk-surface-alt);
+    border-color: var(--wpk-border) var(--wpk-border) transparent;
+    outline: none;
+    box-shadow: none;
+}
+
+/* Active tab — white background, bottom border transparent, connects to cards below */
+.wpk-settings-wrap .nav-tab-active,
+.wpk-settings-wrap .nav-tab-active:hover,
+.wpk-settings-wrap .nav-tab-active:focus {
+    background: var(--wpk-surface);
+    border-color: var(--wpk-border) var(--wpk-border) var(--wpk-surface);
+    color: var(--wpk-ink);
+    font-weight: 600;
+    box-shadow: none;
+    outline: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SHORTCODES TAB
+   ────────────────────────────────────────────────────────────────────────── */
+
+.wpk-code-example {
+    background: var(--wpk-surface-alt);
+    border: 1px solid var(--wpk-border);
+    border-radius: var(--wpk-radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: Consolas, 'Courier New', monospace;
+    color: var(--wpk-ink);
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.wpk-shortcodes-body .wpk-settings-card__header code {
+    font-size: 17px;
+    background: transparent;
+    color: var(--wpk-ink);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SHORTCODE — front-end passkey buttons
+   ────────────────────────────────────────────────────────────────────────── */
+
+.wpk-shortcode-login-wrap,
+.wpk-shortcode-register-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Shortcode variant: auto-width (not 100% like the login-page version) */
+.wpk-sc-btn {
+    display: inline-flex !important;
+    width: auto !important;
+    padding: 0 20px !important;
 }
