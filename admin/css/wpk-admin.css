@@ -1,1227 +1,628 @@
-/* ==========================================================================
-   WP Passkey — Admin & Login UI (redesigned)
-   Drop-in replacement for admin/css/wpk-admin.css
-   ========================================================================== */
-
-/* ── Design tokens ──────────────────────────────────────────────────────── */
 :root {
-    --wpk-ink:           #1d2327;
-    --wpk-ink-soft:      #2c3338;
-    --wpk-text:          #1d2327;
-    --wpk-muted:         #757575;
-    --wpk-border:        #dcdcde;
-    --wpk-border-strong: #c7c8ca;
-    --wpk-bg:            #f5f6f8;
-    --wpk-surface:       #ffffff;
-    --wpk-surface-alt:   #fafbfc;
-
-    --wpk-pro:           #7e5bef;
-    --wpk-pro-deep:      #4a2ec4;
-    --wpk-pro-soft:      #fbfaff;
-
-    --wpk-migrate:       #0073aa;
-    --wpk-migrate-deep:  #005a87;
-    --wpk-migrate-soft:  #f0f8ff;
-
-    --wpk-success:       #1d6b1d;
-    --wpk-warning-bg:    #fff8e1;
-    --wpk-warning-fg:    #856404;
-    --wpk-warning-bd:    #ffc107;
-    --wpk-danger:        #b32d2e;
-
-    --wpk-radius:        8px;
-    --wpk-radius-sm:     6px;
-    --wpk-shadow-sm:     0 1px 2px rgba(29,35,39,.04), 0 1px 3px rgba(29,35,39,.04);
-    --wpk-shadow:        0 4px 16px -4px rgba(29,35,39,.08);
+    --wpk-ink: #1d2327;
+    --wpk-ink-soft: #34404a;
+    --wpk-pro: #7e5bef;
+    --wpk-pro-dark: #6344d8;
+    --wpk-bg: #f4f6f8;
+    --wpk-card: #ffffff;
+    --wpk-border: #dce2e8;
+    --wpk-border-strong: #c7d0da;
+    --wpk-muted: #667085;
+    --wpk-muted-bg: #f8fafc;
+    --wpk-success: #15803d;
+    --wpk-success-bg: #e8f7ee;
+    --wpk-radius: 14px;
+    --wpk-shadow: 0 18px 45px rgba(29, 35, 39, 0.08);
+    --wpk-shadow-soft: 0 8px 24px rgba(29, 35, 39, 0.06);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   SETTINGS PAGE
-   ────────────────────────────────────────────────────────────────────────── */
+.wpk-admin-wrap {
+    margin: 20px 20px 0 0;
+    color: var(--wpk-ink);
+}
 
-.wpk-settings-wrap {
+.wpk-premium-shell {
     max-width: 1280px;
-    margin: 12px 20px 40px 0;
 }
 
-/* Hide the default WP <h1> at top of .wrap when we render our own */
-.wpk-settings-wrap > h1:first-child { display: none; }
-
-.wpk-page-header {
-    padding: 4px 0 20px;
-    border-bottom: 1px solid var(--wpk-border);
-    margin-bottom: 6px;
-}
-
-.wpk-page-header h1 {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--wpk-ink);
-    margin: 0 0 6px;
-    padding: 0;
-}
-
-.wpk-tagline {
-    color: var(--wpk-muted);
-    margin: 0;
-    font-size: 14px;
-}
-
-.wpk-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(29,107,29,.08);
-    color: var(--wpk-success);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 999px;
-    margin-left: 10px;
-    vertical-align: middle;
-}
-.wpk-status-pill::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--wpk-success);
-}
-
-.wpk-settings-body {
-    display: grid;
-    grid-template-columns: minmax(0,1fr) 320px;
-    gap: 24px;
-    align-items: start;
-}
-
-@media (max-width: 1100px) {
-    .wpk-settings-body { grid-template-columns: 1fr; }
-}
-
-.wpk-settings-main { min-width: 0; }
-
-.wpk-settings-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-/* ── Main settings card ────────────────────────────────────────────────── */
-
-.wpk-settings-card {
-    background: var(--wpk-surface);
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius);
-    box-shadow: var(--wpk-shadow-sm);
-    overflow: hidden;
-}
-
-.wpk-settings-card__header {
-    padding: 20px 28px 16px;
-    background: var(--wpk-surface-alt);
-    border-bottom: 1px solid var(--wpk-border);
-}
-.wpk-settings-card__header h2 {
-    margin: 0 0 2px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-}
-.wpk-settings-card__header p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--wpk-muted);
-}
-
-/* Sections rendered by do_settings_sections */
-.wpk-settings-card .form-table {
-    margin: 0;
-    background: transparent;
-}
-
-/* Each <h2> from add_settings_section becomes a section heading */
-.wpk-settings-card > form > h2 {
-    margin: 0;
-    padding: 22px 28px 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-    text-transform: none;
-    letter-spacing: 0;
-    border-top: 1px solid var(--wpk-border);
-}
-.wpk-settings-card > form > h2:first-of-type { border-top: 0; }
-
-.wpk-settings-card > form > p:not(.submit) {
-    margin: 0 28px 8px;
-    font-size: 12px;
-    color: var(--wpk-muted);
-    max-width: 560px;
-}
-
-.wpk-settings-card .form-table {
-    padding: 4px 28px 18px;
-    box-sizing: border-box;
-    width: 100%;
-}
-
-.wpk-settings-card .form-table th {
-    width: 220px;
-    padding: 16px 24px 16px 28px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-    vertical-align: top;
-}
-
-.wpk-settings-card .form-table td {
-    padding: 14px 28px 14px 0;
-    font-size: 13px;
-}
-
-.wpk-settings-card .form-table .description {
-    color: var(--wpk-muted);
-    font-size: 12px;
-    margin-top: 6px;
-    line-height: 1.55;
-}
-
-/* Inputs */
-.wpk-settings-card input[type="text"],
-.wpk-settings-card input[type="number"],
-.wpk-settings-card select {
-    border: 1px solid var(--wpk-border-strong);
-    border-radius: var(--wpk-radius-sm);
-    padding: 8px 10px;
-    font-size: 13px;
-    background: #fff;
-    color: var(--wpk-ink);
-    box-shadow: none;
-    transition: border-color .15s ease, box-shadow .15s ease;
-    min-height: 36px;
-    line-height: 1.3;
-}
-
-/* Select — custom chevron, room for arrow on the right */
-.wpk-settings-card select {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 32px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23757575' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px 16px;
-    cursor: pointer;
-}
-.wpk-settings-card input[type="text"]:focus,
-.wpk-settings-card input[type="number"]:focus,
-.wpk-settings-card select:focus {
-    border-color: var(--wpk-ink);
-    box-shadow: 0 0 0 3px rgba(29,35,39,.12);
-    outline: none;
-}
-.wpk-settings-card input.regular-text { width: 100%; max-width: 420px; }
-.wpk-settings-card input.small-text   { width: 96px; }
-
-/* Roles checkbox grid */
-.wpk-settings-card fieldset {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
-    gap: 8px;
-    max-width: 560px;
-}
-
-/* Pill label */
-.wpk-settings-card fieldset label {
-    display: flex !important;
-    align-items: center;
-    gap: 10px;
-    margin: 0 !important;
-    padding: 10px 14px;
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius-sm);
-    background: #fff;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--wpk-ink);
-    cursor: pointer;
-    transition: border-color .15s ease, background .15s ease;
-    user-select: none;
-}
-
-/* Custom checkbox box — hide native, draw our own */
-.wpk-settings-card fieldset label input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    border: 1.5px solid #c0c4c8;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-    position: relative;
-    transition: background .15s ease, border-color .15s ease;
-    margin: 0;
-}
-
-/* Kill WP admin's ::before SVG tick on both states */
-.wpk-settings-card fieldset label input[type="checkbox"]::before,
-.wpk-settings-card fieldset label input[type="checkbox"]:checked::before {
-    content: none !important;
-    display: none !important;
-}
-
-/* Our checkmark via ::after */
-.wpk-settings-card fieldset label input[type="checkbox"]::after {
-    content: '';
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 46%;
-    width: 5px;
-    height: 9px;
-    border: 2px solid transparent;
-    border-top: none;
-    border-left: none;
-    transform: translate(-50%, -50%) rotate(45deg);
-    transition: border-color .1s ease;
-}
-
-/* Checked state — filled box + white mark; kill WP admin's SVG background */
-.wpk-settings-card fieldset label input[type="checkbox"]:checked {
-    background: var(--wpk-ink) !important;
-    background-image: none !important;
-    border-color: var(--wpk-ink);
-    box-shadow: none !important;
-}
-.wpk-settings-card fieldset label input[type="checkbox"]:checked::after {
-    border-color: #fff;
-}
-
-/* Pill hover */
-.wpk-settings-card fieldset label:hover {
-    border-color: var(--wpk-ink);
-    background: var(--wpk-surface-alt);
-}
-.wpk-settings-card fieldset label:hover input[type="checkbox"]:not(:checked) {
-    border-color: var(--wpk-ink);
-}
-
-/* Pill checked state */
-.wpk-settings-card fieldset label:has(input:checked) {
-    border-color: var(--wpk-ink);
-    background: rgba(29,35,39,.04);
-}
-
-/* Submit row */
-.wpk-submit-row {
+.wpk-hero {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 14px 28px;
-    background: var(--wpk-surface-alt);
-    border-top: 1px solid var(--wpk-border);
-    margin: 0;
+    gap: 24px;
+    min-height: 150px;
+    padding: 30px;
+    color: #fff;
+    background:
+        radial-gradient(circle at top right, rgba(126, 91, 239, 0.42), transparent 36%),
+        linear-gradient(135deg, var(--wpk-ink), #111820 72%);
+    border-radius: 18px;
+    box-shadow: var(--wpk-shadow);
+    overflow: hidden;
 }
 
-/* Reset link */
-.wpk-reset-link {
+.wpk-product-mark {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.wpk-product-icon {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--wpk-muted);
-    text-decoration: none;
-    padding: 6px 0;
-    transition: color .15s ease;
-    white-space: nowrap;
-}
-.wpk-reset-link:hover {
-    color: var(--wpk-ink);
-    text-decoration: none;
-}
-.wpk-reset-link svg {
-    flex-shrink: 0;
-}
-
-/* Save button */
-.wpk-save-btn.button {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 7px;
-    background: var(--wpk-ink) !important;
-    border-color: var(--wpk-ink) !important;
-    color: #fff !important;
-    border-radius: 999px !important;
-    padding: 0 20px !important;
-    height: 40px !important;
-    line-height: 38px !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    text-shadow: none !important;
-    box-shadow: none !important;
-    cursor: pointer;
-    transition: background .15s ease !important;
-}
-.wpk-save-btn.button:hover,
-.wpk-save-btn.button:focus {
-    background: var(--wpk-ink-soft) !important;
-    border-color: var(--wpk-ink-soft) !important;
-    color: #fff !important;
-    box-shadow: none !important;
-}
-.wpk-save-btn svg {
-    flex-shrink: 0;
-}
-
-/* ── Sidebar cards ─────────────────────────────────────────────────────── */
-
-.wpk-card {
-    background: var(--wpk-surface);
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius);
-    padding: 18px 20px;
-    margin: 0;
-    box-shadow: var(--wpk-shadow-sm);
-}
-
-.wpk-card h3 {
-    margin: 0 0 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.wpk-card p,
-.wpk-card li {
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: #3c434a;
-}
-
-.wpk-card p.description { color: var(--wpk-muted); margin: 0 0 10px; }
-
-/* PRO card */
-.wpk-card-pro {
-    border-color: rgba(126,91,239,.35);
-    background: linear-gradient(160deg, #f3f0ff 0%, #fff 55%);
-    padding: 20px;
-}
-
-/* Header row: icon + title/subtitle */
-.wpk-pro-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.wpk-pro-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #9b72f5 0%, #6c3fd4 100%);
-    display: flex;
-    align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(108,63,212,.35);
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 30px;
+    line-height: 1;
+    color: #fff;
 }
 
-.wpk-pro-title {
-    display: block;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--wpk-pro-deep);
+.wpk-hero h1,
+.wpk-section-header h2,
+.wpk-card h3,
+.wpk-side-card h2,
+.wpk-shortcode-card h3 {
+    margin: 0;
+    color: inherit;
     line-height: 1.2;
 }
 
-.wpk-pro-subtitle {
-    display: block;
-    font-size: 11.5px;
-    color: var(--wpk-pro);
-    font-weight: 500;
-    margin-top: 2px;
+.wpk-hero h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
-.wpk-pro-desc {
-    font-size: 13px;
-    line-height: 1.55;
-    color: #3c434a;
-    margin: 0 0 16px;
-}
-
-/* Feature list */
-.wpk-pro-features {
-    margin: 0 0 18px;
-    padding: 0;
-    list-style: none;
-}
-.wpk-pro-features li {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 5px 0;
-    font-size: 13px;
-    color: var(--wpk-ink);
-    line-height: 1.4;
-}
-.wpk-pro-check {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    color: var(--wpk-pro);
-}
-
-/* CTA button */
-.wpk-btn-pro {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 42px;
-    background: var(--wpk-pro) !important;
-    border-color: var(--wpk-pro) !important;
-    color: #fff !important;
-    border-radius: 999px !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    text-shadow: none !important;
-    box-shadow: 0 2px 10px rgba(126,91,239,.4) !important;
-    text-decoration: none !important;
-    transition: background .15s ease, box-shadow .15s ease !important;
-}
-.wpk-btn-pro:hover,
-.wpk-btn-pro:focus {
-    background: var(--wpk-pro-deep) !important;
-    border-color: var(--wpk-pro-deep) !important;
-    color: #fff !important;
-    box-shadow: 0 4px 14px rgba(74,46,196,.45) !important;
-}
-
-/* Guarantee link */
-.wpk-pro-guarantee {
-    text-align: center;
-    margin: 10px 0 0;
-    font-size: 11.5px;
-}
-.wpk-pro-guarantee a {
-    color: var(--wpk-pro);
-    text-decoration: none;
-}
-.wpk-pro-guarantee a:hover {
-    text-decoration: underline;
-}
-
-/* Setup steps */
-.wpk-setup-steps {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    counter-reset: wpk-step;
-}
-.wpk-setup-steps li {
-    counter-increment: wpk-step;
-    position: relative;
-    padding: 4px 0 8px 28px;
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: #3c434a;
-}
-.wpk-setup-steps li::before {
-    content: counter(wpk-step);
-    position: absolute;
-    left: 0; top: 4px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--wpk-ink);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Compatibility list */
-.wpk-card ul.wpk-compat {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.wpk-compat li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 0;
-    font-size: 12.5px;
-    color: var(--wpk-ink);
-}
-.wpk-compat__icon {
-    width: 32px; height: 32px;
-    border-radius: var(--wpk-radius-sm);
-    background: var(--wpk-surface-alt);
-    border: 1px solid var(--wpk-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--wpk-ink);
-}
-.wpk-compat__icon svg {
-    width: 16px;
-    height: 16px;
-    display: block;
-}
-
-/* Per-brand icon colours */
-.wpk-compat li:nth-child(1) .wpk-compat__icon { background: #f5f5f7; border-color: #d2d2d7; color: #1d1d1f; } /* Apple */
-.wpk-compat li:nth-child(2) .wpk-compat__icon { background: #f0f4ff; border-color: #ccd8f5; color: #0078d4; } /* Windows */
-.wpk-compat li:nth-child(3) .wpk-compat__icon { background: #f0faf5; border-color: #b3dfc7; color: #007a3d; } /* YubiKey green */
-.wpk-compat li:nth-child(4) .wpk-compat__icon { background: #f0f8ff; border-color: #c0d8f0; color: #0071e3; } /* iCloud blue */
-.wpk-compat li:nth-child(5) .wpk-compat__icon { background: #f0fff4; border-color: #a8e6bf; color: #3ddc84; } /* Android green */
-
-.wpk-compat__label { font-weight: 500; }
-.wpk-compat__note  { display: block; font-size: 11px; color: var(--wpk-muted); font-weight: 400; }
-
-/* ──────────────────────────────────────────────────────────────────────────
-   PROFILE PAGE — Your Passkeys
-   ────────────────────────────────────────────────────────────────────────── */
-
-.wpk-profile-section {
-    margin-top: 28px;
-    max-width: 1100px;
-}
-
-.wpk-profile-section > h2 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--wpk-ink);
-    margin: 0 0 4px;
-    padding: 0;
-}
-.wpk-profile-section > p.description {
-    color: var(--wpk-muted);
-    font-size: 13px;
-    margin: 0 0 22px;
-}
-
-.wpk-profile-grid {
-    display: grid;
-    grid-template-columns: minmax(0,2fr) minmax(280px,1fr);
-    gap: 22px;
-    align-items: start;
-}
-
-@media (max-width: 960px) {
-    .wpk-profile-grid { grid-template-columns: 1fr; }
-}
-
-/* Registered list panel */
-.wpk-panel {
-    background: var(--wpk-surface);
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius);
-    box-shadow: var(--wpk-shadow-sm);
-    overflow: hidden;
-}
-.wpk-panel__header {
-    padding: 16px 22px;
-    border-bottom: 1px solid var(--wpk-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-.wpk-panel__header h3 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-}
-.wpk-panel__header .wpk-panel__sub {
-    display: block;
-    font-size: 11.5px;
-    color: var(--wpk-muted);
-    font-weight: 400;
-    margin-top: 2px;
-}
-
-.wpk-capacity {
-    display: flex;
-    gap: 4px;
-}
-.wpk-capacity span {
-    width: 22px; height: 6px;
-    border-radius: 3px;
-    background: var(--wpk-border);
-}
-.wpk-capacity span.is-on { background: var(--wpk-ink); }
-
-/* Passkey list */
-.wpk-passkey-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.wpk-passkey-list li {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 22px;
-    border-bottom: 1px solid var(--wpk-border);
-    transition: background .15s ease;
-}
-.wpk-passkey-list li:last-child { border-bottom: 0; }
-.wpk-passkey-list li:hover { background: var(--wpk-surface-alt); }
-
-.wpk-passkey-list .wpk-passkey-icon {
-    width: 36px; height: 36px;
-    border-radius: var(--wpk-radius-sm);
-    background: var(--wpk-surface-alt);
-    border: 1px solid var(--wpk-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: #4c5358;
-}
-
-.wpk-passkey-meta { flex: 1; min-width: 0; }
-.wpk-passkey-meta__label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--wpk-ink);
-    line-height: 1.3;
-}
-.wpk-passkey-meta__sub {
-    font-size: 11.5px;
-    color: var(--wpk-muted);
-    margin-top: 2px;
-}
-.wpk-passkey-meta__sub .sep { margin: 0 8px; opacity: .4; }
-
-.wpk-passkey-revoke {
-    background: transparent !important;
-    border: 0 !important;
-    color: var(--wpk-danger) !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    padding: 6px 10px !important;
-    border-radius: var(--wpk-radius-sm) !important;
-    cursor: pointer;
-    text-decoration: none !important;
-}
-.wpk-passkey-revoke:hover {
-    background: rgba(179,45,46,.08) !important;
-    color: var(--wpk-danger) !important;
-}
-
-/* Empty state */
-.wpk-passkey-empty {
-    padding: 40px 22px;
-    text-align: center;
-    color: var(--wpk-muted);
-    font-size: 13px;
-}
-
-/* ── Register area ─────────────────────────────────────────── */
-.wpk-register-wrap {
-    max-width: 400px;
-}
-
-.wpk-label-input {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--wpk-border-strong);
-    border-radius: var(--wpk-radius-sm);
-    font-size: 13px;
-    background: #fff;
-    margin-bottom: 0;
-}
-.wpk-label-input:focus {
-    border-color: var(--wpk-ink);
-    box-shadow: 0 0 0 2px rgba(29,35,39,.1);
-    outline: none;
-}
-
-.wpk-register-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 8px;
-}
-
-#wpk-passkey-register {
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.wpk-inline-message {
-    font-size: 12.5px;
-    margin: 0;
-    line-height: 1.4;
-}
-.wpk-inline-message:empty { display: none; }
-
-/* State colours — used via JS class toggle (avoids inline style and honours forced-colors) */
-.wpk-msg-error   { color: var(--wpk-danger) !important; }
-.wpk-msg-success { color: var(--wpk-success) !important; }
-
-.wpk-register-hint {
-    color: var(--wpk-muted);
-    font-size: 12px !important;
-    line-height: 1.5;
-    margin-top: 10px !important;
-}
-
-/* ── Credentials table ─────────────────────────────────────── */
-.wpk-credentials-table {
-    max-width: 680px;
-    border: 1px solid var(--wpk-border) !important;
-    border-radius: var(--wpk-radius-sm);
-    overflow: hidden;
-}
-.wpk-credentials-table thead th {
-    padding: 8px 14px !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--wpk-muted) !important;
-    background: var(--wpk-surface-alt) !important;
-    border-bottom: 1px solid var(--wpk-border) !important;
-}
-.wpk-credentials-table tbody td {
-    padding: 9px 14px !important;
-    font-size: 13px;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--wpk-border) !important;
-}
-.wpk-credentials-table tbody tr:last-child td {
-    border-bottom: 0 !important;
-}
-.wpk-credentials-table tbody tr:nth-child(odd) {
-    background: var(--wpk-surface-alt);
-}
-.wpk-credentials-table .wpk-col-label {
-    font-weight: 500;
-    color: var(--wpk-ink);
-}
-.wpk-credentials-table .wpk-col-action {
-    width: 72px;
-    text-align: right;
-}
-
-/* Register-new card (legacy, kept for backward compat) */
-.wpk-register-card {
-    background: var(--wpk-surface);
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius);
-    box-shadow: var(--wpk-shadow-sm);
-    overflow: hidden;
-}
-.wpk-register-card__hero {
-    padding: 20px 22px 16px;
-    background: linear-gradient(180deg, rgba(29,35,39,.03), transparent);
-    border-bottom: 1px solid var(--wpk-border);
-}
-.wpk-register-card__icon {
-    width: 40px; height: 40px;
-    border-radius: var(--wpk-radius-sm);
-    background: var(--wpk-ink);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-}
-.wpk-register-card__hero h3 {
-    margin: 0 0 4px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-}
-.wpk-register-card__hero p {
-    margin: 0;
-    font-size: 12.5px;
-    color: var(--wpk-muted);
-    line-height: 1.5;
-}
-.wpk-register-card__body { padding: 18px 22px 20px; }
-
-.wpk-register-card label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--wpk-ink);
-    margin-bottom: 6px;
-}
-.wpk-register-card input[type="text"] {
-    width: 100%;
-    height: 38px;
-    border: 1px solid var(--wpk-border-strong);
-    border-radius: var(--wpk-radius-sm);
-    padding: 0 12px;
-    font-size: 13px;
-    background: #fff;
-    margin-bottom: 12px;
-    box-shadow: none;
-}
-.wpk-register-card input[type="text"]:focus {
-    border-color: var(--wpk-ink);
-    box-shadow: 0 0 0 3px rgba(29,35,39,.12);
-    outline: none;
-}
-
-#wpk-passkey-register {
-    width: auto;
-    height: 36px;
-    background: var(--wpk-ink) !important;
-    border-color: var(--wpk-ink) !important;
-    color: #fff !important;
-    border-radius: var(--wpk-radius-sm) !important;
-    font-weight: 500 !important;
-    text-shadow: none !important;
-    box-shadow: none !important;
-}
-#wpk-passkey-register:hover {
-    background: var(--wpk-ink-soft) !important;
-    border-color: var(--wpk-ink-soft) !important;
-}
-
-.wpk-mobile-hint {
-    color: var(--wpk-muted);
-    font-style: italic;
-    font-size: 11.5px;
-    margin: 10px 0 0 !important;
-}
-
-.wpk-notice-warning {
-    color: var(--wpk-warning-fg);
-    background: var(--wpk-warning-bg);
-    border-left: 3px solid var(--wpk-warning-bd);
-    padding: 10px 12px;
-    border-radius: 0 var(--wpk-radius-sm) var(--wpk-radius-sm) 0;
-    font-size: 12.5px;
-    line-height: 1.5;
-    margin: 12px 22px;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   LOGIN PAGE — Sign in with Passkey button
-   ────────────────────────────────────────────────────────────────────────── */
-
-.wpk-login-separator {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 18px 0 14px;
-    color: var(--wpk-muted);
+.wpk-eyebrow {
+    margin: 0 0 5px;
     font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    font-weight: 500;
-}
-.wpk-login-separator::before,
-.wpk-login-separator::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--wpk-border);
+    letter-spacing: 0.08em;
+    color: currentColor;
+    opacity: 0.72;
 }
 
-.wpk-login-passkey-wrap {
-    margin-bottom: 18px;
-    text-align: center;
-}
-.wpk-login-passkey-wrap.wpk-no-separator {
-    margin-top: 18px;
+.wpk-hero__copy {
+    max-width: 560px;
+    margin: 14px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 15px;
 }
 
-.wpk-passkey-btn {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    height: 42px;
-    padding: 0 16px;
-    background: var(--wpk-ink) !important;
-    color: #fff !important;
-    border: 1px solid var(--wpk-ink) !important;
-    border-radius: var(--wpk-radius-sm) !important;
-    font-size: 14px;
-    font-weight: 500 !important;
-    cursor: pointer;
-    text-shadow: none !important;
-    box-shadow: none !important;
-    transition: background .15s ease, opacity .15s ease;
-}
-.wpk-passkey-btn:hover,
-.wpk-passkey-btn:focus {
-    background: var(--wpk-ink-soft) !important;
-    border-color: var(--wpk-ink-soft) !important;
-    color: #fff !important;
-}
-.wpk-passkey-btn:disabled,
-.wpk-passkey-btn.wpk-btn-busy {
-    opacity: .65;
-    cursor: wait;
-}
-.wpk-passkey-btn .wpk-passkey-icon {
+.wpk-hero__actions {
     display: flex;
     align-items: center;
-    flex-shrink: 0;
-    background: none;
-    border: none;
-    width: auto;
-    height: auto;
-    border-radius: 0;
-    color: inherit;
-}
-.wpk-login-message {
-    margin: 8px 0 0;
-    font-size: 13px;
-    color: var(--wpk-danger);
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
-@media (max-width: 782px) {
-    .wpk-settings-card .form-table th { width: 100%; display: block; padding-bottom: 4px; }
-    .wpk-settings-card .form-table td { display: block; padding-top: 4px; }
+.wpk-status-pill,
+.wpk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: fit-content;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   TABS
-   ────────────────────────────────────────────────────────────────────────── */
+.wpk-status-pill {
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wpk-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #38d87b;
+    box-shadow: 0 0 0 4px rgba(56, 216, 123, 0.14);
+}
 
 .wpk-tabs {
     display: flex;
-    align-items: flex-end;
-    gap: 0;
-    margin: -8px 0 24px;
-    border-bottom: 1px solid var(--wpk-border);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   TOGGLE SWITCH
-   ────────────────────────────────────────────────────────────────────────── */
-
-.wpk-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    user-select: none;
-    line-height: 1.4;
-}
-
-.wpk-toggle input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    margin: 0;
-    pointer-events: none;
-}
-
-.wpk-toggle__track {
-    position: relative;
-    width: 46px;
-    height: 26px;
-    border-radius: 13px;
-    background: var(--wpk-border-strong);
-    flex-shrink: 0;
-    transition: background .2s ease;
-}
-
-.wpk-toggle__thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,.25);
-    transition: transform .2s ease;
-}
-
-.wpk-toggle:has(input:checked) .wpk-toggle__track {
-    background: var(--wpk-ink);
-}
-
-.wpk-toggle:has(input:checked) .wpk-toggle__thumb {
-    transform: translateX(20px);
-}
-
-.wpk-toggle__label {
-    font-size: 13px;
-    font-weight: 400;
-    color: var(--wpk-ink);
+    gap: 8px;
+    margin-top: 18px;
+    padding: 8px;
+    background: var(--wpk-card);
+    border: 1px solid var(--wpk-border);
+    border-radius: 16px;
+    box-shadow: var(--wpk-shadow-soft);
+    overflow-x: auto;
 }
 
 .wpk-tab {
     display: inline-flex;
     align-items: center;
-    min-height: 46px;
-    padding: 0 22px;
-    margin: 0 0 -1px;
-    border: 1px solid transparent;
-    border-bottom-color: var(--wpk-border);
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 11px;
     color: var(--wpk-muted);
-    font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     text-decoration: none;
-    background: transparent;
-    transition: color .15s ease, background .15s ease, border-color .15s ease;
+    transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
 
 .wpk-tab:hover,
 .wpk-tab:focus {
     color: var(--wpk-ink);
-    background: rgba(255,255,255,.45);
-    box-shadow: none;
+    background: var(--wpk-muted-bg);
     outline: none;
+    box-shadow: none;
 }
 
 .wpk-tab.is-active {
-    color: var(--wpk-ink);
-    background: var(--wpk-surface);
-    border-color: var(--wpk-border);
-    border-bottom-color: var(--wpk-surface);
-    border-radius: var(--wpk-radius-sm) var(--wpk-radius-sm) 0 0;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   SHORTCODES TAB
-   ────────────────────────────────────────────────────────────────────────── */
-
-.wpk-shortcodes-panel {
-    padding: 22px 28px 28px;
-}
-.wpk-shortcodes-panel h2 {
-    margin: 0 0 4px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-}
-.wpk-shortcodes-panel > p {
-    margin: 0 0 18px;
-    color: var(--wpk-muted);
-    font-size: 12px;
-}
-.wpk-shortcode-list {
-    display: grid;
-    gap: 12px;
-}
-.wpk-shortcode-item {
-    display: grid;
-    grid-template-columns: minmax(0,1fr) auto;
-    gap: 18px;
-    align-items: start;
-    padding: 16px;
-    border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius-sm);
-    background: var(--wpk-surface-alt);
-}
-.wpk-shortcode-item h3 {
-    margin: 0 0 4px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-    font-family: Consolas, 'Courier New', monospace;
-}
-.wpk-shortcode-item > div > p {
-    margin: 0 0 10px;
-    font-size: 12px;
-    color: var(--wpk-muted);
-}
-.wpk-shortcode-item > code {
-    display: inline-block;
-    background: var(--wpk-ink);
     color: #fff;
-    padding: 4px 10px;
-    border-radius: var(--wpk-radius-sm);
-    font-size: 12px;
-    white-space: nowrap;
-    align-self: start;
-    margin-top: 2px;
+    background: var(--wpk-ink);
+    box-shadow: 0 8px 18px rgba(29, 35, 39, 0.16);
 }
-.wpk-shortcode-item table {
-    font-size: 12px;
-    border-collapse: collapse;
-    width: 100%;
+
+.wpk-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 22px;
+    margin-top: 22px;
+    align-items: start;
 }
-.wpk-shortcode-item table th {
-    font-weight: 600;
-    color: var(--wpk-ink);
-    padding: 3px 14px 3px 0;
-    text-align: left;
-    white-space: nowrap;
-    vertical-align: top;
-}
-.wpk-shortcode-item table th code {
-    background: rgba(29,35,39,.06);
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-size: 11.5px;
-}
-.wpk-shortcode-item table td {
-    color: #3c434a;
-    padding: 3px 0;
-    line-height: 1.5;
-}
-.wpk-shortcode-notes {
-    margin-top: 18px;
-    padding: 14px 18px;
+
+.wpk-main-panel,
+.wpk-side-card,
+.wpk-card,
+.wpk-shortcode-card {
+    background: var(--wpk-card);
     border: 1px solid var(--wpk-border);
-    border-radius: var(--wpk-radius-sm);
-    background: var(--wpk-surface-alt);
+    border-radius: var(--wpk-radius);
+    box-shadow: var(--wpk-shadow-soft);
 }
-.wpk-shortcode-notes h3 {
-    margin: 0 0 8px;
+
+.wpk-main-panel {
+    overflow: hidden;
+}
+
+.wpk-section-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    padding: 26px 28px;
+    border-bottom: 1px solid var(--wpk-border);
+    background: linear-gradient(180deg, #fff, #fbfcfe);
+}
+
+.wpk-section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.wpk-section-header .wpk-eyebrow {
+    color: var(--wpk-pro);
+    opacity: 1;
+}
+
+.wpk-settings-form .wpk-card,
+.wpk-shortcode-grid {
+    margin: 22px 28px;
+}
+
+.wpk-card {
+    padding: 22px;
+}
+
+.wpk-card--setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.wpk-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.wpk-setting-copy h3,
+.wpk-card h3,
+.wpk-side-card h2,
+.wpk-shortcode-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.wpk-setting-copy p,
+.wpk-card__header p,
+.wpk-field p,
+.wpk-side-card p,
+.wpk-shortcode-card p,
+.wpk-form-footer p {
+    margin: 7px 0 0;
+    color: var(--wpk-muted);
     font-size: 13px;
-    font-weight: 600;
-    color: var(--wpk-ink);
-}
-.wpk-shortcode-notes ul {
-    margin: 0;
-    padding-left: 18px;
-    list-style: disc;
-}
-.wpk-shortcode-notes li {
-    font-size: 12.5px;
-    color: #3c434a;
-    padding: 3px 0;
     line-height: 1.55;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   SHORTCODE — front-end passkey buttons
-   ────────────────────────────────────────────────────────────────────────── */
-
-.wpk-shortcode-login-wrap,
-.wpk-shortcode-register-wrap {
+.wpk-switch {
+    position: relative;
     display: inline-flex;
-    flex-direction: column;
-    gap: 8px;
+    cursor: pointer;
 }
 
-/* Shortcode variant: auto-width (not 100% like the login-page version) */
-.wpk-sc-btn {
+.wpk-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wpk-switch__track {
+    position: relative;
+    display: inline-flex;
+    width: 54px;
+    height: 30px;
+    border-radius: 999px;
+    background: #cbd5df;
+    transition: background 160ms ease;
+}
+
+.wpk-switch__thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(29, 35, 39, 0.22);
+    transition: transform 160ms ease;
+}
+
+.wpk-switch input:checked + .wpk-switch__track {
+    background: var(--wpk-pro);
+}
+
+.wpk-switch input:checked + .wpk-switch__track .wpk-switch__thumb {
+    transform: translateX(24px);
+}
+
+.wpk-role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.wpk-role-chip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--wpk-border);
+    border-radius: 12px;
+    background: var(--wpk-muted-bg);
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.wpk-role-chip input {
+    accent-color: var(--wpk-pro);
+}
+
+.wpk-grid-2,
+.wpk-grid-3 {
+    display: grid;
+    gap: 18px;
+}
+
+.wpk-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wpk-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpk-field label,
+.wpk-label-row label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--wpk-ink);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.wpk-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.wpk-label-row label {
+    margin-bottom: 0;
+}
+
+.wpk-field input[type="text"],
+.wpk-field input[type="number"],
+.wpk-field select {
+    width: 100%;
+    max-width: none;
+    min-height: 42px;
+    border-radius: 10px;
+    border-color: var(--wpk-border-strong);
+    color: var(--wpk-ink);
+    background-color: #fff;
+}
+
+.wpk-field input:focus,
+.wpk-field select:focus {
+    border-color: var(--wpk-pro);
+    box-shadow: 0 0 0 3px rgba(126, 91, 239, 0.14);
+    outline: none;
+}
+
+.wpk-badge {
+    padding: 7px 9px;
+    color: var(--wpk-muted);
+    background: var(--wpk-muted-bg);
+    border: 1px solid var(--wpk-border);
+}
+
+.wpk-badge--pro {
+    color: var(--wpk-pro-dark);
+    background: rgba(126, 91, 239, 0.1);
+    border-color: rgba(126, 91, 239, 0.22);
+}
+
+.wpk-badge--success {
+    color: var(--wpk-success);
+    background: var(--wpk-success-bg);
+    border-color: rgba(21, 128, 61, 0.16);
+}
+
+.wpk-button,
+.wp-core-ui .wpk-save-button {
     display: inline-flex !important;
-    width: auto !important;
-    padding: 0 20px !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px !important;
+    padding: 0 16px !important;
+    border-radius: 10px !important;
+    border: 0 !important;
+    font-weight: 750 !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.wpk-button:hover,
+.wp-core-ui .wpk-save-button:hover {
+    transform: translateY(-1px);
+}
+
+.wp-core-ui .wpk-save-button {
+    background: var(--wpk-ink) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 20px rgba(29, 35, 39, 0.18) !important;
+}
+
+.wpk-button--ghost {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.wpk-button--pro {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    color: #fff !important;
+    background: var(--wpk-pro);
+    box-shadow: 0 12px 24px rgba(126, 91, 239, 0.28);
+    text-align: center;
+}
+
+.wpk-button--pro:hover,
+.wpk-button--pro:focus {
+    color: #fff !important;
+    background: var(--wpk-pro-deep);
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(126, 91, 239, 0.38);
+}
+
+.wpk-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 28px;
+    background: var(--wpk-muted-bg);
+    border-top: 1px solid var(--wpk-border);
+}
+
+.wpk-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.wpk-side-card {
+    padding: 22px;
+}
+
+.wpk-side-card--pro {
+    color: #fff;
+    background:
+        radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.28), transparent 30%),
+        linear-gradient(145deg, var(--wpk-pro), #4f33ba);
+    border-color: rgba(126, 91, 239, 0.2);
+}
+
+.wpk-side-card--pro p,
+.wpk-side-card--pro li,
+.wpk-side-card--pro h2 {
+    color: #fff;
+}
+
+.wpk-side-card--pro p,
+.wpk-side-card--pro li {
+    opacity: 0.88;
+}
+
+.wpk-side-card--pro .wpk-badge--pro {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.wpk-side-card ul,
+.wpk-checklist {
+    margin: 16px 0 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.wpk-side-card li,
+.wpk-checklist li,
+.wpk-compat-list span {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.wpk-side-card ul li::before,
+.wpk-checklist li::before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 50%;
+    color: var(--wpk-success);
+    background: var(--wpk-success-bg);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.wpk-side-card--pro ul li::before {
+    color: var(--wpk-pro-dark);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.wpk-compat-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.wpk-compat-list span {
+    justify-content: space-between;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--wpk-muted-bg);
+}
+
+.wpk-compat-list strong {
+    color: var(--wpk-success);
+}
+
+.wpk-shortcode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.wpk-shortcode-card {
+    padding: 22px;
+}
+
+.wpk-shortcode-card code {
+    display: block;
+    margin-top: 16px;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--wpk-border);
+    background: #111820;
+    color: #f8fafc;
+    font-size: 13px;
+    white-space: normal;
+}
+
+.wpk-shortcode-card span {
+    display: block;
+    margin-top: 12px;
+    color: var(--wpk-muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+@media (max-width: 1100px) {
+    .wpk-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .wpk-sidebar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: grid;
+    }
+}
+
+@media (max-width: 782px) {
+    .wpk-admin-wrap {
+        margin-right: 12px;
+    }
+
+    .wpk-hero,
+    .wpk-card--setting,
+    .wpk-card__header,
+    .wpk-form-footer,
+    .wpk-section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .wpk-hero {
+        padding: 24px;
+    }
+
+    .wpk-hero h1 {
+        font-size: 28px;
+    }
+
+    .wpk-role-grid,
+    .wpk-grid-2,
+    .wpk-grid-3,
+    .wpk-shortcode-grid,
+    .wpk-sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .wpk-settings-form .wpk-card,
+    .wpk-shortcode-grid {
+        margin: 16px;
+    }
+
+    .wpk-section-header,
+    .wpk-form-footer {
+        padding: 20px;
+    }
 }

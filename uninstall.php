@@ -33,8 +33,6 @@ $options = array(
     'wpk_login_redirect',
     'wpk_log_retention_days',
     'wpk_rp_name',
-    'wpk_migration_last_run',
-    'wpk_migration_imported',
 );
 
 foreach ( $options as $option ) {
