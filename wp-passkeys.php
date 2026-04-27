@@ -4,8 +4,8 @@
  * Plugin URI:  https://wppasskey.com
  * Description: Passwordless passkey login for WordPress (free / Lite). Supports Face ID, Touch ID, Windows Hello, YubiKey, and more. Upgrade to WP Passkey Pro for unlimited passkeys, WooCommerce support, audit logs, and advanced access controls.
  * Version:     1.1.0
- * Author:      Mark Best
- * Author URI:  https://lakeviewcc.net
+ * Author:      WP Passkey
+ * Author URI:  https://wppasskey.com
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-passkeys
