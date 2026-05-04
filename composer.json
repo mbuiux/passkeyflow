@@ -1,0 +1,14 @@
+{
+  "name": "mbuiux/passkeyflow",
+  "description": "PasskeyFlow for Secure Login WordPress plugin",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.0",
+    "lbuchs/webauthn": "^2.2"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
