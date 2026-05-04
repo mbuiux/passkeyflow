@@ -1,23 +1,23 @@
-# PasskeyFlow
+# PasskeyFlow for Secure Login
 
 **Passwordless passkey login for WordPress — powered by WebAuthn / FIDO2.**
 
-[![WordPress tested up to 6.8](https://img.shields.io/badge/WordPress-6.8-3858e9?logo=wordpress&logoColor=white)](https://wordpress.org)
+[![WordPress tested up to 6.9](https://img.shields.io/badge/WordPress-6.9-3858e9?logo=wordpress&logoColor=white)](https://wordpress.org)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-777bb4?logo=php&logoColor=white)](https://php.net)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/version-1.1.1-success)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.1.1-success)](readme.txt)
 
 ---
 
 ## Overview
 
-PasskeyFlow replaces passwords with passkeys — cryptographic credentials stored in your device's Secure Enclave, Windows Hello, or a hardware key like a YubiKey. Users authenticate with Face ID, Touch ID, fingerprint, or PIN: no password required.
+PasskeyFlow for Secure Login replaces passwords with passkeys — cryptographic credentials stored in your device's Secure Enclave, Windows Hello, or a hardware key like a YubiKey. Users authenticate with Face ID, Touch ID, fingerprint, or PIN: no password required.
 
-**Passkey Pro** (coming soon at [wppasskey.com](https://wppasskey.com)) adds WooCommerce checkout integration, a device health dashboard, audit log with export, and more.
+**PasskeyFlow Pro** (coming soon at [wppasskey.com](https://wppasskey.com)) adds WooCommerce checkout integration, a device health dashboard, audit log with export, and more.
 
 ---
 
-## Features (Lite)
+## Features
 
 - Passkey registration and authentication via the **WebAuthn Level 2** spec
 - Works with **Face ID, Touch ID, Windows Hello, Android biometrics, YubiKey** and any FIDO2 authenticator
@@ -53,21 +53,19 @@ PasskeyFlow replaces passwords with passkeys — cryptographic credentials store
 
 1. Upload the `passkeyflow` folder to `/wp-content/plugins/`.
 2. Activate via **Plugins → Installed Plugins**.
-3. Go to **Settings → PasskeyFlow** and enable passkeys.
+3. Go to **Settings → PasskeyFlow for Secure Login** and enable passkeys.
 4. Visit **Your Profile** and register your first passkey.
 5. Sign out and click **Sign in with Passkey** on the login page.
 
 ### From source (development)
 
 ```bash
-git clone https://github.com/your-org/passkeyflow.git
+git clone https://github.com/mbuiux/passkeyflow.git
 cd passkeyflow
 composer install
 ```
 
 Then symlink or copy the folder into your WordPress plugins directory and activate.
-
-> **Note:** The `vendor/` directory is excluded from version control. You **must** run `composer install` after cloning.
 
 ---
 
@@ -87,7 +85,7 @@ passkeyflow/
 │   ├── class-wpk-login-form.php   # Injects passkey button on wp-login.php
 │   └── class-wpk-shortcodes.php  # [wpk_login_button] and [wpk_register_button]
 ├── languages/                     # Translation files (.pot)
-├── vendor/                        # Composer dependencies (git-ignored)
+├── vendor/                        # Composer dependencies
 ├── composer.json
 ├── composer.lock
 ├── index.php                      # Silence is golden
@@ -175,13 +173,20 @@ composer require --dev squizlabs/php_codesniffer wp-coding-standards/wpcs
 ./vendor/bin/phpcs --standard=WordPress includes/ admin/ passkeyflow.php
 ```
 
-### Generating a release zip
+### Generating a release zip (local)
 
 ```bash
-composer archive --format=zip --dir=./dist --file=passkeyflow
+PLUGIN_SLUG="passkeyflow"
+DIST_DIR="dist"
+BUILD_ROOT="${DIST_DIR}/${PLUGIN_SLUG}"
+rm -rf "${DIST_DIR}"
+mkdir -p "${BUILD_ROOT}"
+cp -R admin includes languages vendor "${BUILD_ROOT}/"
+cp index.php passkeyflow.php readme.txt uninstall.php composer.json composer.lock "${BUILD_ROOT}/"
+(cd "${DIST_DIR}" && zip -r "${PLUGIN_SLUG}.zip" "${PLUGIN_SLUG}")
 ```
 
-This honours `.gitignore` and excludes `vendor/` test directories.
+The GitHub release workflow uses the same packaging structure and produces a single installable `passkeyflow.zip`.
 
 ---
 
