@@ -210,7 +210,9 @@ class PKFLOW_Passkeys {
                 continue;
             }
 
-            $wpdb->query( "RENAME TABLE {$legacy_table} TO {$new_table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $legacy_table_escaped = esc_sql( $legacy_table );
+            $new_table_escaped    = esc_sql( $new_table );
+            $wpdb->query( "RENAME TABLE {$legacy_table_escaped} TO {$new_table_escaped}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         }
     }
 
@@ -1100,7 +1102,7 @@ class PKFLOW_Passkeys {
 
             wp_set_current_user( (int) $user->ID );
             wp_set_auth_cookie( (int) $user->ID, false );
-            do_action( 'wp_login', $user->user_login, $user );
+            do_action( 'wp_login', $user->user_login, $user ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core WordPress hook.
 
             // Update sign count and last-used timestamp.
             $next_count = $web_authn->getSignatureCounter();
@@ -1158,7 +1160,7 @@ class PKFLOW_Passkeys {
             }
 
             if ( $redirect === '' ) {
-                $default  = apply_filters( 'login_redirect', admin_url(), '', $user );
+                $default  = apply_filters( 'login_redirect', admin_url(), '', $user ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core WordPress hook.
                 $redirect = $this->safe_redirect( $default, admin_url() );
             }
 
@@ -1347,23 +1349,6 @@ class PKFLOW_Passkeys {
      */
     private function has_any_user_credentials( int $user_id ): bool {
         return $this->count_user_credentials( $user_id ) > 0;
-    }
-
-    private function count_user_credentials_in_table( int $user_id, string $table_suffix ): int {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . $table_suffix;
-        $like       = $wpdb->esc_like( $table_name );
-        $exists     = (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-
-        if ( $exists !== $table_name ) {
-            return 0;
-        }
-
-        return (int) $wpdb->get_var( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-            "SELECT COUNT(*) FROM {$table_name} WHERE user_id = %d AND revoked_at IS NULL", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $user_id
-        ) );
     }
 
     private function get_credential_ids_binary( int $user_id ): array {

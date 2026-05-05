@@ -7,6 +7,10 @@
  * has opted in via the standard WordPress uninstall process.
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
     exit;
 }
@@ -68,29 +72,29 @@ function pkflow_uninstall_cleanup_current_blog(): void {
 }
 
 if ( is_multisite() ) {
-    $current_blog_id = get_current_blog_id();
+    $pkflow_current_blog_id = get_current_blog_id();
 
     $page     = 1;
     $per_page = 200;
 
     do {
-        $site_ids = get_sites( array(
+        $pkflow_site_ids = get_sites( array(
             'fields' => 'ids',
             'number' => $per_page,
             'paged'  => $page,
         ) );
 
-        foreach ( $site_ids as $site_id ) {
-            switch_to_blog( (int) $site_id );
+        foreach ( $pkflow_site_ids as $pkflow_site_id ) {
+            switch_to_blog( (int) $pkflow_site_id );
             pkflow_uninstall_cleanup_current_blog();
             restore_current_blog();
         }
 
         $page++;
-    } while ( ! empty( $site_ids ) );
+    } while ( ! empty( $pkflow_site_ids ) );
 
-    if ( get_current_blog_id() !== (int) $current_blog_id ) {
-        switch_to_blog( (int) $current_blog_id );
+    if ( get_current_blog_id() !== (int) $pkflow_current_blog_id ) {
+        switch_to_blog( (int) $pkflow_current_blog_id );
         restore_current_blog();
     }
 } else {

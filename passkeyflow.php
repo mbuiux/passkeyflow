@@ -26,38 +26,38 @@ define( 'PKFLOW_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 
 // Allow env-based constant injection (same pattern used in planning-center-sso).
 foreach ( array( 'PKFLOW_ALLOW_HTTP', 'PKFLOW_RP_ID', 'PKFLOW_RP_NAME', 'PKFLOW_CHALLENGE_TTL', 'PKFLOW_USER_VERIFICATION',
-                 'PKFLOW_RATE_WINDOW', 'PKFLOW_RATE_MAX_ATTEMPTS', 'PKFLOW_RATE_LOCKOUT', 'PKFLOW_ENABLE_LOGGING' ) as $_pkflow_const ) {
-    if ( ! defined( $_pkflow_const ) ) {
-        $v = getenv( $_pkflow_const );
-        if ( $v !== false && $v !== '' ) {
-            define( $_pkflow_const, $v );
+                 'PKFLOW_RATE_WINDOW', 'PKFLOW_RATE_MAX_ATTEMPTS', 'PKFLOW_RATE_LOCKOUT', 'PKFLOW_ENABLE_LOGGING' ) as $pkflow_env_const ) {
+    if ( ! defined( $pkflow_env_const ) ) {
+        $pkflow_env_value = getenv( $pkflow_env_const );
+        if ( $pkflow_env_value !== false && $pkflow_env_value !== '' ) {
+            define( $pkflow_env_const, $pkflow_env_value );
         }
     }
 }
-unset( $_pkflow_const, $v );
+unset( $pkflow_env_const, $pkflow_env_value );
 
 // ──────────────────────────────────────────────────────────────
 // Composer autoload (lbuchs/webauthn)
 // ──────────────────────────────────────────────────────────────
-$_pkflow_autoload = PKFLOW_PLUGIN_DIR . 'vendor/autoload.php';
-if ( PHP_VERSION_ID >= 80000 && file_exists( $_pkflow_autoload ) ) {
-    $should_load_autoloader = true;
+$pkflow_autoload = PKFLOW_PLUGIN_DIR . 'vendor/autoload.php';
+if ( PHP_VERSION_ID >= 80000 && file_exists( $pkflow_autoload ) ) {
+    $pkflow_should_load_autoloader = true;
 
-    $autoload_real = PKFLOW_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
-    if ( file_exists( $autoload_real ) ) {
-        $autoload_real_src = file_get_contents( $autoload_real );
-        if ( is_string( $autoload_real_src ) && preg_match( '/class\s+(ComposerAutoloaderInit[0-9a-fA-F_]+)/', $autoload_real_src, $m ) ) {
+    $pkflow_autoload_real = PKFLOW_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
+    if ( file_exists( $pkflow_autoload_real ) ) {
+        $pkflow_autoload_real_src = file_get_contents( $pkflow_autoload_real );
+        if ( is_string( $pkflow_autoload_real_src ) && preg_match( '/class\s+(ComposerAutoloaderInit[0-9a-fA-F_]+)/', $pkflow_autoload_real_src, $m ) ) {
             if ( ! empty( $m[1] ) && class_exists( (string) $m[1], false ) ) {
-                $should_load_autoloader = false;
+                $pkflow_should_load_autoloader = false;
             }
         }
     }
 
-    if ( $should_load_autoloader ) {
-        require_once $_pkflow_autoload;
+    if ( $pkflow_should_load_autoloader ) {
+        require_once $pkflow_autoload;
     }
 }
-unset( $_pkflow_autoload );
+unset( $pkflow_autoload, $pkflow_should_load_autoloader, $pkflow_autoload_real, $pkflow_autoload_real_src );
 
 /**
  * Copy legacy option keys into pkflow_* keys once, preserving existing values.

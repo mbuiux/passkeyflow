@@ -38,7 +38,9 @@ class PKFLOW_Settings {
             return;
         }
 
-        if ( 'POST' !== strtoupper( (string) wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) {
+        $request_method = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized immediately for method check.
+
+        if ( 'POST' !== strtoupper( $request_method ) ) {
             return;
         }
 
@@ -277,7 +279,7 @@ class PKFLOW_Settings {
             wp_die(esc_html__('You do not have permission to access this page.', 'passkeyflow'));
         }
 
-        $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'settings';
+        $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'settings'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only tab routing.
         $allowed_tabs = array('settings', 'advanced', 'shortcodes');
 
         if (!in_array($active_tab, $allowed_tabs, true)) {
@@ -328,8 +330,8 @@ class PKFLOW_Settings {
             }
         }
 
-        if ( empty( $queued_notices ) && isset( $_GET['settings-updated'] ) ) {
-            $updated = sanitize_key( wp_unslash( $_GET['settings-updated'] ) );
+        if ( empty( $queued_notices ) && isset( $_GET['settings-updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only notice rendering.
+            $updated = sanitize_key( wp_unslash( $_GET['settings-updated'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only notice rendering.
             if ( in_array( $updated, array( '1', 'true' ), true ) ) {
                 $queued_notices[] = array(
                     'type'    => 'success',
@@ -340,18 +342,18 @@ class PKFLOW_Settings {
         }
 
         $show_debug = current_user_can( 'manage_options' )
-            && isset( $_GET['pkflow_notice_debug'] )
-            && '1' === sanitize_key( wp_unslash( $_GET['pkflow_notice_debug'] ) );
+            && isset( $_GET['pkflow_notice_debug'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin debug toggle.
+            && '1' === sanitize_key( wp_unslash( $_GET['pkflow_notice_debug'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only admin debug toggle.
 
         $debug_payload = array();
         if ( $show_debug ) {
             $debug_payload = array(
-                'method'                  => isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '',
-                'page'                    => isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '',
+                'method'                  => isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostics payload.
+                'page'                    => isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostics payload.
                 'tab'                     => $active_tab,
-                'settings_updated_get'    => isset( $_GET['settings-updated'] ) ? sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) : '(absent)',
-                'post_option_page'        => isset( $_POST['option_page'] ) ? sanitize_text_field( wp_unslash( $_POST['option_page'] ) ) : '(absent)',
-                'post_action'             => isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '(absent)',
+                'settings_updated_get'    => isset( $_GET['settings-updated'] ) ? sanitize_text_field( wp_unslash( $_GET['settings-updated'] ) ) : '(absent)', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostics payload.
+                'post_option_page'        => isset( $_POST['option_page'] ) ? sanitize_text_field( wp_unslash( $_POST['option_page'] ) ) : '(absent)', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostics payload.
+                'post_action'             => isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '(absent)', // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only diagnostics payload.
                 'core_errors_count'       => count( $core_settings_errors ),
                 'transient_present'       => $transient_present ? 'yes' : 'no',
                 'queued_notices_count'    => count( $queued_notices ),
