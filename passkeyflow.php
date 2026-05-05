@@ -19,31 +19,31 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPK_VERSION',     '1.1.2' );
-define( 'WPK_PLUGIN_FILE', __FILE__ );
-define( 'WPK_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
-define( 'WPK_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
+define( 'PKFLOW_VERSION',     '1.1.2' );
+define( 'PKFLOW_PLUGIN_FILE', __FILE__ );
+define( 'PKFLOW_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
+define( 'PKFLOW_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 
 // Allow env-based constant injection (same pattern used in planning-center-sso).
-foreach ( array( 'WPK_ALLOW_HTTP', 'WPK_RP_ID', 'WPK_RP_NAME', 'WPK_CHALLENGE_TTL', 'WPK_USER_VERIFICATION',
-                 'WPK_RATE_WINDOW', 'WPK_RATE_MAX_ATTEMPTS', 'WPK_RATE_LOCKOUT', 'WPK_ENABLE_LOGGING' ) as $_wpk_const ) {
-    if ( ! defined( $_wpk_const ) ) {
-        $v = getenv( $_wpk_const );
+foreach ( array( 'PKFLOW_ALLOW_HTTP', 'PKFLOW_RP_ID', 'PKFLOW_RP_NAME', 'PKFLOW_CHALLENGE_TTL', 'PKFLOW_USER_VERIFICATION',
+                 'PKFLOW_RATE_WINDOW', 'PKFLOW_RATE_MAX_ATTEMPTS', 'PKFLOW_RATE_LOCKOUT', 'PKFLOW_ENABLE_LOGGING' ) as $_pkflow_const ) {
+    if ( ! defined( $_pkflow_const ) ) {
+        $v = getenv( $_pkflow_const );
         if ( $v !== false && $v !== '' ) {
-            define( $_wpk_const, $v );
+            define( $_pkflow_const, $v );
         }
     }
 }
-unset( $_wpk_const, $v );
+unset( $_pkflow_const, $v );
 
 // ──────────────────────────────────────────────────────────────
 // Composer autoload (lbuchs/webauthn)
 // ──────────────────────────────────────────────────────────────
-$_wpk_autoload = WPK_PLUGIN_DIR . 'vendor/autoload.php';
-if ( PHP_VERSION_ID >= 80000 && file_exists( $_wpk_autoload ) ) {
+$_pkflow_autoload = PKFLOW_PLUGIN_DIR . 'vendor/autoload.php';
+if ( PHP_VERSION_ID >= 80000 && file_exists( $_pkflow_autoload ) ) {
     $should_load_autoloader = true;
 
-    $autoload_real = WPK_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
+    $autoload_real = PKFLOW_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
     if ( file_exists( $autoload_real ) ) {
         $autoload_real_src = file_get_contents( $autoload_real );
         if ( is_string( $autoload_real_src ) && preg_match( '/class\s+(ComposerAutoloaderInit[0-9a-fA-F_]+)/', $autoload_real_src, $m ) ) {
@@ -54,51 +54,122 @@ if ( PHP_VERSION_ID >= 80000 && file_exists( $_wpk_autoload ) ) {
     }
 
     if ( $should_load_autoloader ) {
-        require_once $_wpk_autoload;
+        require_once $_pkflow_autoload;
     }
 }
-unset( $_wpk_autoload );
+unset( $_pkflow_autoload );
+
+/**
+ * Copy legacy option keys into pkflow_* keys once, preserving existing values.
+ */
+function pkflow_migrate_legacy_options_once(): void {
+    if ( (int) get_option( 'pkflow_legacy_options_migrated_v1', 0 ) === 1 ) {
+        return;
+    }
+
+    $legacy_keys = array(
+        'enabled',
+        'show_separator',
+        'show_setup_notice',
+        'eligible_roles',
+        'max_passkeys_per_user',
+        'user_verification',
+        'rp_id',
+        'rp_name',
+        'challenge_ttl',
+        'login_challenge_ttl',
+        'registration_challenge_ttl',
+        'rate_limit_window',
+        'rate_limit_max_failures',
+        'rate_limit_lockout',
+        'rate_window',
+        'rate_max_attempts',
+        'rate_lockout',
+        'login_redirect',
+        'log_retention_days',
+        'credentials_schema_v2',
+    );
+
+    foreach ( $legacy_keys as $key ) {
+        $new_option = 'pkflow_' . $key;
+        if ( get_option( $new_option, null ) !== null ) {
+            continue;
+        }
+
+        $old_option = 'wpk_' . $key;
+        $old_value  = get_option( $old_option, null );
+        if ( $old_value !== null ) {
+            update_option( $new_option, $old_value );
+        }
+    }
+
+    // Legacy free builds commonly stored a default cap of 5; move to unlimited.
+    $legacy_cap = (int) get_option( 'pkflow_max_passkeys_per_user', 0 );
+    if ( $legacy_cap === 5 ) {
+        update_option( 'pkflow_max_passkeys_per_user', 0 );
+    }
+
+    update_option( 'pkflow_legacy_options_migrated_v1', 1, false );
+}
+
+/**
+ * Ensure passkey cap defaults to unlimited for existing installs migrated earlier.
+ */
+function pkflow_remove_legacy_passkey_cap_once(): void {
+    if ( (int) get_option( 'pkflow_cap_migrated_v1', 0 ) === 1 ) {
+        return;
+    }
+
+    if ( (int) get_option( 'pkflow_max_passkeys_per_user', 0 ) === 5 ) {
+        update_option( 'pkflow_max_passkeys_per_user', 0 );
+    }
+
+    update_option( 'pkflow_cap_migrated_v1', 1, false );
+}
 
 // ──────────────────────────────────────────────────────────────
 // Load classes
 // ──────────────────────────────────────────────────────────────
-require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
-require_once WPK_PLUGIN_DIR . 'includes/class-wpk-settings.php';
-require_once WPK_PLUGIN_DIR . 'includes/class-wpk-login-form.php';
-require_once WPK_PLUGIN_DIR . 'includes/class-wpk-shortcodes.php';
-require_once WPK_PLUGIN_DIR . 'includes/class-wpk-integration-manager.php';
+require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
+require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-settings.php';
+require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-login-form.php';
+require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-shortcodes.php';
+require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-integration-manager.php';
 
 // ──────────────────────────────────────────────────────────────
 // Bootstrap
 // ──────────────────────────────────────────────────────────────
-function wpk_init() {
-    new WPK_Passkeys();
-    new WPK_Login_Form();
-    new WPK_Shortcodes();
-    new WPK_Integration_Manager();
+function pkflow_init() {
+    pkflow_migrate_legacy_options_once();
+    pkflow_remove_legacy_passkey_cap_once();
+
+    new PKFLOW_Passkeys();
+    new PKFLOW_Login_Form();
+    new PKFLOW_Shortcodes();
+    new PKFLOW_Integration_Manager();
 
     if ( is_admin() ) {
-        new WPK_Settings();
+        new PKFLOW_Settings();
     }
 }
-add_action( 'plugins_loaded', 'wpk_init' );
+add_action( 'plugins_loaded', 'pkflow_init' );
 
 /**
  * Detect whether the plugin is network-activated.
  */
-function wpk_is_network_active(): bool {
+function pkflow_is_network_active(): bool {
     if ( ! is_multisite() ) {
         return false;
     }
 
     $active = (array) get_site_option( 'active_sitewide_plugins', array() );
-    return isset( $active[ plugin_basename( WPK_PLUGIN_FILE ) ] );
+    return isset( $active[ plugin_basename( PKFLOW_PLUGIN_FILE ) ] );
 }
 
 /**
  * Run a callback for current site or across the whole network.
  */
-function wpk_for_each_site( bool $network_wide, callable $callback ): void {
+function pkflow_for_each_site( bool $network_wide, callable $callback ): void {
     if ( ! is_multisite() || ! $network_wide ) {
         $callback();
         return;
@@ -134,34 +205,34 @@ function wpk_for_each_site( bool $network_wide, callable $callback ): void {
 // ──────────────────────────────────────────────────────────────
 // Activation / deactivation
 // ──────────────────────────────────────────────────────────────
-register_activation_hook( __FILE__, 'wpk_activate' );
-register_deactivation_hook( __FILE__, 'wpk_deactivate' );
+register_activation_hook( __FILE__, 'pkflow_activate' );
+register_deactivation_hook( __FILE__, 'pkflow_deactivate' );
 
-function wpk_activate( bool $network_wide = false ) {
+function pkflow_activate( bool $network_wide = false ) {
     if ( version_compare( PHP_VERSION, '8.0', '<' ) ) {
-        deactivate_plugins( plugin_basename( WPK_PLUGIN_FILE ) );
+        deactivate_plugins( plugin_basename( PKFLOW_PLUGIN_FILE ) );
         wp_die( esc_html__( 'PasskeyFlow for Secure Login requires PHP 8.0 or higher. Please upgrade PHP before activating this plugin.', 'passkeyflow' ) );
     }
     if ( version_compare( $GLOBALS['wp_version'], '6.0', '<' ) ) {
-        deactivate_plugins( plugin_basename( WPK_PLUGIN_FILE ) );
+        deactivate_plugins( plugin_basename( PKFLOW_PLUGIN_FILE ) );
         wp_die( esc_html__( 'PasskeyFlow for Secure Login requires WordPress 6.0 or higher. Please update WordPress before activating this plugin.', 'passkeyflow' ) );
     }
 
-    require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
+    require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
 
-    wpk_for_each_site( $network_wide, static function (): void {
-        WPK_Passkeys::create_tables();
-        WPK_Passkeys::schedule_cron();
+    pkflow_for_each_site( $network_wide, static function (): void {
+        PKFLOW_Passkeys::create_tables();
+        PKFLOW_Passkeys::schedule_cron();
     } );
 
     flush_rewrite_rules();
 }
 
-function wpk_deactivate( bool $network_wide = false ) {
-    require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
+function pkflow_deactivate( bool $network_wide = false ) {
+    require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
 
-    wpk_for_each_site( $network_wide, static function (): void {
-        WPK_Passkeys::unschedule_cron();
+    pkflow_for_each_site( $network_wide, static function (): void {
+        PKFLOW_Passkeys::unschedule_cron();
     } );
 
     // Nothing else to tear down on deactivation; tables are preserved until uninstall.
@@ -170,19 +241,19 @@ function wpk_deactivate( bool $network_wide = false ) {
 /**
  * Provision plugin tables/cron when a new site is created on multisite.
  */
-function wpk_multisite_initialize_site( WP_Site $new_site ): void {
-    if ( ! wpk_is_network_active() ) {
+function pkflow_multisite_initialize_site( WP_Site $new_site ): void {
+    if ( ! pkflow_is_network_active() ) {
         return;
     }
 
-    require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
+    require_once PKFLOW_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
 
     switch_to_blog( (int) $new_site->blog_id );
-    WPK_Passkeys::create_tables();
-    WPK_Passkeys::schedule_cron();
+    PKFLOW_Passkeys::create_tables();
+    PKFLOW_Passkeys::schedule_cron();
     restore_current_blog();
 }
-add_action( 'wp_initialize_site', 'wpk_multisite_initialize_site' );
+add_action( 'wp_initialize_site', 'pkflow_multisite_initialize_site' );
 
 // ──────────────────────────────────────────────────────────────
 // Settings link on Plugins page
@@ -220,8 +291,8 @@ add_action( 'admin_notices', function () {
         return;
     }
     $warnings = array();
-    if ( defined( 'WPK_ALLOW_HTTP' ) && WPK_ALLOW_HTTP ) {
-        $warnings[] = '<strong>WPK_ALLOW_HTTP</strong> is enabled — insecure transport is allowed. Disable in production.';
+    if ( defined( 'PKFLOW_ALLOW_HTTP' ) && PKFLOW_ALLOW_HTTP ) {
+        $warnings[] = '<strong>PKFLOW_ALLOW_HTTP</strong> is enabled — insecure transport is allowed. Disable in production.';
     }
     if ( empty( $warnings ) ) {
         return;

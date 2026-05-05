@@ -1,21 +1,21 @@
 <?php
 /**
- * WPK_Passkeys — core WebAuthn engine.
+ * PKFLOW_Passkeys — core WebAuthn engine.
  *
  * Handles:
  *  - DB table creation (credentials + rate limits)
  *  - AJAX endpoints for registration, login, revocation
  *  - Rate limiting
- *  - User eligibility (configurable by role; Pro-extensible via filter)
- *  - Per-user passkey cap (Lite: max 5; Pro: extend via filter)
+ *  - User eligibility (configurable by role and filters)
+ *  - Per-user passkey cap (0 means unlimited)
  *
- * Pro extension points (filters / actions):
- *  - Filter  wpk_is_eligible_user          ( bool, WP_User )
- *  - Filter  wpk_max_passkeys_per_user      ( int,  WP_User )
- *  - Filter  wpk_login_redirect             ( string redirect_url, WP_User )
- *  - Action  wpk_passkey_registered         ( int user_id, string credential_hash )
- *  - Action  wpk_passkey_login_success      ( int user_id, string credential_hash, string device_info )
- *  - Action  wpk_passkey_revoked            ( int user_id, int credential_id )
+ * Extension points (filters / actions):
+ *  - Filter  pkflow_is_eligible_user          ( bool, WP_User )
+ *  - Filter  pkflow_max_passkeys_per_user      ( int,  WP_User )
+ *  - Filter  pkflow_login_redirect             ( string redirect_url, WP_User )
+ *  - Action  pkflow_passkey_registered         ( int user_id, string credential_hash )
+ *  - Action  pkflow_passkey_login_success      ( int user_id, string credential_hash, string device_info )
+ *  - Action  pkflow_passkey_revoked            ( int user_id, int credential_id )
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,12 +25,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 use lbuchs\WebAuthn\Binary\ByteBuffer;
 use lbuchs\WebAuthn\WebAuthn;
 
-class WPK_Passkeys {
+class PKFLOW_Passkeys {
 
     private static $instance = null;
 
-    const TABLE_CREDENTIALS = 'wpk_credentials';
-    const TABLE_RATE_LIMITS  = 'wpk_rate_limits';
+    const TABLE_CREDENTIALS = 'pkflow_credentials';
+    const TABLE_RATE_LIMITS  = 'pkflow_rate_limits';
     const DEFAULT_MAX_PASSKEYS = 0;
 
     // ──────────────────────────────────────────────────────────
@@ -38,10 +38,10 @@ class WPK_Passkeys {
     // ──────────────────────────────────────────────────────────
 
     public static function is_enabled(): bool {
-        if ( defined( 'WPK_ENABLED' ) ) {
-            return (bool) WPK_ENABLED;
+        if ( defined( 'PKFLOW_ENABLED' ) ) {
+            return (bool) PKFLOW_ENABLED;
         }
-        return (int) get_option( 'wpk_enabled', 1 ) === 1;
+        return (int) get_option( 'pkflow_enabled', 1 ) === 1;
     }
 
     /**
@@ -49,8 +49,8 @@ class WPK_Passkeys {
      * without instantiating the full class.
      */
     public static function user_is_eligible( WP_User $user ): bool {
-        $allowed_roles = (array) get_option( 'wpk_eligible_roles', array( 'administrator' ) );
-        $eligible      = apply_filters( 'wpk_is_eligible_user', null, $user );
+        $allowed_roles = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
+        $eligible      = apply_filters( 'pkflow_is_eligible_user', null, $user );
         if ( $eligible !== null ) {
             return (bool) $eligible;
         }
@@ -62,6 +62,8 @@ class WPK_Passkeys {
             return;
         }
 
+        self::migrate_legacy_table_names();
+
         if ( ! class_exists( 'lbuchs\\WebAuthn\\WebAuthn' ) ) {
             add_action( 'admin_notices', array( $this, 'render_missing_dependency_notice' ) );
             return;
@@ -70,9 +72,9 @@ class WPK_Passkeys {
         self::$instance = $this;
 
         // One-time schema patch: remove raw AAGUID storage from the shared credentials table.
-        if ( is_admin() && current_user_can( 'manage_options' ) && (int) get_option( 'wpk_credentials_schema_v2', 0 ) !== 1 ) {
+        if ( is_admin() && current_user_can( 'manage_options' ) && (int) get_option( 'pkflow_credentials_schema_v2', 0 ) !== 1 ) {
             self::ensure_credentials_schema_v2();
-            update_option( 'wpk_credentials_schema_v2', 1, false );
+            update_option( 'pkflow_credentials_schema_v2', 1, false );
         }
 
         // Profile hooks
@@ -89,21 +91,30 @@ class WPK_Passkeys {
 
         // Admin: passkey setup nudge notice
         add_action( 'admin_notices', array( $this, 'render_setup_notice' ) );
+        add_action( 'wp_ajax_pkflow_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
         add_action( 'wp_ajax_wpk_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
 
         // Cron: scheduled cleanup
-        add_action( 'wpk_scheduled_cleanup', array( $this, 'run_scheduled_cleanup' ) );
+        add_action( 'pkflow_scheduled_cleanup', array( $this, 'run_scheduled_cleanup' ) );
 
         // AJAX — authenticated (registration + revocation)
-        add_action( 'wp_ajax_wpk_begin_registration',   array( $this, 'ajax_begin_registration' ) );
-        add_action( 'wp_ajax_wpk_finish_registration',  array( $this, 'ajax_finish_registration' ) );
-        add_action( 'wp_ajax_wpk_revoke_credential',    array( $this, 'ajax_revoke_credential' ) );
+        // Keep both pkflow_* and wpk_* action names for backward compatibility.
+        add_action( 'wp_ajax_pkflow_begin_registration',   array( $this, 'ajax_begin_registration' ) );
+        add_action( 'wp_ajax_wpk_begin_registration',      array( $this, 'ajax_begin_registration' ) );
+        add_action( 'wp_ajax_pkflow_finish_registration',  array( $this, 'ajax_finish_registration' ) );
+        add_action( 'wp_ajax_wpk_finish_registration',     array( $this, 'ajax_finish_registration' ) );
+        add_action( 'wp_ajax_pkflow_revoke_credential',    array( $this, 'ajax_revoke_credential' ) );
+        add_action( 'wp_ajax_wpk_revoke_credential',       array( $this, 'ajax_revoke_credential' ) );
 
         // AJAX — public + authenticated (login)
-        add_action( 'wp_ajax_nopriv_wpk_begin_login',  array( $this, 'ajax_begin_login' ) );
-        add_action( 'wp_ajax_wpk_begin_login',          array( $this, 'ajax_begin_login' ) );
-        add_action( 'wp_ajax_nopriv_wpk_finish_login', array( $this, 'ajax_finish_login' ) );
-        add_action( 'wp_ajax_wpk_finish_login',         array( $this, 'ajax_finish_login' ) );
+        add_action( 'wp_ajax_nopriv_pkflow_begin_login',  array( $this, 'ajax_begin_login' ) );
+        add_action( 'wp_ajax_pkflow_begin_login',         array( $this, 'ajax_begin_login' ) );
+        add_action( 'wp_ajax_nopriv_wpk_begin_login',     array( $this, 'ajax_begin_login' ) );
+        add_action( 'wp_ajax_wpk_begin_login',            array( $this, 'ajax_begin_login' ) );
+        add_action( 'wp_ajax_nopriv_pkflow_finish_login', array( $this, 'ajax_finish_login' ) );
+        add_action( 'wp_ajax_pkflow_finish_login',        array( $this, 'ajax_finish_login' ) );
+        add_action( 'wp_ajax_nopriv_wpk_finish_login',    array( $this, 'ajax_finish_login' ) );
+        add_action( 'wp_ajax_wpk_finish_login',           array( $this, 'ajax_finish_login' ) );
     }
 
     public static function get_instance(): ?self {
@@ -117,6 +128,8 @@ class WPK_Passkeys {
     public static function create_tables(): void {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
+
+        self::migrate_legacy_table_names();
 
         $cred = $wpdb->prefix . self::TABLE_CREDENTIALS;
         $rate = $wpdb->prefix . self::TABLE_RATE_LIMITS;
@@ -151,7 +164,7 @@ class WPK_Passkeys {
             KEY window_expires_at (window_expires_at)
         ) $charset;";
 
-        $logs     = $wpdb->prefix . 'wpk_logs';
+        $logs     = $wpdb->prefix . 'pkflow_logs';
         $sql_logs = "CREATE TABLE $logs (
             id             BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             event_type     VARCHAR(64) NOT NULL,
@@ -169,7 +182,36 @@ class WPK_Passkeys {
         dbDelta( $sql_logs );
 
         self::ensure_credentials_schema_v2();
-        update_option( 'wpk_credentials_schema_v2', 1, false );
+        update_option( 'pkflow_credentials_schema_v2', 1, false );
+    }
+
+    /**
+     * Move legacy wpk_* table names to pkflow_* names when safe.
+     */
+    private static function migrate_legacy_table_names(): void {
+        global $wpdb;
+
+        $table_pairs = array(
+            'wpk_credentials' => self::TABLE_CREDENTIALS,
+            'wpk_rate_limits' => self::TABLE_RATE_LIMITS,
+            'wpk_logs'        => 'pkflow_logs',
+        );
+
+        foreach ( $table_pairs as $legacy_suffix => $new_suffix ) {
+            $legacy_table = $wpdb->prefix . $legacy_suffix;
+            $new_table    = $wpdb->prefix . $new_suffix;
+
+            $legacy_like = $wpdb->esc_like( $legacy_table );
+            $new_like    = $wpdb->esc_like( $new_table );
+            $legacy_row  = (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $legacy_like ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            $new_row     = (string) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $new_like ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+            if ( $legacy_row !== $legacy_table || $new_row === $new_table ) {
+                continue;
+            }
+
+            $wpdb->query( "RENAME TABLE {$legacy_table} TO {$new_table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        }
     }
 
     private static function ensure_credentials_schema_v2(): void {
@@ -192,7 +234,7 @@ class WPK_Passkeys {
         global $wpdb;
         $wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . self::TABLE_CREDENTIALS ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
         $wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . self::TABLE_RATE_LIMITS );  // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
-        $wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'wpk_logs' );               // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+        $wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'pkflow_logs' );               // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
     }
 
     // ──────────────────────────────────────────────────────────
@@ -224,7 +266,7 @@ class WPK_Passkeys {
             }
         }
 
-        if ( ! (int) get_option( 'wpk_show_setup_notice', 1 ) ) {
+        if ( ! (int) get_option( 'pkflow_show_setup_notice', 1 ) ) {
             return;
         }
 
@@ -233,7 +275,7 @@ class WPK_Passkeys {
             return;
         }
 
-        $dismissed_key = 'wpk_notice_dismissed_' . (int) $user->ID;
+        $dismissed_key = 'pkflow_notice_dismissed_' . (int) $user->ID;
         if ( get_user_meta( (int) $user->ID, $dismissed_key, true ) ) {
             return;
         }
@@ -243,7 +285,7 @@ class WPK_Passkeys {
         }
 
         $profile_url = admin_url( 'profile.php#wpk-profile-section' );
-        $nonce       = wp_create_nonce( 'wpk_dismiss_notice' );
+        $nonce       = wp_create_nonce( 'pkflow_dismiss_notice' );
         ?>
         <div class="notice notice-info is-dismissible wpk-setup-notice" data-nonce="<?php echo esc_attr( $nonce ); ?>">
             <p>
@@ -264,12 +306,12 @@ class WPK_Passkeys {
     }
 
     public function ajax_dismiss_notice(): void {
-        if ( ! check_ajax_referer( 'wpk_dismiss_notice', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_dismiss_notice', 'nonce', false ) ) {
             wp_send_json_error( null, 403 );
         }
         $user_id = get_current_user_id();
         if ( $user_id ) {
-            update_user_meta( $user_id, 'wpk_notice_dismissed_' . $user_id, 1 );
+            update_user_meta( $user_id, 'pkflow_notice_dismissed_' . $user_id, 1 );
         }
         wp_send_json_success();
     }
@@ -279,12 +321,12 @@ class WPK_Passkeys {
     // ──────────────────────────────────────────────────────────
 
     public function users_column_header( array $columns ): array {
-        $columns['wpk_passkeys'] = __( 'Passkeys', 'passkeyflow' );
+        $columns['pkflow_passkeys'] = __( 'Passkeys', 'passkeyflow' );
         return $columns;
     }
 
     public function users_column_content( string $output, string $column_name, int $user_id ): string {
-        if ( $column_name !== 'wpk_passkeys' ) {
+        if ( $column_name !== 'pkflow_passkeys' ) {
             return $output;
         }
 
@@ -316,7 +358,7 @@ class WPK_Passkeys {
     }
 
     public function users_column_sortable( array $columns ): array {
-        $columns['wpk_passkeys'] = 'wpk_passkeys';
+        $columns['pkflow_passkeys'] = 'pkflow_passkeys';
         return $columns;
     }
 
@@ -325,21 +367,21 @@ class WPK_Passkeys {
     // ──────────────────────────────────────────────────────────
 
     public static function schedule_cron(): void {
-        if ( ! wp_next_scheduled( 'wpk_scheduled_cleanup' ) ) {
-            wp_schedule_event( time(), 'daily', 'wpk_scheduled_cleanup' );
+        if ( ! wp_next_scheduled( 'pkflow_scheduled_cleanup' ) ) {
+            wp_schedule_event( time(), 'daily', 'pkflow_scheduled_cleanup' );
         }
     }
 
     public static function unschedule_cron(): void {
         if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
-            wp_clear_scheduled_hook( 'wpk_scheduled_cleanup' );
+            wp_clear_scheduled_hook( 'pkflow_scheduled_cleanup' );
             return;
         }
 
-        $timestamp = wp_next_scheduled( 'wpk_scheduled_cleanup' );
+        $timestamp = wp_next_scheduled( 'pkflow_scheduled_cleanup' );
         while ( $timestamp ) {
-            wp_unschedule_event( $timestamp, 'wpk_scheduled_cleanup' );
-            $timestamp = wp_next_scheduled( 'wpk_scheduled_cleanup' );
+            wp_unschedule_event( $timestamp, 'pkflow_scheduled_cleanup' );
+            $timestamp = wp_next_scheduled( 'pkflow_scheduled_cleanup' );
         }
     }
 
@@ -353,8 +395,8 @@ class WPK_Passkeys {
         );
 
         // Purge log rows older than the configured retention window.
-        $keep_days = max( 7, (int) get_option( 'wpk_log_retention_days', 90 ) );
-        $log_table = esc_sql( $wpdb->prefix . 'wpk_logs' );
+        $keep_days = max( 7, (int) get_option( 'pkflow_log_retention_days', 90 ) );
+        $log_table = esc_sql( $wpdb->prefix . 'pkflow_logs' );
         $wpdb->query( $wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
             "DELETE FROM {$log_table} WHERE log_timestamp < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $keep_days
@@ -379,15 +421,15 @@ class WPK_Passkeys {
 
         wp_enqueue_script(
             'wpk-profile',
-            WPK_PLUGIN_URL . 'admin/js/wpk-profile.js',
+            PKFLOW_PLUGIN_URL . 'admin/js/wpk-profile.js',
             array(),
-            WPK_VERSION,
+            PKFLOW_VERSION,
             true
         );
 
         wp_localize_script( 'wpk-profile', 'WPKProfile', array(
             'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'wpk_profile' ),
+            'nonce'    => wp_create_nonce( 'pkflow_profile' ),
             'messages' => array(
                 'labelPlaceholder' => __( 'e.g. iPhone 15, YubiKey 5', 'passkeyflow' ),
                 'starting'         => __( 'Starting passkey registration…', 'passkeyflow' ),
@@ -401,21 +443,21 @@ class WPK_Passkeys {
             ),
         ) );
 
-        wp_enqueue_style( 'wpk-admin', WPK_PLUGIN_URL . 'admin/css/wpk-admin.css', array(), WPK_VERSION );
+        wp_enqueue_style( 'wpk-admin', PKFLOW_PLUGIN_URL . 'admin/css/wpk-admin.css', array(), PKFLOW_VERSION );
     }
 
     public function enqueue_login_assets(): void {
         wp_enqueue_script(
             'wpk-login',
-            WPK_PLUGIN_URL . 'admin/js/wpk-login.js',
+            PKFLOW_PLUGIN_URL . 'admin/js/wpk-login.js',
             array(),
-            WPK_VERSION,
+            PKFLOW_VERSION,
             true
         );
 
         wp_localize_script( 'wpk-login', 'WPKLogin', array(
             'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'wpk_login' ),
+            'nonce'    => wp_create_nonce( 'pkflow_login' ),
             'messages' => array(
                 'notSupported' => __( 'Passkeys are unavailable here. Use HTTPS (or localhost) in a passkey-capable browser, or sign in with your password.', 'passkeyflow' ),
                 'genericError' => __( 'Passkey sign-in failed. Please try again or use your password.', 'passkeyflow' ),
@@ -423,7 +465,7 @@ class WPK_Passkeys {
             ),
         ) );
 
-        wp_enqueue_style( 'wpk-login', WPK_PLUGIN_URL . 'admin/css/wpk-admin.css', array(), WPK_VERSION );
+        wp_enqueue_style( 'wpk-login', PKFLOW_PLUGIN_URL . 'admin/css/wpk-admin.css', array(), PKFLOW_VERSION );
     }
 
     // ──────────────────────────────────────────────────────────
@@ -473,7 +515,7 @@ class WPK_Passkeys {
                                 (int) $max_passkeys
                             );
                             ?>
-                            <?php do_action( 'wpk_profile_limit_reached_cta', $user ); ?>
+                            <?php do_action( 'pkflow_profile_limit_reached_cta', $user ); ?>
                         </div>
                     <?php else : ?>
                         <div class="wpk-profile-register-controls">
@@ -508,7 +550,7 @@ class WPK_Passkeys {
                                 <th><?php esc_html_e( 'Label', 'passkeyflow' ); ?></th>
                                 <th><?php esc_html_e( 'Registered', 'passkeyflow' ); ?></th>
                                 <th><?php esc_html_e( 'Last Used', 'passkeyflow' ); ?></th>
-                                <?php do_action( 'wpk_profile_table_header', $user ); ?>
+                                <?php do_action( 'pkflow_profile_table_header', $user ); ?>
                                 <th><?php esc_html_e( 'Action', 'passkeyflow' ); ?></th>
                             </tr>
                         </thead>
@@ -521,7 +563,7 @@ class WPK_Passkeys {
                                     </td>
                                     <td><?php echo esc_html( $this->format_utc_datetime_for_display( (string) $cred->created_at ) ); ?></td>
                                     <td><?php echo $cred->last_used_at ? esc_html( $this->format_utc_datetime_for_display( (string) $cred->last_used_at ) ) : esc_html__( 'Never', 'passkeyflow' ); ?></td>
-                                    <?php do_action( 'wpk_profile_table_row', $cred, $user ); ?>
+                                    <?php do_action( 'pkflow_profile_table_row', $cred, $user ); ?>
                                     <td>
                                         <button class="wpk-revoke-btn wpk-passkey-revoke" type="button">
                                             <?php esc_html_e( 'Revoke', 'passkeyflow' ); ?>
@@ -558,7 +600,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
         }
 
-        if ( ! check_ajax_referer( 'wpk_profile', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
             $this->record_failure( 'reg_begin_ip', $ip );
             wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
         }
@@ -604,7 +646,7 @@ class WPK_Passkeys {
 
             $token  = wp_generate_password( 32, false, false );
             set_transient(
-                'wpk_reg_' . $token,
+                'pkflow_reg_' . $token,
                 array(
                     'user_id'   => (int) $user->ID,
                     'challenge' => base64_encode( $web_authn->getChallenge()->getBinaryString() ),
@@ -644,7 +686,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
         }
 
-        if ( ! check_ajax_referer( 'wpk_profile', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
             $this->record_failure( 'reg_finish_ip', $ip );
             wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
         }
@@ -665,14 +707,14 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Registration session expired.' ), 400 );
         }
 
-        $state = get_transient( 'wpk_reg_' . $token );
+        $state = get_transient( 'pkflow_reg_' . $token );
         if ( ! $state || empty( $state['challenge'] ) || (int) $state['user_id'] !== (int) $user->ID ) {
             $this->record_failure( 'reg_finish_ip', $ip );
             $this->record_failure( 'reg_finish_user', (int) $user->ID );
             wp_send_json_error( array( 'message' => 'Registration session expired.' ), 400 );
         }
 
-        delete_transient( 'wpk_reg_' . $token );
+        delete_transient( 'pkflow_reg_' . $token );
 
         $client_data  = isset( $_POST['clientDataJSON'] )   ? sanitize_text_field( wp_unslash( $_POST['clientDataJSON'] ) )   : '';
         $attestation  = isset( $_POST['attestationObject'] ) ? sanitize_text_field( wp_unslash( $_POST['attestationObject'] ) ) : '';
@@ -755,7 +797,7 @@ class WPK_Passkeys {
              * @param int    $user_id         WordPress user ID.
              * @param string $credential_hash SHA-256 hash of the credential ID.
              */
-            do_action( 'wpk_passkey_registered', (int) $user->ID, $cred_hash );
+            do_action( 'pkflow_passkey_registered', (int) $user->ID, $cred_hash );
 
             $this->clear_failures( 'reg_finish_ip', $ip );
             $this->clear_failures( 'reg_finish_user', (int) $user->ID );
@@ -789,7 +831,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
         }
 
-        if ( ! check_ajax_referer( 'wpk_profile', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
             $this->record_failure( 'revoke_ip', $ip );
             wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
         }
@@ -834,7 +876,7 @@ class WPK_Passkeys {
          * @param int $user_id       WordPress user ID.
          * @param int $credential_id DB row ID of the revoked credential.
          */
-        do_action( 'wpk_passkey_revoked', (int) $cred->user_id, $cred_row_id );
+        do_action( 'pkflow_passkey_revoked', (int) $cred->user_id, $cred_row_id );
 
         wp_send_json_success( array( 'message' => 'Passkey revoked.' ) );
     }
@@ -855,7 +897,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
         }
 
-        if ( ! check_ajax_referer( 'wpk_login', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_login', 'nonce', false ) ) {
             $this->record_failure( 'login_begin_ip', $ip );
             wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
         }
@@ -904,7 +946,7 @@ class WPK_Passkeys {
 
             $token = wp_generate_password( 32, false, false );
             set_transient(
-                'wpk_login_' . $token,
+                'pkflow_login_' . $token,
                 array(
                     'user_id'   => $state_uid,
                     'challenge' => base64_encode( $web_authn->getChallenge()->getBinaryString() ),
@@ -945,7 +987,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
         }
 
-        if ( ! check_ajax_referer( 'wpk_login', 'nonce', false ) ) {
+        if ( ! check_ajax_referer( 'pkflow_login', 'nonce', false ) ) {
             $this->record_failure( 'login_finish_ip', $ip );
             wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
         }
@@ -956,7 +998,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Login session expired.' ), 400 );
         }
 
-        $state = get_transient( 'wpk_login_' . $token );
+        $state = get_transient( 'pkflow_login_' . $token );
         if ( ! $state || empty( $state['challenge'] ) || ! isset( $state['user_id'] ) ) {
             $this->record_failure( 'login_finish_ip', $ip );
             wp_send_json_error( array( 'message' => 'Login session expired.' ), 400 );
@@ -968,7 +1010,7 @@ class WPK_Passkeys {
             wp_send_json_error( array( 'message' => 'Too many attempts. Please wait and try again.' ), 429 );
         }
 
-        delete_transient( 'wpk_login_' . $token );
+        delete_transient( 'pkflow_login_' . $token );
 
         $cred_id       = isset( $_POST['id'] )               ? sanitize_text_field( wp_unslash( $_POST['id'] ) )               : '';
         $client_data   = isset( $_POST['clientDataJSON'] )   ? sanitize_text_field( wp_unslash( $_POST['clientDataJSON'] ) )   : '';
@@ -1082,7 +1124,7 @@ class WPK_Passkeys {
              * @param string $credential_hash SHA-256 hash of the credential ID.
              * @param string $user_agent       Raw User-Agent string.
              */
-            do_action( 'wpk_passkey_login_success', (int) $user->ID, $cred_hash, sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ) );
+            do_action( 'pkflow_passkey_login_success', (int) $user->ID, $cred_hash, sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ) );
 
             $this->clear_failures( 'login_finish_ip', $ip );
             $this->clear_failures( 'login_finish_user', (int) $user->ID );
@@ -1098,8 +1140,8 @@ class WPK_Passkeys {
             }
             $redirect = $request_redirect !== '' ? $this->safe_redirect( $request_redirect ) : '';
 
-            if ( $redirect === '' && isset( $_COOKIE['wpk_redirect_to'] ) ) {
-                $cookie_redirect_raw = wp_unslash( $_COOKIE['wpk_redirect_to'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized via esc_url_raw/safe_redirect.
+            if ( $redirect === '' && isset( $_COOKIE['pkflow_redirect_to'] ) ) {
+                $cookie_redirect_raw = wp_unslash( $_COOKIE['pkflow_redirect_to'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized via esc_url_raw/safe_redirect.
                 if ( is_string( $cookie_redirect_raw ) ) {
                     $redirect = $this->safe_redirect( esc_url_raw( $cookie_redirect_raw ) );
                 }
@@ -1109,7 +1151,7 @@ class WPK_Passkeys {
 
             // Fall back to the settings-page redirect URL.
             if ( $redirect === '' ) {
-                $settings_redirect = (string) get_option( 'wpk_login_redirect', '' );
+                $settings_redirect = (string) get_option( 'pkflow_login_redirect', '' );
                 if ( $settings_redirect !== '' ) {
                     $redirect = $this->safe_redirect( $settings_redirect );
                 }
@@ -1127,7 +1169,7 @@ class WPK_Passkeys {
              * @param WP_User $user     Logged-in user.
              */
             // Re-validate after filter to prevent open-redirect via third-party hooks.
-            $redirect = $this->safe_redirect( (string) apply_filters( 'wpk_login_redirect', $redirect, $user ), admin_url() );
+            $redirect = $this->safe_redirect( (string) apply_filters( 'pkflow_login_redirect', $redirect, $user ), admin_url() );
 
             wp_send_json_success( array( 'redirect' => $redirect ) );
 
@@ -1154,25 +1196,25 @@ class WPK_Passkeys {
     }
 
     private function get_rp_id(): string {
-        if ( defined( 'WPK_RP_ID' ) && WPK_RP_ID ) {
-            return (string) WPK_RP_ID;
+        if ( defined( 'PKFLOW_RP_ID' ) && PKFLOW_RP_ID ) {
+            return (string) PKFLOW_RP_ID;
         }
         return (string) wp_parse_url( home_url(), PHP_URL_HOST );
     }
 
     private function get_rp_name(): string {
-        if ( defined( 'WPK_RP_NAME' ) && WPK_RP_NAME ) {
-            return (string) WPK_RP_NAME;
+        if ( defined( 'PKFLOW_RP_NAME' ) && PKFLOW_RP_NAME ) {
+            return (string) PKFLOW_RP_NAME;
         }
-        $name = get_option( 'wpk_rp_name', '' );
+        $name = get_option( 'pkflow_rp_name', '' );
         return $name !== '' ? (string) $name : (string) get_bloginfo( 'name' );
     }
 
     private function get_challenge_ttl(): int {
-        if ( defined( 'WPK_CHALLENGE_TTL' ) && (int) WPK_CHALLENGE_TTL > 30 ) {
-            return (int) WPK_CHALLENGE_TTL;
+        if ( defined( 'PKFLOW_CHALLENGE_TTL' ) && (int) PKFLOW_CHALLENGE_TTL > 30 ) {
+            return (int) PKFLOW_CHALLENGE_TTL;
         }
-        $opt = (int) get_option( 'wpk_challenge_ttl', 0 );
+        $opt = (int) get_option( 'pkflow_challenge_ttl', 0 );
         if ( $opt >= 30 ) {
             return min( 600, $opt );
         }
@@ -1180,7 +1222,7 @@ class WPK_Passkeys {
     }
 
     private function get_login_challenge_ttl(): int {
-        $opt = (int) get_option( 'wpk_login_challenge_ttl', 0 );
+        $opt = (int) get_option( 'pkflow_login_challenge_ttl', 0 );
         if ( $opt >= 30 ) {
             return min( 1200, $opt );
         }
@@ -1189,7 +1231,7 @@ class WPK_Passkeys {
     }
 
     private function get_registration_challenge_ttl(): int {
-        $opt = (int) get_option( 'wpk_registration_challenge_ttl', 0 );
+        $opt = (int) get_option( 'pkflow_registration_challenge_ttl', 0 );
         if ( $opt >= 30 ) {
             return min( 1200, $opt );
         }
@@ -1198,12 +1240,12 @@ class WPK_Passkeys {
     }
 
     private function get_user_verification(): string {
-        $opt = strtolower( (string) get_option( 'wpk_user_verification', '' ) );
+        $opt = strtolower( (string) get_option( 'pkflow_user_verification', '' ) );
         if ( in_array( $opt, array( 'required', 'preferred', 'discouraged' ), true ) ) {
             return $opt;
         }
-        if ( defined( 'WPK_USER_VERIFICATION' ) ) {
-            $v = strtolower( (string) WPK_USER_VERIFICATION );
+        if ( defined( 'PKFLOW_USER_VERIFICATION' ) ) {
+            $v = strtolower( (string) PKFLOW_USER_VERIFICATION );
             if ( in_array( $v, array( 'required', 'preferred', 'discouraged' ), true ) ) {
                 return $v;
             }
@@ -1226,17 +1268,16 @@ class WPK_Passkeys {
     private function is_eligible_user( WP_User $user ): bool {
         /**
          * Filters whether a user may register/use passkeys.
-         * Pro add-on can hook here to expand eligibility (e.g. WooCommerce customers).
          *
          * @param bool    $eligible Whether the user is eligible.
          * @param WP_User $user     The user in question.
          */
-        $eligible = apply_filters( 'wpk_is_eligible_user', null, $user );
+        $eligible = apply_filters( 'pkflow_is_eligible_user', null, $user );
         if ( $eligible !== null ) {
             return (bool) $eligible;
         }
 
-        $allowed_roles = (array) get_option( 'wpk_eligible_roles', array( 'administrator' ) );
+        $allowed_roles = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
         return ! empty( array_intersect( (array) $user->roles, $allowed_roles ) );
     }
 
@@ -1248,13 +1289,13 @@ class WPK_Passkeys {
          * @param int     $max  Current cap.
          * @param WP_User $user The user.
          */
-        $filtered = apply_filters( 'wpk_max_passkeys_per_user', null, $user );
+        $filtered = apply_filters( 'pkflow_max_passkeys_per_user', null, $user );
         if ( $filtered !== null ) {
             $filtered = (int) $filtered;
             return $filtered <= 0 ? PHP_INT_MAX : max( 1, $filtered );
         }
 
-        $setting = (int) get_option( 'wpk_max_passkeys_per_user', self::DEFAULT_MAX_PASSKEYS );
+        $setting = (int) get_option( 'pkflow_max_passkeys_per_user', self::DEFAULT_MAX_PASSKEYS );
         return $setting <= 0 ? PHP_INT_MAX : max( 1, $setting );
     }
 
@@ -1302,14 +1343,10 @@ class WPK_Passkeys {
     }
 
     /**
-     * Suppress setup nudge when credentials exist in Lite or legacy Pro table.
+     * Suppress setup nudge when credentials already exist.
      */
     private function has_any_user_credentials( int $user_id ): bool {
-        if ( $this->count_user_credentials( $user_id ) > 0 ) {
-            return true;
-        }
-
-        return $this->count_user_credentials_in_table( $user_id, 'wpkpro_credentials' ) > 0;
+        return $this->count_user_credentials( $user_id ) > 0;
     }
 
     private function count_user_credentials_in_table( int $user_id, string $table_suffix ): int {
@@ -1345,7 +1382,7 @@ class WPK_Passkeys {
     }
 
     private function clear_redirect_cookie(): void {
-        setcookie( 'wpk_redirect_to', '', array(
+        setcookie( 'pkflow_redirect_to', '', array(
             'expires'  => time() - 3600,
             'path'     => defined( 'COOKIEPATH' )   ? (string) COOKIEPATH   : '/',
             'domain'   => defined( 'COOKIE_DOMAIN' ) ? (string) COOKIE_DOMAIN : '',
@@ -1360,55 +1397,55 @@ class WPK_Passkeys {
     // ──────────────────────────────────────────────────────────
 
     private function get_rate_window(): int {
-        $opt = (int) get_option( 'wpk_rate_limit_window', 0 );
+        $opt = (int) get_option( 'pkflow_rate_limit_window', 0 );
         if ( $opt >= 60 ) {
             return min( 3600, $opt );
         }
         // Backward compatibility with pre-1.1 option keys.
-        $opt = (int) get_option( 'wpk_rate_window', 0 );
+        $opt = (int) get_option( 'pkflow_rate_window', 0 );
         if ( $opt >= 60 ) {
             return min( 3600, $opt );
         }
-        if ( defined( 'WPK_RATE_WINDOW' ) && (int) WPK_RATE_WINDOW >= 60 ) {
-            return (int) WPK_RATE_WINDOW;
+        if ( defined( 'PKFLOW_RATE_WINDOW' ) && (int) PKFLOW_RATE_WINDOW >= 60 ) {
+            return (int) PKFLOW_RATE_WINDOW;
         }
         return 300;
     }
 
     private function get_rate_max_attempts(): int {
-        $opt = (int) get_option( 'wpk_rate_limit_max_failures', 0 );
+        $opt = (int) get_option( 'pkflow_rate_limit_max_failures', 0 );
         if ( $opt >= 1 ) {
             return min( 50, $opt );
         }
         // Backward compatibility with pre-1.1 option keys.
-        $opt = (int) get_option( 'wpk_rate_max_attempts', 0 );
+        $opt = (int) get_option( 'pkflow_rate_max_attempts', 0 );
         if ( $opt >= 1 ) {
             return min( 50, $opt );
         }
-        if ( defined( 'WPK_RATE_MAX_ATTEMPTS' ) && (int) WPK_RATE_MAX_ATTEMPTS >= 1 ) {
-            return (int) WPK_RATE_MAX_ATTEMPTS;
+        if ( defined( 'PKFLOW_RATE_MAX_ATTEMPTS' ) && (int) PKFLOW_RATE_MAX_ATTEMPTS >= 1 ) {
+            return (int) PKFLOW_RATE_MAX_ATTEMPTS;
         }
         return 8;
     }
 
     private function get_rate_lockout(): int {
-        $opt = (int) get_option( 'wpk_rate_limit_lockout', 0 );
+        $opt = (int) get_option( 'pkflow_rate_limit_lockout', 0 );
         if ( $opt >= 60 ) {
             return min( 86400, $opt );
         }
         // Backward compatibility with pre-1.1 option keys.
-        $opt = (int) get_option( 'wpk_rate_lockout', 0 );
+        $opt = (int) get_option( 'pkflow_rate_lockout', 0 );
         if ( $opt >= 60 ) {
             return min( 86400, $opt );
         }
-        if ( defined( 'WPK_RATE_LOCKOUT' ) && (int) WPK_RATE_LOCKOUT >= 60 ) {
-            return (int) WPK_RATE_LOCKOUT;
+        if ( defined( 'PKFLOW_RATE_LOCKOUT' ) && (int) PKFLOW_RATE_LOCKOUT >= 60 ) {
+            return (int) PKFLOW_RATE_LOCKOUT;
         }
         return 900;
     }
 
     private function bucket_key( string $prefix, string $identifier ): string {
-        return 'wpk_' . md5( $prefix . '|' . $identifier );
+        return 'pkflow_' . md5( $prefix . '|' . $identifier );
     }
 
     private function is_locked_out( string $prefix, $identifier ): bool {
@@ -1510,7 +1547,7 @@ class WPK_Passkeys {
         }
 
         // Allow HTTP only for local/dev-style environments when explicitly enabled.
-        if ( defined( 'WPK_ALLOW_HTTP' ) && WPK_ALLOW_HTTP ) {
+        if ( defined( 'PKFLOW_ALLOW_HTTP' ) && PKFLOW_ALLOW_HTTP ) {
             if ( function_exists( 'wp_get_environment_type' ) && wp_get_environment_type() === 'production' ) {
                 return false;
             }
@@ -1535,7 +1572,7 @@ class WPK_Passkeys {
     }
 
     private function log_event( string $event, array $data = array() ): void {
-        if ( ! defined( 'WPK_ENABLE_LOGGING' ) || ! WPK_ENABLE_LOGGING ) {
+        if ( ! defined( 'PKFLOW_ENABLE_LOGGING' ) || ! PKFLOW_ENABLE_LOGGING ) {
             return;
         }
 
@@ -1553,7 +1590,7 @@ class WPK_Passkeys {
 
         global $wpdb;
         $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- append-only logging table write.
-            $wpdb->prefix . 'wpk_logs',
+            $wpdb->prefix . 'pkflow_logs',
             array(
                 'event_type'    => $event,
                 'log_timestamp' => gmdate( 'Y-m-d H:i:s' ),

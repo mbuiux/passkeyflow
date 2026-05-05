@@ -1,6 +1,6 @@
 <?php
 /**
- * WPK_Integration_Manager
+ * PKFLOW_Integration_Manager
  *
  * Adds optional passkey login modules for popular ecosystem plugins.
  * Modules are auto-enabled only when each dependency is active.
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class WPK_Integration_Manager {
+class PKFLOW_Integration_Manager {
 
     private array $registry = array();
     private array $auto_inject_rendered = array();
@@ -94,59 +94,59 @@ class WPK_Integration_Manager {
     private function build_registry(): array {
         return array(
             'woocommerce' => array(
-                'master_option'      => 'wpk_enable_woocommerce_support',
+                'master_option'      => 'pkflow_enable_woocommerce_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_woocommerce_active(),
-                'shortcode' => 'wpk_woocommerce_login',
+                'shortcode' => 'pkflow_woocommerce_login',
                 'block'     => 'passkeyflow/woocommerce-login-card',
             ),
             'edd' => array(
-                'master_option'      => 'wpk_enable_edd_support',
+                'master_option'      => 'pkflow_enable_edd_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_edd_active(),
-                'shortcode' => 'wpk_edd_login',
+                'shortcode' => 'pkflow_edd_login',
                 'block'     => 'passkeyflow/edd-login-card',
             ),
             'memberpress' => array(
-                'master_option'      => 'wpk_enable_memberpress_support',
+                'master_option'      => 'pkflow_enable_memberpress_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_memberpress_active(),
-                'shortcode' => 'wpk_memberpress_login',
+                'shortcode' => 'pkflow_memberpress_login',
                 'block'     => 'passkeyflow/memberpress-login-card',
             ),
             'ultimate_member' => array(
-                'master_option'      => 'wpk_enable_ultimate_member_support',
+                'master_option'      => 'pkflow_enable_ultimate_member_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_ultimate_member_active(),
-                'shortcode' => 'wpk_ultimate_member_login',
+                'shortcode' => 'pkflow_ultimate_member_login',
                 'block'     => 'passkeyflow/ultimate-member-login-card',
             ),
             'learndash' => array(
-                'master_option'      => 'wpk_enable_learndash_support',
+                'master_option'      => 'pkflow_enable_learndash_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_learndash_active(),
-                'shortcode' => 'wpk_learndash_login',
+                'shortcode' => 'pkflow_learndash_login',
                 'block'     => 'passkeyflow/learndash-login-card',
             ),
             'buddyboss' => array(
-                'master_option'      => 'wpk_enable_buddyboss_support',
+                'master_option'      => 'pkflow_enable_buddyboss_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_buddyboss_active(),
-                'shortcode' => 'wpk_buddyboss_login',
+                'shortcode' => 'pkflow_buddyboss_login',
                 'block'     => 'passkeyflow/buddyboss-login-card',
             ),
             'gravityforms' => array(
-                'master_option'      => 'wpk_enable_gravityforms_support',
+                'master_option'      => 'pkflow_enable_gravityforms_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_gravityforms_active(),
-                'shortcode' => 'wpk_gravityforms_login',
+                'shortcode' => 'pkflow_gravityforms_login',
                 'block'     => 'passkeyflow/gravityforms-login-card',
             ),
             'pmp' => array(
-                'master_option'      => 'wpk_enable_pmp_support',
+                'master_option'      => 'pkflow_enable_pmp_support',
                 'default_master'     => 1,
                 'dependency_active'  => $this->is_pmp_active(),
-                'shortcode' => 'wpk_pmp_login',
+                'shortcode' => 'pkflow_pmp_login',
                 'block'     => 'passkeyflow/pmp-login-card',
             ),
         );
@@ -196,7 +196,7 @@ class WPK_Integration_Manager {
                 }
 
                 return '<div class="' . $classes . '">'
-                    . do_shortcode( '[wpk_login_button allow_multiple="1" label="' . esc_attr( $label ) . '"]' )
+                    . do_shortcode( '[pkflow_login_button allow_multiple="1" label="' . esc_attr( $label ) . '"]' )
                     . '</div>';
             }
         );
@@ -247,16 +247,16 @@ class WPK_Integration_Manager {
 
         wp_register_style(
             'wpk-gutenberg-blocks',
-            WPK_PLUGIN_URL . 'admin/css/wpk-gutenberg-blocks.css',
+            PKFLOW_PLUGIN_URL . 'admin/css/wpk-gutenberg-blocks.css',
             array(),
-            WPK_VERSION
+            PKFLOW_VERSION
         );
 
         wp_register_script(
             'wpk-gutenberg-blocks',
-            WPK_PLUGIN_URL . 'admin/js/wpk-gutenberg-blocks.js',
+            PKFLOW_PLUGIN_URL . 'admin/js/wpk-gutenberg-blocks.js',
             array( 'wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor' ),
-            WPK_VERSION,
+            PKFLOW_VERSION,
             true
         );
     }
@@ -285,7 +285,7 @@ class WPK_Integration_Manager {
             'learndash'       => __( 'LearnDash', 'passkeyflow' ),
             'buddyboss'       => __( 'BuddyBoss', 'passkeyflow' ),
             'gravityforms'    => __( 'Gravity Forms', 'passkeyflow' ),
-            'pmp'             => __( 'Paid Memberships Pro', 'passkeyflow' ),
+            'pmp'             => __( 'PMPro', 'passkeyflow' ),
             'woocommerce'     => __( 'WooCommerce', 'passkeyflow' ),
             'edd'             => __( 'Easy Digital Downloads', 'passkeyflow' ),
             'memberpress'     => __( 'MemberPress', 'passkeyflow' ),
@@ -325,11 +325,12 @@ class WPK_Integration_Manager {
         if ( 'memberpress' === $integration_key ) {
             add_action( 'mepr-login-form-before-submit', array( $this, 'render_memberpress_auto_inject' ) );
             add_action( 'mepr_before_login_form_submit', array( $this, 'render_memberpress_auto_inject' ) );
+            add_action( 'mepr-login-form-after-submit', array( $this, 'render_memberpress_auto_inject' ) );
             return;
         }
 
         if ( 'ultimate_member' === $integration_key ) {
-            add_action( 'um_after_login_fields', array( $this, 'render_ultimate_member_auto_inject' ) );
+            add_action( 'um_after_login_fields', array( $this, 'render_ultimate_member_auto_inject' ), 10005 );
             return;
         }
 
@@ -364,7 +365,7 @@ class WPK_Integration_Manager {
             return $content;
         }
 
-        $button = do_shortcode( '[wpk_learndash_login]' );
+        $button = do_shortcode( '[pkflow_learndash_login]' );
         if ( '' === trim( $button ) ) {
             return $content;
         }
@@ -373,27 +374,27 @@ class WPK_Integration_Manager {
     }
 
     public function render_buddyboss_auto_inject(): void {
-        $this->render_integration_auto_inject( 'buddyboss', '[wpk_buddyboss_login]' );
+        $this->render_integration_auto_inject( 'buddyboss', '[pkflow_buddyboss_login]' );
     }
 
     public function render_woocommerce_auto_inject(): void {
-        $this->render_integration_auto_inject( 'woocommerce', '[wpk_woocommerce_login]' );
+        $this->render_integration_auto_inject( 'woocommerce', '[pkflow_woocommerce_login]' );
     }
 
     public function render_edd_auto_inject(): void {
-        $this->render_integration_auto_inject( 'edd', '[wpk_edd_login]' );
+        $this->render_integration_auto_inject( 'edd', '[pkflow_edd_login]' );
     }
 
     public function render_memberpress_auto_inject(): void {
-        $this->render_integration_auto_inject( 'memberpress', '[wpk_memberpress_login]' );
+        $this->render_integration_auto_inject( 'memberpress', '[pkflow_memberpress_login]' );
     }
 
     public function render_ultimate_member_auto_inject(): void {
-        $this->render_integration_auto_inject( 'ultimate_member', '[wpk_ultimate_member_login]' );
+        $this->render_integration_auto_inject( 'ultimate_member', '[pkflow_ultimate_member_login]' );
     }
 
     public function render_pmp_auto_inject(): void {
-        $this->render_integration_auto_inject( 'pmp', '[wpk_pmp_login]' );
+        $this->render_integration_auto_inject( 'pmp', '[pkflow_pmp_login]' );
     }
 
     public function render_gravityforms_auto_inject( $form, bool $ajax ): void {
@@ -407,7 +408,7 @@ class WPK_Integration_Manager {
             return;
         }
 
-        $output = do_shortcode( '[wpk_gravityforms_login]' );
+        $output = do_shortcode( '[pkflow_gravityforms_login]' );
         if ( '' === trim( $output ) ) {
             return;
         }
@@ -420,7 +421,15 @@ class WPK_Integration_Manager {
             return;
         }
 
-        if ( isset( $this->auto_inject_rendered[ $integration_key ] ) && $this->auto_inject_rendered[ $integration_key ] ) {
+        // Prevent duplicate output from the same callback context, while still
+        // allowing the same integration to render in distinct form contexts.
+        $render_context = current_filter();
+        if ( ! is_string( $render_context ) || '' === $render_context ) {
+            $render_context = 'manual';
+        }
+
+        $render_key = $integration_key . '|' . $render_context;
+        if ( isset( $this->auto_inject_rendered[ $render_key ] ) && $this->auto_inject_rendered[ $render_key ] ) {
             return;
         }
 
@@ -430,7 +439,7 @@ class WPK_Integration_Manager {
             return;
         }
 
-        $this->auto_inject_rendered[ $integration_key ] = true;
+        $this->auto_inject_rendered[ $render_key ] = true;
         echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
@@ -466,12 +475,12 @@ class WPK_Integration_Manager {
             return;
         }
 
-        wpk_register_gravityforms_passkey_field_class();
-        if ( ! class_exists( 'WPK_GF_Field_Passkey' ) ) {
+        pkflow_register_gravityforms_passkey_field_class();
+        if ( ! class_exists( 'PKFLOW_GF_Field_Passkey' ) ) {
             return;
         }
 
-        GF_Fields::register( new WPK_GF_Field_Passkey() );
+        GF_Fields::register( new PKFLOW_GF_Field_Passkey() );
     }
 
     private function is_gravityforms_login_like_form( $form ): bool {
@@ -578,12 +587,12 @@ class WPK_Integration_Manager {
 /**
  * Register Gravity Forms custom field class lazily after GF loads.
  */
-function wpk_register_gravityforms_passkey_field_class(): void {
-    if ( ! class_exists( 'GF_Field' ) || class_exists( 'WPK_GF_Field_Passkey' ) ) {
+function pkflow_register_gravityforms_passkey_field_class(): void {
+    if ( ! class_exists( 'GF_Field' ) || class_exists( 'PKFLOW_GF_Field_Passkey' ) ) {
         return;
     }
 
-    class WPK_GF_Field_Passkey extends GF_Field {
+    class PKFLOW_GF_Field_Passkey extends GF_Field {
         public $type = 'passkey';
 
         public function get_form_editor_field_title() {
@@ -607,7 +616,7 @@ function wpk_register_gravityforms_passkey_field_class(): void {
 
         public function get_field_input( $form, $value = '', $entry = null ) {
             unset( $form, $value, $entry );
-            return do_shortcode( '[wpk_gravityforms_login]' );
+            return do_shortcode( '[pkflow_gravityforms_login]' );
         }
     }
 }
