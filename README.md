@@ -5,7 +5,7 @@
 [![WordPress tested up to 6.9](https://img.shields.io/badge/WordPress-6.9-3858e9?logo=wordpress&logoColor=white)](https://wordpress.org)
 [![PHP 8.0+](https://img.shields.io/badge/PHP-8.0%2B-777bb4?logo=php&logoColor=white)](https://php.net)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/version-1.1.1-success)](readme.txt)
+[![Version](https://img.shields.io/badge/version-1.1.2-success)](readme.txt)
 
 ---
 

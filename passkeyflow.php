@@ -3,7 +3,7 @@
  * Plugin Name: PasskeyFlow for Secure Login
  * Plugin URI:  https://github.com/mbuiux/passkeyflow.git
  * Description: PasskeyFlow for Secure Login enables passwordless passkey login for WordPress. Supports Face ID, Touch ID, Windows Hello, YubiKey, and more.
- * Version:     1.1.1
+ * Version:     1.1.2
  * Author:      mbuiux
  * Author URI:  https://profiles.wordpress.org/mbuiux/
  * License:     GPL v2 or later
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPK_VERSION',     '1.1.1' );
+define( 'WPK_VERSION',     '1.1.2' );
 define( 'WPK_PLUGIN_FILE', __FILE__ );
 define( 'WPK_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'WPK_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );

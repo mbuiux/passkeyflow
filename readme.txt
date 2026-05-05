@@ -3,7 +3,7 @@ Contributors: mbuiux
 Tags: passkeys, webauthn, passwordless, login, security
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -123,6 +123,14 @@ Yes — add `define( 'WPK_RP_ID', 'example.com' );` to `wp-config.php`.
 
 == Changelog ==
 
+= 1.1.2 =
+* Added: integration manager for popular ecosystem plugins with dependency-aware module loading
+* Added: integration-specific shortcodes and Gutenberg blocks
+* Added: integration controls in settings with installed/not installed indicators
+* Added: shortcode quick-start helper and improved shortcode documentation in admin UI
+* Changed: removed legacy shortcode alias registrations and related legacy copy
+* Changed: refreshed docs and translation template strings for current shortcode names
+
 = 1.1.1 =
 * Updated: plugin name and user-facing references to "PasskeyFlow for Secure Login"
 * Updated: settings/UI copy to use the full plugin name
@@ -142,5 +150,5 @@ Yes — add `define( 'WPK_RP_ID', 'example.com' );` to `wp-config.php`.
 
 == Upgrade Notice ==
 
-= 1.1.1 =
-Recommended update: includes full-name branding updates and documentation alignment.
+= 1.1.2 =
+Recommended update: adds integration module controls, Gutenberg block support, and shortcode UX improvements.
