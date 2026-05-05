@@ -66,6 +66,7 @@ require_once WPK_PLUGIN_DIR . 'includes/class-wpk-passkeys.php';
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-settings.php';
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-login-form.php';
 require_once WPK_PLUGIN_DIR . 'includes/class-wpk-shortcodes.php';
+require_once WPK_PLUGIN_DIR . 'includes/class-wpk-integration-manager.php';
 
 // ──────────────────────────────────────────────────────────────
 // Bootstrap
@@ -74,6 +75,7 @@ function wpk_init() {
     new WPK_Passkeys();
     new WPK_Login_Form();
     new WPK_Shortcodes();
+    new WPK_Integration_Manager();
 
     if ( is_admin() ) {
         new WPK_Settings();

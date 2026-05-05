@@ -163,6 +163,54 @@ class WPK_Settings {
             'default' => true,
         ));
 
+        register_setting($this->option_group, 'wpk_enable_woocommerce_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_edd_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_memberpress_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_ultimate_member_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_learndash_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_buddyboss_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_gravityforms_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
+        register_setting($this->option_group, 'wpk_enable_pmp_support', array(
+            'type' => 'boolean',
+            'sanitize_callback' => array($this, 'sanitize_checkbox'),
+            'default' => true,
+        ));
+
         register_setting($this->option_group, 'wpk_eligible_roles', array(
             'type' => 'array',
             'sanitize_callback' => array($this, 'sanitize_roles'),
@@ -405,12 +453,31 @@ class WPK_Settings {
         if ($active_tab === 'advanced') {
             $enabled = (bool) get_option('wpk_enabled', true);
             $show_setup_notice = (bool) get_option('wpk_show_setup_notice', true);
+            $integration_settings = class_exists( 'WPK_Integration_Manager' ) && method_exists( 'WPK_Integration_Manager', 'get_settings_registry' )
+                ? WPK_Integration_Manager::get_settings_registry()
+                : array();
             $roles = (array) get_option('wpk_eligible_roles', array('administrator'));
             $max_passkeys = absint(get_option('wpk_max_passkeys_per_user', 0));
             $verification = get_option('wpk_user_verification', 'required');
 
             echo '<input type="hidden" name="wpk_enabled" value="' . esc_attr($enabled ? '1' : '0') . '" />';
             echo '<input type="hidden" name="wpk_show_setup_notice" value="' . esc_attr($show_setup_notice ? '1' : '0') . '" />';
+
+            foreach ( $integration_settings as $integration_setting ) {
+                if ( empty( $integration_setting['master_option'] ) ) {
+                    continue;
+                }
+
+                $master_option = sanitize_key( (string) $integration_setting['master_option'] );
+
+                $dependency_active = ! empty( $integration_setting['dependency_active'] );
+                $master_value      = $dependency_active
+                    ? (bool) get_option( $master_option, ! empty( $integration_setting['default_master'] ) )
+                    : false;
+
+                echo '<input type="hidden" name="' . esc_attr( $master_option ) . '" value="' . esc_attr( $master_value ? '1' : '0' ) . '" />';
+            }
+
             foreach ($roles as $role) {
                 echo '<input type="hidden" name="wpk_eligible_roles[]" value="' . esc_attr(sanitize_key($role)) . '" />';
             }
@@ -479,6 +546,55 @@ class WPK_Settings {
                 <span class="screen-reader-text"><?php esc_html_e('Show setup alert on profile', 'passkeyflow'); ?></span>
             </label>
         </div>
+
+        <?php
+        if ( class_exists( 'WPK_Integration_Manager' ) && method_exists( 'WPK_Integration_Manager', 'get_settings_registry' ) ) {
+            $integration_settings = WPK_Integration_Manager::get_settings_registry();
+            if ( ! empty( $integration_settings ) ) {
+                ?>
+                <div class="wpk-card">
+                    <div class="wpk-card__header">
+                        <div>
+                            <h3><?php esc_html_e('Integration modules', 'passkeyflow'); ?></h3>
+                            <p><?php esc_html_e('Control each integration independently with master and auto-inject switches.', 'passkeyflow'); ?></p>
+                        </div>
+                    </div>
+                    <div class="wpk-integration-settings-grid">
+                        <?php foreach ( $integration_settings as $integration_setting ) :
+                            $label             = ! empty( $integration_setting['label'] ) ? (string) $integration_setting['label'] : __( 'Integration', 'passkeyflow' );
+                            $master_option     = ! empty( $integration_setting['master_option'] ) ? sanitize_key( (string) $integration_setting['master_option'] ) : '';
+                            $dependency_active = ! empty( $integration_setting['dependency_active'] );
+                            $default_master    = ! empty( $integration_setting['default_master'] );
+                            $saved_master_enabled = $master_option ? (bool) get_option( $master_option, $default_master ) : false;
+                            $master_enabled       = $dependency_active ? $saved_master_enabled : false;
+                            ?>
+                            <article class="wpk-integration-setting-card<?php echo $dependency_active ? ' is-active' : ' is-missing'; ?>">
+                                <header>
+                                    <h4><?php echo esc_html( $label ); ?></h4>
+                                    <span class="wpk-integration-status <?php echo $dependency_active ? 'is-active' : 'is-missing'; ?>">
+                                        <?php echo $dependency_active ? esc_html__( 'Installed', 'passkeyflow' ) : esc_html__( 'Not installed', 'passkeyflow' ); ?>
+                                    </span>
+                                </header>
+                                <p><?php esc_html_e('Enable this to add passkey blocks, shortcodes, and auto sign-in prompts.', 'passkeyflow'); ?></p>
+                                <?php if ( ! $dependency_active && $master_option ) : ?>
+                                    <input type="hidden" name="<?php echo esc_attr( $master_option ); ?>" value="0" />
+                                <?php endif; ?>
+                                <div class="wpk-integration-toggle-row">
+                                    <label><?php esc_html_e('Enable module', 'passkeyflow'); ?></label>
+                                    <label class="wpk-switch">
+                                        <input type="checkbox" name="<?php echo esc_attr( $master_option ); ?>" value="1" <?php checked( $master_enabled ); ?> <?php disabled( ! $dependency_active ); ?> />
+                                        <span class="wpk-switch__track"><span class="wpk-switch__thumb"></span></span>
+                                        <span class="screen-reader-text"><?php esc_html_e('Enable integration module', 'passkeyflow'); ?></span>
+                                    </label>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+        ?>
 
         <div class="wpk-card">
             <div class="wpk-card__header">
@@ -633,23 +749,42 @@ class WPK_Settings {
             array(
                 'title' => __('Account Passkeys', 'passkeyflow'),
                 'code' => '[wpk_passkey_profile]',
-                'description' => __('Show a user-facing passkey management area. Legacy alias: [wp_passkey_profile].', 'passkeyflow'),
+                'description' => __('Show a user-facing passkey management area.', 'passkeyflow'),
                 'placement' => __('Best for profile or dashboard pages.', 'passkeyflow'),
             ),
             array(
                 'title' => __('Conditional Prompt', 'passkeyflow'),
                 'code' => '[wpk_passkey_prompt]',
-                'description' => __('Prompt eligible users to set up passwordless login. Legacy alias: [wp_passkey_prompt].', 'passkeyflow'),
+                'description' => __('Prompt eligible users to set up passwordless login.', 'passkeyflow'),
                 'placement' => __('Best after login or checkout.', 'passkeyflow'),
             ),
         );
+
+        if ( class_exists( 'WPK_Integration_Manager' ) && method_exists( 'WPK_Integration_Manager', 'get_integration_shortcodes' ) ) {
+            $integration_shortcodes = WPK_Integration_Manager::get_integration_shortcodes();
+
+            foreach ( $integration_shortcodes as $integration_shortcode ) {
+                if ( empty( $integration_shortcode['title'] ) || empty( $integration_shortcode['code'] ) ) {
+                    continue;
+                }
+
+                $shortcodes[] = array(
+                    'title'       => sanitize_text_field( (string) $integration_shortcode['title'] ),
+                    'code'        => sanitize_text_field( (string) $integration_shortcode['code'] ),
+                    'description' => __( 'Integration-specific passkey entry point.', 'passkeyflow' ),
+                    'placement'   => __( 'Shown only when the related plugin is active.', 'passkeyflow' ),
+                );
+            }
+        }
         ?>
         <section class="wpk-section-header">
             <div>
                 <p class="wpk-eyebrow"><?php esc_html_e('Shortcodes', 'passkeyflow'); ?></p>
                 <h2><?php esc_html_e('Drop-in passkey experiences', 'passkeyflow'); ?></h2>
+                <p class="wpk-shortcode-tab-note"><?php esc_html_e('Prefer visual editing? Use matching Gutenberg blocks for login, registration, profile prompts, and active integrations or drop in shortcodes wherever you need them.', 'passkeyflow'); ?></p>
             </div>
         </section>
+
         <div class="wpk-shortcode-grid">
             <?php foreach ($shortcodes as $shortcode) : ?>
                 <article class="wpk-shortcode-card">
@@ -660,6 +795,57 @@ class WPK_Settings {
                 </article>
             <?php endforeach; ?>
         </div>
+
+        <article class="wpk-shortcode-helper-card" aria-label="<?php esc_attr_e( 'Shortcode quick start guide', 'passkeyflow' ); ?>">
+            <header class="wpk-shortcode-helper-card__header">
+                <h3><?php esc_html_e( 'Quick start: use shortcodes like a pro', 'passkeyflow' ); ?></h3>
+                <p><?php esc_html_e( 'Paste a shortcode into any page, post, or block that supports shortcodes. Then add options to control labels, redirects, and behavior.', 'passkeyflow' ); ?></p>
+            </header>
+
+            <div class="wpk-shortcode-helper-grid">
+                <section>
+                    <h4><?php esc_html_e( 'How to add one', 'passkeyflow' ); ?></h4>
+                    <ol>
+                        <li><?php esc_html_e( 'Open the page where you want passkey UI to appear.', 'passkeyflow' ); ?></li>
+                        <li><?php esc_html_e( 'Add a Shortcode block (or paste into classic content).', 'passkeyflow' ); ?></li>
+                        <li><?php esc_html_e( 'Paste a shortcode from the cards above and update the page.', 'passkeyflow' ); ?></li>
+                    </ol>
+                </section>
+
+                <section>
+                    <h4><?php esc_html_e( 'Most useful options', 'passkeyflow' ); ?></h4>
+                    <ul class="wpk-shortcode-helper-list">
+                        <li><code>label</code> <?php esc_html_e( 'Change button text.', 'passkeyflow' ); ?></li>
+                        <li><code>redirect_to</code> <?php esc_html_e( 'Send users to a specific URL after sign-in.', 'passkeyflow' ); ?></li>
+                        <li><code>class</code> <?php esc_html_e( 'Add your own CSS class for styling.', 'passkeyflow' ); ?></li>
+                        <li><code>allow_multiple</code> <?php esc_html_e( 'Allow more than one login button on a page (0 or 1).', 'passkeyflow' ); ?></li>
+                        <li><code>button_label</code> <?php esc_html_e( 'Set prompt CTA text for passkey setup prompts.', 'passkeyflow' ); ?></li>
+                    </ul>
+                </section>
+            </div>
+
+            <div class="wpk-shortcode-examples">
+                <h4><?php esc_html_e( 'Copy-and-paste examples', 'passkeyflow' ); ?></h4>
+                <div class="wpk-shortcode-examples__grid">
+                    <div>
+                        <p><?php esc_html_e( 'Custom login button + redirect', 'passkeyflow' ); ?></p>
+                        <code>[wpk_login_button label="Sign in securely" redirect_to="/my-account/"]</code>
+                    </div>
+                    <div>
+                        <p><?php esc_html_e( 'Multiple login buttons on one page', 'passkeyflow' ); ?></p>
+                        <code>[wpk_login_button allow_multiple="1" class="my-passkey-login"]</code>
+                    </div>
+                    <div>
+                        <p><?php esc_html_e( 'Custom register button label', 'passkeyflow' ); ?></p>
+                        <code>[wpk_register_button label="Add this device"]</code>
+                    </div>
+                    <div>
+                        <p><?php esc_html_e( 'Prompt users to set up passkeys', 'passkeyflow' ); ?></p>
+                        <code>[wpk_passkey_prompt title="Secure your account" button_label="Set up passkey"]</code>
+                    </div>
+                </div>
+            </div>
+        </article>
         <?php
     }
 
@@ -672,15 +858,13 @@ class WPK_Settings {
             <ul>
                 <li><?php esc_html_e('Passkey-only mode per role', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('Magic-link account recovery', 'passkeyflow'); ?></li>
-                <li><?php esc_html_e('Can be added to sites using: WooCommerce, Easy Digital Downloads, MemberPress, Ultimate Member, LearnDash, BuddyBoss, Gravity Forms, and Paid Memberships Pro.', 'passkeyflow'); ?></li>
-                <li><?php esc_html_e('Gutenberg &amp; Elementor blocks', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('Device health dashboard', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('Full audit log + CSV export', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('Conditional access by role &amp; URL', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('WP-CLI commands', 'passkeyflow'); ?></li>
                 <li><?php esc_html_e('White-label &amp; agency tools', 'passkeyflow'); ?></li>
             </ul>
-            <a href="#" class="wpk-button wpk-button--pro"><?php esc_html_e('Upgrade to Pro', 'passkeyflow'); ?></a>
+            <a href="<?php echo esc_url( 'https://wppasskey.com/pro' ); ?>" class="wpk-button wpk-button--pro" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Upgrade to Pro', 'passkeyflow'); ?></a>
         </section>
 
         <section class="wpk-side-card">
@@ -693,6 +877,25 @@ class WPK_Settings {
                 <li><?php esc_html_e('Sign out and test the login button', 'passkeyflow'); ?></li>
             </ol>
         </section>
+
+        <?php
+        if ( class_exists( 'WPK_Integration_Manager' ) && method_exists( 'WPK_Integration_Manager', 'get_available_integrations' ) ) {
+            $available_integrations = WPK_Integration_Manager::get_available_integrations();
+            if ( ! empty( $available_integrations ) ) {
+                ?>
+                <section class="wpk-side-card">
+                    <h2><?php esc_html_e('Active integrations', 'passkeyflow'); ?></h2>
+                    <p><?php esc_html_e('Passkey modules, shortcodes, and Gutenberg blocks are available for these detected plugins.', 'passkeyflow'); ?></p>
+                    <ul>
+                        <?php foreach ( $available_integrations as $integration_label ) : ?>
+                            <li><?php echo esc_html( $integration_label ); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+                <?php
+            }
+        }
+        ?>
 
         <?php
     }
