@@ -26,12 +26,14 @@ PasskeyFlow for Secure Login replaces passwords with passkeys — cryptographic 
 - Integration-aware passkey modules for **WooCommerce, Easy Digital Downloads, MemberPress, Ultimate Member, LearnDash, BuddyBoss, Gravity Forms, and PMPro**
 - Integration shortcodes and Gutenberg blocks auto-register when supported plugins are active
 - Integration modules also auto-inject passkey entry points into supported login and checkout surfaces when enabled
+- Dashboard tab with an **Authenticator Overview** card for provider distribution and usage insights
+- Dashboard tab with a **Last Login** activity card for quick, at-a-glance sign-in visibility
 - Per-role eligibility control — grant passkeys to admins only, or all users
 - Configurable per-user passkey limit (or no limit)
 - Passkey management in the **user profile** (rename, revoke, capacity indicator)
 - Dismissible admin notice prompting eligible users to register their first passkey
 - **Users list column** showing each user's passkey count
-- Tabbed settings page — Settings, Advanced, Shortcodes reference
+- Tabbed settings page — Dashboard, Settings, Advanced, Shortcodes reference
 - Rate limiting on login and revoke endpoints
 - Daily cron cleanup of expired rate-limit rows and activity logs
 - Challenge TTL, login redirect URL, RP name, and log retention are all configurable
@@ -83,6 +85,7 @@ passkeyflow/
 │   └── js/
 │       ├── wpk-login.js           # Login page WebAuthn flow
 │       ├── wpk-profile.js         # Profile page registration + revoke flow
+│       ├── wpk-dashboard.js       # Dashboard tab charts and activity rendering
 │       └── wpk-gutenberg-blocks.js # Integration block registration in editor
 ├── includes/
 │   ├── class-wpk-passkeys.php     # Core WebAuthn engine, AJAX handlers, rate limiting
@@ -260,6 +263,10 @@ The GitHub release workflow uses the same packaging structure and produces a sin
 ## Changelog
 
 See [readme.txt](readme.txt) for the full changelog in WordPress.org format.
+
+### Unreleased
+- Added Dashboard tab with an Authenticator Overview card
+- Added Last Login activity card in the Dashboard tab
 
 ### 1.1.0
 - Users list passkey-count column

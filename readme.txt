@@ -26,6 +26,8 @@ Passkeys are phishing-resistant by design. There is no password to steal, no cre
 * Includes plugin-aware integration modules for WooCommerce, Easy Digital Downloads, MemberPress, Ultimate Member, LearnDash, BuddyBoss, Gravity Forms, and PMPro
 * Integration-specific shortcodes and Gutenberg blocks are registered automatically when supported plugins are active
 * Integration modules can auto-inject passkey entry points on supported login and checkout surfaces
+* Dashboard tab with an Authenticator Overview card for quick visibility into authenticator usage
+* Dashboard tab with a Last Login card to surface recent sign-in activity at a glance
 * Configurable per-user passkey limit (or no limit)
 * Configurable eligible roles (default: administrators)
 * Built-in brute-force protection with configurable rate limiting
@@ -144,6 +146,10 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 4. The PasskeyFlow for Secure Login settings page
 
 == Changelog ==
+
+= Unreleased =
+* Added: Dashboard tab with an Authenticator Overview card
+* Added: Last Login activity card in the Dashboard tab
 
 = 1.1.2 =
 * Added: integration manager for popular ecosystem plugins with dependency-aware module loading
