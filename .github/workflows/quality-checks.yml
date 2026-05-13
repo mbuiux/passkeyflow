@@ -11,7 +11,20 @@ permissions:
   contents: read
 
 jobs:
+  workflow-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint GitHub workflows (actionlint)
+        uses: reviewdog/action-actionlint@v1
+        with:
+          fail_level: any
+
   quality-gates:
+    needs: workflow-lint
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -117,6 +130,7 @@ jobs:
             --format=json \
             --allow-root > /tmp/plugin-check-results.raw
 
+          # shellcheck disable=SC2016
           php -r '
           $raw = (string) file_get_contents("/tmp/plugin-check-results.raw");
 
