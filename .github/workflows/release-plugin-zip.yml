@@ -1,10 +1,24 @@
 name: Release Plugin ZIP
 
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag to create/use (example: v1.2.0)"
+        required: true
+        type: string
+      release_name:
+        description: "Optional release title (defaults to tag)"
+        required: false
+        type: string
+      prerelease:
+        description: "Mark release as pre-release"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -16,6 +30,44 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            RELEASE_NAME="${GITHUB_REF_NAME}"
+            PRERELEASE="false"
+          else
+            TAG_NAME="${{ inputs.tag_name }}"
+            RELEASE_NAME="${{ inputs.release_name }}"
+            PRERELEASE="${{ inputs.prerelease }}"
+            if [ -z "${RELEASE_NAME}" ]; then
+              RELEASE_NAME="${TAG_NAME}"
+            fi
+          fi
+
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag (workflow dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+
+          TAG_NAME="${{ steps.meta.outputs.tag_name }}"
+
+          if git ls-remote --tags origin "refs/tags/${TAG_NAME}" | grep -q .; then
+            echo "Tag ${TAG_NAME} already exists on origin."
+          else
+            git tag "${TAG_NAME}" "${GITHUB_SHA}"
+            git push origin "refs/tags/${TAG_NAME}"
+          fi
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -92,8 +144,10 @@ jobs:
           path: dist/advanced-passkey-login.zip
           if-no-files-found: error
 
-      - name: Attach ZIP to GitHub Release
-        if: github.event_name == 'release'
+      - name: Create or update GitHub Release and attach ZIP
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          name: ${{ steps.meta.outputs.release_name }}
+          prerelease: ${{ steps.meta.outputs.prerelease }}
           files: dist/advanced-passkey-login.zip
