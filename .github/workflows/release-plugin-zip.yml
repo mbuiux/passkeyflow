@@ -82,9 +82,9 @@ PY
             RELEASE_NAME="${GITHUB_REF_NAME}"
             PRERELEASE="false"
           else
-            TAG_NAME="${{ inputs.tag_name }}"
-            RELEASE_NAME="${{ inputs.release_name }}"
-            PRERELEASE="${{ inputs.prerelease }}"
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+            RELEASE_NAME="${{ github.event.inputs.release_name }}"
+            PRERELEASE="${{ github.event.inputs.prerelease }}"
             if [ -z "${RELEASE_NAME}" ]; then
               RELEASE_NAME="${TAG_NAME}"
             fi
