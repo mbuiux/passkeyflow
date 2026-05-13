@@ -50,26 +50,26 @@ jobs:
             "$URL" > /tmp/quality-runs.json
 
           python3 - <<'PY'
-            import json
-            import sys
+          import json
+          import sys
 
-            with open('/tmp/quality-runs.json', 'r', encoding='utf-8') as fh:
+          with open('/tmp/quality-runs.json', 'r', encoding='utf-8') as fh:
               payload = json.load(fh)
 
-            runs = payload.get('workflow_runs', [])
-            if not runs:
+          runs = payload.get('workflow_runs', [])
+          if not runs:
               print('No completed Quality Checks workflow run found for this commit.')
               sys.exit(1)
 
-            for run in runs:
+          for run in runs:
               if run.get('conclusion') == 'success':
-                print('Quality Checks passed:', run.get('html_url', ''))
-                sys.exit(0)
+                  print('Quality Checks passed:', run.get('html_url', ''))
+                  sys.exit(0)
 
-            print('Quality Checks found for commit, but none passed.')
-            for run in runs:
+          print('Quality Checks found for commit, but none passed.')
+          for run in runs:
               print('-', run.get('conclusion'), run.get('html_url', ''))
-            sys.exit(1)
+          sys.exit(1)
           PY
 
       - name: Resolve release metadata
