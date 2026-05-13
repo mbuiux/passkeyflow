@@ -66,7 +66,7 @@ jobs:
           fi
 
           # Ensure all root-level entries are expected.
-          awk -F/ -v slug="${PLUGIN_SLUG}" '$1==slug && NF>=2 {print $2}' /tmp/zip-contents.txt | sort -u > /tmp/root-entries.txt
+          awk -F/ -v slug="${PLUGIN_SLUG}" '$1==slug && NF>=2 && $2!="" {print $2}' /tmp/zip-contents.txt | sort -u > /tmp/root-entries.txt
           cat <<'EOF' | sort -u > /tmp/expected-root-entries.txt
           admin
           advanced-passkey-login.php
