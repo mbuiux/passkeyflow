@@ -119,6 +119,13 @@ jobs:
 
           php -r '
           $raw = (string) file_get_contents("/tmp/plugin-check-results.raw");
+
+            if (strpos($raw, "No errors found.") !== false) {
+              echo "Plugin Check errors: 0\n";
+              echo "Plugin Check warnings: 0\n";
+              exit(0);
+            }
+
           $start = strpos($raw, "[");
           $end = strrpos($raw, "]");
           if ($start === false || $end === false || $end < $start) {
