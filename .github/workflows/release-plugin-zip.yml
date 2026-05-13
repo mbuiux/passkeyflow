@@ -21,140 +21,11 @@ on:
         type: boolean
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
-  quality-gates:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: wordpress
-          MYSQL_USER: wp
-          MYSQL_PASSWORD: wp
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up PHP and WP-CLI
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          tools: composer:v2, wp-cli
-          coverage: none
-
-      - name: Install production dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-
-      - name: Install PHPCS + WPCS tooling
-        run: |
-          set -euo pipefail
-
-          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-          composer global require --dev \
-            squizlabs/php_codesniffer:^3 \
-            wp-coding-standards/wpcs:^3 \
-            phpcsstandards/phpcsutils:^1 \
-            phpcsstandards/phpcsextra:^1 \
-            --no-interaction --with-all-dependencies
-
-          echo "$HOME/.composer/vendor/bin" >> "$GITHUB_PATH"
-          echo "$HOME/.config/composer/vendor/bin" >> "$GITHUB_PATH"
-
-      - name: Run PHPCS (WordPress standard)
-        run: |
-          set -euo pipefail
-          phpcs --standard=WordPress --extensions=php --ignore='*/vendor/*,*/node_modules/*,*/dist/*' includes admin advanced-passkey-login.php
-
-      - name: Set up clean WordPress for Plugin Check
-        run: |
-          set -euo pipefail
-
-          WP_TEST_DIR="/tmp/wp-plugin-check"
-          rm -rf "$WP_TEST_DIR"
-          mkdir -p "$WP_TEST_DIR"
-          cd "$WP_TEST_DIR"
-
-          wp core download --allow-root
-          wp config create \
-            --dbname=wordpress \
-            --dbuser=wp \
-            --dbpass=wp \
-            --dbhost=127.0.0.1:3306 \
-            --skip-check \
-            --allow-root
-
-          for i in {1..30}; do
-            if wp db check --allow-root >/dev/null 2>&1; then
-              break
-            fi
-            if [ "$i" -eq 30 ]; then
-              echo "Timed out waiting for MySQL readiness"
-              exit 1
-            fi
-            sleep 2
-          done
-
-          wp core install \
-            --url=http://localhost \
-            --title="Plugin Check CI" \
-            --admin_user=admin \
-            --admin_password=admin \
-            --admin_email=admin@example.com \
-            --skip-email \
-            --allow-root
-
-          ln -s "$GITHUB_WORKSPACE" "$WP_TEST_DIR/wp-content/plugins/advanced-passkey-login"
-          wp plugin install plugin-check --activate --allow-root
-
-      - name: Run Plugin Check
-        run: |
-          set -euo pipefail
-
-          WP_TEST_DIR="/tmp/wp-plugin-check"
-          cd "$WP_TEST_DIR"
-
-          wp plugin check advanced-passkey-login \
-            --exclude-directories=dist,.github \
-            --exclude-files=.gitignore,.DS_Store \
-            --format=strict-json \
-            --allow-root > /tmp/plugin-check-results.json
-
-          php -r '
-          $rows = json_decode(file_get_contents("/tmp/plugin-check-results.json"), true);
-          if (!is_array($rows)) {
-              fwrite(STDERR, "Plugin Check did not return valid JSON.\n");
-              exit(2);
-          }
-          $errors = 0;
-          $warnings = 0;
-          foreach ($rows as $row) {
-              $type = strtolower((string)($row["type"] ?? ""));
-              if ($type === "error") {
-                  $errors++;
-              } elseif ($type === "warning") {
-                  $warnings++;
-              }
-          }
-          echo "Plugin Check errors: {$errors}\n";
-          echo "Plugin Check warnings: {$warnings}\n";
-          if ($errors > 0 || $warnings > 0) {
-              exit(1);
-          }
-          '
-
   build-and-attach:
-    needs: quality-gates
     runs-on: ubuntu-latest
 
     steps:
@@ -162,6 +33,44 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Verify Quality Checks passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.repository }}"
+          SHA="${GITHUB_SHA}"
+          URL="https://api.github.com/repos/${REPO}/actions/workflows/quality-checks.yml/runs?head_sha=${SHA}&status=completed&per_page=50"
+
+          curl -fsSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "$URL" > /tmp/quality-runs.json
+
+          python3 - <<'PY'
+import json
+import sys
+
+with open('/tmp/quality-runs.json', 'r', encoding='utf-8') as fh:
+    payload = json.load(fh)
+
+runs = payload.get('workflow_runs', [])
+if not runs:
+    print('No completed Quality Checks workflow run found for this commit.')
+    sys.exit(1)
+
+for run in runs:
+    if run.get('conclusion') == 'success':
+        print('Quality Checks passed:', run.get('html_url', ''))
+        sys.exit(0)
+
+print('Quality Checks found for commit, but none passed.')
+for run in runs:
+    print('-', run.get('conclusion'), run.get('html_url', ''))
+sys.exit(1)
+PY
 
       - name: Resolve release metadata
         id: meta
