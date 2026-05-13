@@ -3,7 +3,7 @@ Contributors: wppasskey, mbuiux
 Tags: passkeys, webauthn, passwordless, login, security
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -147,7 +147,7 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 
 == Changelog ==
 
-= Unreleased =
+= 1.1.4 =
 * Added: Dashboard tab with an Authenticator Overview card
 * Added: Last Login activity card in the Dashboard tab
 
@@ -177,6 +177,9 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1.4 =
+Recommended update: adds Dashboard insights for authenticator coverage and recent login activity.
 
 = 1.1.2 =
 Recommended update: adds integration module controls, Gutenberg block support, and shortcode UX improvements.
