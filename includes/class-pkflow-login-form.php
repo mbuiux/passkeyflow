@@ -1,8 +1,7 @@
 <?php
 // phpcs:ignoreFile WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
 /**
- * PKFLOW_Login_Form — injects the passkey button into wp-login.php
- * and stores any redirect_to cookie for post-login handling.
+ * PKFLOW_Login_Form — injects the passkey button into wp-login.php.
  *
  * @package PKFLOW
  */

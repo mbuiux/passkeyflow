@@ -507,10 +507,19 @@ class PKFLOW_Settings {
 			}
 		}
 
-		$notice_debug = filter_input( INPUT_GET, 'pkflow_notice_debug', FILTER_SANITIZE_NUMBER_INT );
-		$show_debug   = current_user_can( 'manage_options' )
+		$notice_debug      = filter_input( INPUT_GET, 'pkflow_notice_debug', FILTER_SANITIZE_NUMBER_INT );
+		$raw_debug_nonce   = filter_input( INPUT_GET, 'pkflow_notice_debug_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$debug_nonce_valid = false;
+
+		if ( is_string( $raw_debug_nonce ) && '' !== $raw_debug_nonce ) {
+			$debug_nonce = sanitize_text_field( $raw_debug_nonce );
+			$debug_nonce_valid = wp_verify_nonce( $debug_nonce, 'pkflow_notice_debug' );
+		}
+
+		$show_debug = current_user_can( 'manage_options' )
 			&& is_string( $notice_debug )
-			&& '1' === $notice_debug;
+			&& '1' === $notice_debug
+			&& $debug_nonce_valid;
 
 		$debug_payload = array();
 		if ( $show_debug ) {
@@ -793,10 +802,10 @@ class PKFLOW_Settings {
 							$saved_master_enabled = $master_option ? (bool) get_option( $master_option, $default_master ) : false;
 							$master_enabled       = $dependency_active ? $saved_master_enabled : false;
 							?>
-							<article class="pkflow-integration-setting-card<?php echo $dependency_active ? ' is-active' : ' is-missing'; ?>">
+							<article class="pkflow-integration-setting-card<?php echo esc_attr( $dependency_active ? ' is-active' : ' is-missing' ); ?>">
 								<header>
 									<h4><?php echo esc_html( $label ); ?></h4>
-									<span class="pkflow-integration-status <?php echo $dependency_active ? 'is-active' : 'is-missing'; ?>">
+									<span class="pkflow-integration-status <?php echo esc_attr( $dependency_active ? 'is-active' : 'is-missing' ); ?>">
 										<?php echo $dependency_active ? esc_html__( 'Installed', 'advanced-passkey-login' ) : esc_html__( 'Not installed', 'advanced-passkey-login' ); ?>
 									</span>
 								</header>

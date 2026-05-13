@@ -860,7 +860,7 @@ class PKFLOW_Integration_Manager {
 			return;
 		}
 
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo wp_kses_post( $output );
 	}
 
 	/**
@@ -893,7 +893,7 @@ class PKFLOW_Integration_Manager {
 		}
 
 		$this->auto_inject_rendered[ $render_key ] = true;
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo wp_kses_post( $output );
 	}
 
 	/**

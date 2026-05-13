@@ -826,14 +826,7 @@ class PKFLOW_Passkeys {
 		// Validate transports: decode JSON, allowlist known values, re-encode.
 		$transports       = '';
 		$transports_input = '';
-		$transports_raw   = filter_input(
-			INPUT_POST,
-			'transports',
-			FILTER_CALLBACK,
-			array(
-				'options' => 'sanitize_text_field',
-			)
-		);
+		$transports_raw   = isset( $_POST['transports'] ) ? sanitize_text_field( wp_unslash( $_POST['transports'] ) ) : '';
 		if ( is_string( $transports_raw ) ) {
 			$transports_input = wp_check_invalid_utf8( $transports_raw );
 		}
@@ -960,8 +953,9 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
 
-		$user        = wp_get_current_user();
-		$cred_row_id = isset( $_POST['credentialId'] ) ? absint( $_POST['credentialId'] ) : 0;
+		$user            = wp_get_current_user();
+		$cred_row_id_raw = isset( $_POST['credentialId'] ) ? wp_unslash( $_POST['credentialId'] ) : '';
+		$cred_row_id     = absint( $cred_row_id_raw );
 
 		if ( $cred_row_id < 1 ) {
 			wp_send_json_error( array( 'message' => 'Invalid credential.' ), 400 );

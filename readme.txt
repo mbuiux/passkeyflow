@@ -3,7 +3,7 @@ Contributors: wppasskey, mbuiux
 Tags: passkeys, webauthn, passwordless, login, security
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -147,6 +147,12 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 
 == Changelog ==
 
+= 1.1.5 =
+* Improved: sanitize-early handling for transports and credential request inputs
+* Improved: stricter nonce-gated debug query handling in settings
+* Improved: output escaping hardening for integration-rendered markup and dynamic admin classes
+* Improved: release and quality workflow validation guardrails (actionlint gate)
+
 = 1.1.4 =
 * Added: Dashboard tab with an Authenticator Overview card
 * Added: Last Login activity card in the Dashboard tab
@@ -180,6 +186,9 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1.5 =
+Recommended update: strengthens sanitize/validate/escape protections and improves CI workflow safety checks.
 
 = 1.1.4 =
 Recommended update: adds dashboard visibility, hardens request validation, and improves release packaging quality gates.
