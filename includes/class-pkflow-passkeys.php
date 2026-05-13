@@ -954,8 +954,8 @@ class PKFLOW_Passkeys {
 		}
 
 		$user            = wp_get_current_user();
-		$cred_row_id_raw = isset( $_POST['credentialId'] ) ? wp_unslash( $_POST['credentialId'] ) : '';
-		$cred_row_id     = absint( $cred_row_id_raw );
+		$cred_row_id_raw = filter_input( INPUT_POST, 'credentialId', FILTER_SANITIZE_NUMBER_INT );
+		$cred_row_id     = is_string( $cred_row_id_raw ) ? absint( $cred_row_id_raw ) : 0;
 
 		if ( $cred_row_id < 1 ) {
 			wp_send_json_error( array( 'message' => 'Invalid credential.' ), 400 );

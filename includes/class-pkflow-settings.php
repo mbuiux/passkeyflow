@@ -512,7 +512,7 @@ class PKFLOW_Settings {
 		$debug_nonce_valid = false;
 
 		if ( is_string( $raw_debug_nonce ) && '' !== $raw_debug_nonce ) {
-			$debug_nonce = sanitize_text_field( $raw_debug_nonce );
+			$debug_nonce       = sanitize_text_field( $raw_debug_nonce );
 			$debug_nonce_valid = wp_verify_nonce( $debug_nonce, 'pkflow_notice_debug' );
 		}
 
