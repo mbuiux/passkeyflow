@@ -1,11 +1,11 @@
-.pkflow-block-editor-card {
+.advapafo-block-editor-card {
     border: 1px solid #dce2e8;
     border-radius: 12px;
     background: linear-gradient(180deg, #ffffff, #f8fafc);
     padding: 16px;
 }
 
-.pkflow-block-editor-card__title {
+.advapafo-block-editor-card__title {
     margin: 0 0 8px;
     font-size: 14px;
     line-height: 1.4;
@@ -13,14 +13,14 @@
     color: #111827;
 }
 
-.pkflow-block-editor-card__hint {
+.advapafo-block-editor-card__hint {
     margin: 0 0 12px;
     font-size: 12px;
     line-height: 1.45;
     color: #6b7280;
 }
 
-.pkflow-block-editor-card .button.button-primary[disabled] {
+.advapafo-block-editor-card .button.button-primary[disabled] {
     opacity: 1;
     color: #ffffff;
     border-color: #1f2937;

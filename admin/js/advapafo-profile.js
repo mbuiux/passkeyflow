@@ -1,4 +1,4 @@
-/* global PKFLOWProfile */
+/* global ADVAPAFOProfile */
 (function () {
     'use strict';
 
@@ -57,35 +57,35 @@
     // ── DOM helpers ─────────────────────────────────────────────────────────
 
     function getDefaultMessageNode() {
-        return document.getElementById('pkflow-passkey-profile-message') || document.querySelector('.pkflow-profile-tip');
+        return document.getElementById('advapafo-passkey-profile-message') || document.querySelector('.advapafo-profile-tip');
     }
 
     function setMessage(node, text, isError) {
         node = node || getDefaultMessageNode();
         if (!node) return;
         node.textContent = text;
-        node.classList.toggle('pkflow-msg-error',   !!isError);
-        node.classList.toggle('pkflow-msg-success',  !isError && !!text);
+        node.classList.toggle('advapafo-msg-error',   !!isError);
+        node.classList.toggle('advapafo-msg-success',  !isError && !!text);
         node.style.display = text ? '' : 'none';
     }
 
     function getRegisterContext(btn) {
-        var inputId = btn ? btn.getAttribute('data-pkflow-passkey-input-id') : '';
-        var messageId = btn ? btn.getAttribute('data-pkflow-passkey-message-id') : '';
+        var inputId = btn ? btn.getAttribute('data-advapafo-passkey-input-id') : '';
+        var messageId = btn ? btn.getAttribute('data-advapafo-passkey-message-id') : '';
 
         var labelInput = inputId ? document.getElementById(inputId) : null;
         var messageNode = messageId ? document.getElementById(messageId) : null;
 
         if ((!labelInput || !messageNode) && btn && btn.closest) {
-            var root = btn.closest('.pkflow-profile-register-controls');
+            var root = btn.closest('.advapafo-profile-register-controls');
             if (root) {
-                labelInput = labelInput || root.querySelector('.pkflow-profile-label-input');
-                messageNode = messageNode || root.querySelector('.pkflow-profile-tip');
+                labelInput = labelInput || root.querySelector('.advapafo-profile-label-input');
+                messageNode = messageNode || root.querySelector('.advapafo-profile-tip');
             }
         }
 
         if (!labelInput) {
-            labelInput = document.getElementById('pkflow-passkey-label');
+            labelInput = document.getElementById('advapafo-passkey-label');
         }
         if (!messageNode) {
             messageNode = getDefaultMessageNode();
@@ -102,7 +102,7 @@
         if (msg && /did not match the expected pattern/i.test(msg)) {
             return 'Your passkey request data was invalid. Please refresh this page and try again.';
         }
-        return msg || PKFLOWProfile.messages.failed;
+        return msg || ADVAPAFOProfile.messages.failed;
     }
 
     function hydrateCreateOptions(options) {
@@ -120,7 +120,7 @@
     // ── AJAX ────────────────────────────────────────────────────────────────
 
     async function postForm(data) {
-        var resp = await fetch(PKFLOWProfile.ajaxUrl, {
+        var resp = await fetch(ADVAPAFOProfile.ajaxUrl, {
             method: 'POST',
             credentials: 'same-origin',
             body: data,
@@ -136,7 +136,7 @@
         }
 
         if (!resp.ok) {
-            throw new Error((payload && payload.data && payload.data.message) || PKFLOWProfile.messages.failed);
+            throw new Error((payload && payload.data && payload.data.message) || ADVAPAFOProfile.messages.failed);
         }
 
         return payload;
@@ -149,18 +149,18 @@
         var label = labelInput ? labelInput.value.trim() : '';
         var messageNode = context && context.messageNode ? context.messageNode : null;
 
-        setMessage(messageNode, PKFLOWProfile.messages.starting, false);
+        setMessage(messageNode, ADVAPAFOProfile.messages.starting, false);
 
         var beginData = new FormData();
-        beginData.append('action', 'pkflow_begin_registration');
-        beginData.append('nonce',  PKFLOWProfile.nonce);
+        beginData.append('action', 'advapafo_begin_registration');
+        beginData.append('nonce',  ADVAPAFOProfile.nonce);
 
         var beginResp = await postForm(beginData);
         if (!beginResp || !beginResp.success) {
-            var errMsg = (beginResp && beginResp.data && beginResp.data.message) || PKFLOWProfile.messages.failed;
+            var errMsg = (beginResp && beginResp.data && beginResp.data.message) || ADVAPAFOProfile.messages.failed;
             // Surface "limit reached" message specifically
             if (errMsg.toLowerCase().includes('maximum')) {
-                throw new Error(PKFLOWProfile.messages.limitReached || errMsg);
+                throw new Error(ADVAPAFOProfile.messages.limitReached || errMsg);
             }
             throw new Error(errMsg);
         }
@@ -169,8 +169,8 @@
         var credential = await navigator.credentials.create(options);
 
         var finishData = new FormData();
-        finishData.append('action',            'pkflow_finish_registration');
-        finishData.append('nonce',             PKFLOWProfile.nonce);
+        finishData.append('action',            'advapafo_finish_registration');
+        finishData.append('nonce',             ADVAPAFOProfile.nonce);
         finishData.append('token',             beginResp.data.token);
         finishData.append('clientDataJSON',    bufferToB64url(credential.response.clientDataJSON));
         finishData.append('attestationObject', bufferToB64url(credential.response.attestationObject));
@@ -182,10 +182,10 @@
 
         var finishResp = await postForm(finishData);
         if (!finishResp || !finishResp.success) {
-            throw new Error((finishResp && finishResp.data && finishResp.data.message) || PKFLOWProfile.messages.failed);
+            throw new Error((finishResp && finishResp.data && finishResp.data.message) || ADVAPAFOProfile.messages.failed);
         }
 
-        setMessage(messageNode, PKFLOWProfile.messages.success, false);
+        setMessage(messageNode, ADVAPAFOProfile.messages.success, false);
         setTimeout(function () { window.location.reload(); }, 800);
     }
 
@@ -196,30 +196,30 @@
         if (!credentialId) return;
 
         var data = new FormData();
-        data.append('action',       'pkflow_revoke_credential');
-        data.append('nonce',        PKFLOWProfile.nonce);
+        data.append('action',       'advapafo_revoke_credential');
+        data.append('nonce',        ADVAPAFOProfile.nonce);
         data.append('credentialId', credentialId);
 
         var resp = await postForm(data);
         if (!resp || !resp.success) {
-            throw new Error((resp && resp.data && resp.data.message) || PKFLOWProfile.messages.revokeFailed);
+            throw new Error((resp && resp.data && resp.data.message) || ADVAPAFOProfile.messages.revokeFailed);
         }
         window.location.reload();
     }
 
     function wireSetupNoticeDismiss() {
-        var notice = document.querySelector('.pkflow-setup-notice');
+        var notice = document.querySelector('.advapafo-setup-notice');
         if (!notice) return;
 
         notice.addEventListener('click', function (e) {
             if (!e.target || !e.target.classList.contains('notice-dismiss')) return;
 
             var nonce = notice.getAttribute('data-nonce');
-            var ajaxUrl = (window.PKFLOWProfile && PKFLOWProfile.ajaxUrl) ? PKFLOWProfile.ajaxUrl : (window.ajaxurl || '');
+            var ajaxUrl = (window.ADVAPAFOProfile && ADVAPAFOProfile.ajaxUrl) ? ADVAPAFOProfile.ajaxUrl : (window.ajaxurl || '');
             if (!nonce || !ajaxUrl) return;
 
             var data = new FormData();
-            data.append('action', 'pkflow_dismiss_notice');
+            data.append('action', 'advapafo_dismiss_notice');
             data.append('nonce', nonce);
 
             fetch(ajaxUrl, {
@@ -238,13 +238,13 @@
         wireSetupNoticeDismiss();
 
         // Check WebAuthn support
-        var registerButtons = Array.prototype.slice.call(document.querySelectorAll('#pkflow-passkey-register, [data-pkflow-passkey-register="1"]'));
+        var registerButtons = Array.prototype.slice.call(document.querySelectorAll('#advapafo-passkey-register, [data-advapafo-passkey-register="1"]'));
         if (registerButtons.length) {
             if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.create) {
                 registerButtons.forEach(function (btn) {
                     var context = getRegisterContext(btn);
                     btn.disabled = true;
-                    setMessage(context.messageNode, PKFLOWProfile.messages.notSupported, true);
+                    setMessage(context.messageNode, ADVAPAFOProfile.messages.notSupported, true);
                 });
                 return;
             }
@@ -266,15 +266,15 @@
         }
 
         // Revoke buttons
-        document.querySelectorAll('.pkflow-passkey-revoke').forEach(function (btn) {
+        document.querySelectorAll('.advapafo-passkey-revoke').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (!window.confirm(PKFLOWProfile.messages.confirmRevoke)) return;
+                if (!window.confirm(ADVAPAFOProfile.messages.confirmRevoke)) return;
                 var row = btn.closest('tr');
                 if (!row) return;
                 btn.disabled = true;
                 revokePasskey(row).catch(function (err) {
-                    setMessage(getDefaultMessageNode(), (err && err.message) || PKFLOWProfile.messages.revokeFailed, true);
+                    setMessage(getDefaultMessageNode(), (err && err.message) || ADVAPAFOProfile.messages.revokeFailed, true);
                     btn.disabled = false;
                 });
             });

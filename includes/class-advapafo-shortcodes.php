@@ -1,22 +1,22 @@
 <?php
 // phpcs:ignoreFile WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
 /**
- * PKFLOW_Shortcodes — front-end shortcodes for passkey login and registration.
+ * ADVAPAFO_Shortcodes — front-end shortcodes for passkey login and registration.
  *
- * [pkflow_login_button]
+ * [advapafo_login_button]
  *   Renders the passkey sign-in button on any page or post.
  *   Attributes:
  *     label        — Button text. Default: "Sign in with Passkey".
  *     redirect_to  — URL to redirect after login. Default: site home or settings value.
  *     class        — Extra CSS class(es) added to the wrapper div.
  *
- * [pkflow_register_button]
+ * [advapafo_register_button]
  *   Renders the passkey registration button for already-logged-in eligible users.
  *   Attributes:
  *     label  — Button text. Default: "Register a Passkey".
  *     class  — Extra CSS class(es) added to the wrapper div.
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Registers and renders front-end passkey shortcodes.
  */
-class PKFLOW_Shortcodes {
+class ADVAPAFO_Shortcodes {
 	/**
 	 * Prevent duplicate login button output in one request.
 	 *
@@ -40,10 +40,10 @@ class PKFLOW_Shortcodes {
 	 */
 
 	public function __construct() {
-		add_shortcode( 'pkflow_login_button', array( $this, 'render_login_button' ) );
-		add_shortcode( 'pkflow_register_button', array( $this, 'render_register_button' ) );
-		add_shortcode( 'pkflow_passkey_profile', array( $this, 'render_passkey_profile' ) );
-		add_shortcode( 'pkflow_passkey_prompt', array( $this, 'render_passkey_prompt' ) );
+		add_shortcode( 'advapafo_login_button', array( $this, 'render_login_button' ) );
+		add_shortcode( 'advapafo_register_button', array( $this, 'render_register_button' ) );
+		add_shortcode( 'advapafo_passkey_profile', array( $this, 'render_passkey_profile' ) );
+		add_shortcode( 'advapafo_passkey_prompt', array( $this, 'render_passkey_prompt' ) );
 	}
 
 	/**
@@ -55,11 +55,11 @@ class PKFLOW_Shortcodes {
 	private function user_has_active_passkey( int $user_id ): bool {
 		global $wpdb;
 
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) ) {
 			return false;
 		}
 
-		$table = $wpdb->prefix . PKFLOW_Passkeys::TABLE_CREDENTIALS;
+		$table = $wpdb->prefix . ADVAPAFO_Passkeys::TABLE_CREDENTIALS;
 		$count = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- custom credentials table presence check.
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table} WHERE user_id = %d AND revoked_at IS NULL", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name is plugin-controlled constant + prefix.
@@ -76,20 +76,20 @@ class PKFLOW_Shortcodes {
 	 * @return void
 	 */
 	private function enqueue_profile_assets(): void {
-		if ( ! wp_script_is( 'pkflow-profile', 'enqueued' ) ) {
+		if ( ! wp_script_is( 'advapafo-profile', 'enqueued' ) ) {
 			wp_enqueue_script(
-				'pkflow-profile',
-				PKFLOW_PLUGIN_URL . 'admin/js/pkflow-profile.js',
+				'advapafo-profile',
+				ADVAPAFO_PLUGIN_URL . 'admin/js/advapafo-profile.js',
 				array(),
-				PKFLOW_VERSION,
+				ADVAPAFO_VERSION,
 				true
 			);
 			wp_localize_script(
-				'pkflow-profile',
-				'PKFLOWProfile',
+				'advapafo-profile',
+				'ADVAPAFOProfile',
 				array(
 					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-					'nonce'    => wp_create_nonce( 'pkflow_profile' ),
+					'nonce'    => wp_create_nonce( 'advapafo_profile' ),
 					'messages' => array(
 						'labelPlaceholder' => __( 'e.g. iPhone 15, YubiKey 5', 'advanced-passkey-login' ),
 						'starting'         => __( 'Starting passkey registration…', 'advanced-passkey-login' ),
@@ -104,8 +104,8 @@ class PKFLOW_Shortcodes {
 				)
 			);
 		}
-		if ( ! wp_style_is( 'pkflow-admin', 'enqueued' ) ) {
-			wp_enqueue_style( 'pkflow-admin', PKFLOW_PLUGIN_URL . 'admin/css/pkflow-admin.css', array(), PKFLOW_VERSION );
+		if ( ! wp_style_is( 'advapafo-admin', 'enqueued' ) ) {
+			wp_enqueue_style( 'advapafo-admin', ADVAPAFO_PLUGIN_URL . 'admin/css/advapafo-admin.css', array(), ADVAPAFO_VERSION );
 		}
 	}
 
@@ -116,7 +116,7 @@ class PKFLOW_Shortcodes {
 	 * @return string
 	 */
 	public function render_passkey_profile( $atts ): string {
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) || ! PKFLOW_Passkeys::is_enabled() ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) || ! ADVAPAFO_Passkeys::is_enabled() ) {
 			return '';
 		}
 
@@ -129,13 +129,13 @@ class PKFLOW_Shortcodes {
 		}
 
 		$user = wp_get_current_user();
-		if ( ! PKFLOW_Passkeys::user_is_eligible( $user ) ) {
+		if ( ! ADVAPAFO_Passkeys::user_is_eligible( $user ) ) {
 			return '';
 		}
 
 		$this->enqueue_profile_assets();
 
-		$engine = PKFLOW_Passkeys::get_instance();
+		$engine = ADVAPAFO_Passkeys::get_instance();
 		if ( ! $engine ) {
 			return $this->render_register_button( $atts );
 		}
@@ -152,7 +152,7 @@ class PKFLOW_Shortcodes {
 	 * @return string
 	 */
 	public function render_passkey_prompt( $atts ): string {
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) || ! PKFLOW_Passkeys::is_enabled() ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) || ! ADVAPAFO_Passkeys::is_enabled() ) {
 			return '';
 		}
 
@@ -165,7 +165,7 @@ class PKFLOW_Shortcodes {
 		}
 
 		$user = wp_get_current_user();
-		if ( ! PKFLOW_Passkeys::user_is_eligible( $user ) ) {
+		if ( ! ADVAPAFO_Passkeys::user_is_eligible( $user ) ) {
 			return '';
 		}
 
@@ -178,7 +178,7 @@ class PKFLOW_Shortcodes {
 				'force_show'   => '0',
 			),
 			$atts,
-			'pkflow_passkey_prompt'
+			'advapafo_passkey_prompt'
 		);
 
 		$force_show = in_array( strtolower( (string) $atts['force_show'] ), array( '1', 'true', 'yes' ), true )
@@ -195,7 +195,7 @@ class PKFLOW_Shortcodes {
 		$register_markup = $this->render_register_button(
 			array(
 				'label' => $button_label,
-				'class' => 'pkflow-passkey-prompt-register',
+				'class' => 'advapafo-passkey-prompt-register',
 			)
 		);
 
@@ -203,7 +203,7 @@ class PKFLOW_Shortcodes {
 			return '';
 		}
 
-		$wrapper_class = 'pkflow-passkey-prompt' . ( '' !== $extra_class ? ' ' . $extra_class : '' );
+		$wrapper_class = 'advapafo-passkey-prompt' . ( '' !== $extra_class ? ' ' . $extra_class : '' );
 		$allowed_html  = array(
 			'div'      => array(
 				'class'           => true,
@@ -234,9 +234,9 @@ class PKFLOW_Shortcodes {
 			'button'   => array(
 				'type'                          => true,
 				'class'                         => true,
-				'data-pkflow-passkey-register'  => true,
-				'data-pkflow-passkey-input-id'  => true,
-				'data-pkflow-passkey-message-id'=> true,
+				'data-advapafo-passkey-register'  => true,
+				'data-advapafo-passkey-input-id'  => true,
+				'data-advapafo-passkey-message-id'=> true,
 				'aria-describedby'              => true,
 			),
 			'svg'      => array(
@@ -269,16 +269,16 @@ class PKFLOW_Shortcodes {
 		ob_start();
 		?>
 		<section class="<?php echo esc_attr( $wrapper_class ); ?>" aria-label="<?php esc_attr_e( 'Passkey setup prompt', 'advanced-passkey-login' ); ?>">
-			<div class="pkflow-passkey-prompt__card">
-				<p class="pkflow-passkey-prompt__eyebrow"><?php esc_html_e( 'Recommended', 'advanced-passkey-login' ); ?></p>
+			<div class="advapafo-passkey-prompt__card">
+				<p class="advapafo-passkey-prompt__eyebrow"><?php esc_html_e( 'Recommended', 'advanced-passkey-login' ); ?></p>
 				<h3><?php echo esc_html( $title ); ?></h3>
-				<p class="pkflow-passkey-prompt__copy"><?php echo esc_html( $message ); ?></p>
-				<ul class="pkflow-passkey-prompt__benefits" role="list">
+				<p class="advapafo-passkey-prompt__copy"><?php echo esc_html( $message ); ?></p>
+				<ul class="advapafo-passkey-prompt__benefits" role="list">
 					<li><?php esc_html_e( 'Biometric login in seconds', 'advanced-passkey-login' ); ?></li>
 					<li><?php esc_html_e( 'Stronger protection than passwords', 'advanced-passkey-login' ); ?></li>
 					<li><?php esc_html_e( 'Works across your trusted devices', 'advanced-passkey-login' ); ?></li>
 				</ul>
-				<div class="pkflow-passkey-prompt__actions">
+				<div class="advapafo-passkey-prompt__actions">
 					<?php echo wp_kses( $register_markup, $allowed_html ); ?>
 				</div>
 			</div>
@@ -288,11 +288,11 @@ class PKFLOW_Shortcodes {
 	}
 
 	/**
-	 * [pkflow_login_button]
+	 * [advapafo_login_button]
 	 */
 
 	public function render_login_button( $atts ): string {
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) || ! PKFLOW_Passkeys::is_enabled() ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) || ! ADVAPAFO_Passkeys::is_enabled() ) {
 			return '';
 		}
 
@@ -312,7 +312,7 @@ class PKFLOW_Shortcodes {
 				'allow_multiple' => '0',
 			),
 			$atts,
-			'pkflow_login_button'
+			'advapafo_login_button'
 		);
 
 		$allow_multiple = in_array( strtolower( (string) $atts['allow_multiple'] ), array( '1', 'true', 'yes' ), true );
@@ -327,20 +327,20 @@ class PKFLOW_Shortcodes {
 		$extra_class = implode( ' ', array_map( 'sanitize_html_class', preg_split( '/\s+/', trim( $atts['class'] ) ) ) );
 
 		// Enqueue assets if not already queued.
-		if ( ! wp_script_is( 'pkflow-login', 'enqueued' ) ) {
+		if ( ! wp_script_is( 'advapafo-login', 'enqueued' ) ) {
 			wp_enqueue_script(
-				'pkflow-login',
-				PKFLOW_PLUGIN_URL . 'admin/js/pkflow-login.js',
+				'advapafo-login',
+				ADVAPAFO_PLUGIN_URL . 'admin/js/advapafo-login.js',
 				array(),
-				PKFLOW_VERSION,
+				ADVAPAFO_VERSION,
 				true
 			);
 			wp_localize_script(
-				'pkflow-login',
-				'PKFLOWLogin',
+				'advapafo-login',
+				'ADVAPAFOLogin',
 				array(
 					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-					'nonce'    => wp_create_nonce( 'pkflow_login' ),
+					'nonce'    => wp_create_nonce( 'advapafo_login' ),
 					'messages' => array(
 						'notSupported' => __( 'Passkeys are unavailable here. Use HTTPS (or localhost) in a passkey-capable browser, or sign in with your password.', 'advanced-passkey-login' ),
 						'genericError' => __( 'Passkey sign-in failed. Please try again or use your password.', 'advanced-passkey-login' ),
@@ -349,25 +349,25 @@ class PKFLOW_Shortcodes {
 				)
 			);
 		}
-		if ( ! wp_style_is( 'pkflow-login', 'enqueued' ) ) {
-			wp_enqueue_style( 'pkflow-login', PKFLOW_PLUGIN_URL . 'admin/css/pkflow-admin.css', array(), PKFLOW_VERSION );
+		if ( ! wp_style_is( 'advapafo-login', 'enqueued' ) ) {
+			wp_enqueue_style( 'advapafo-login', ADVAPAFO_PLUGIN_URL . 'admin/css/advapafo-admin.css', array(), ADVAPAFO_VERSION );
 		}
 
-		$wrapper_class               = 'pkflow-shortcode-login-wrap' . ( $extra_class ? ' ' . $extra_class : '' );
+		$wrapper_class               = 'advapafo-shortcode-login-wrap' . ( $extra_class ? ' ' . $extra_class : '' );
 		self::$login_button_rendered = true;
 
 		ob_start();
 		?>
 		<div class="<?php echo esc_attr( $wrapper_class ); ?>">
 			<button type="button"
-					class="pkflow-passkey-btn pkflow-sc-btn pkflow-signin-passkey"
-					data-pkflow-passkey-login-btn="1"
+					class="advapafo-passkey-btn advapafo-sc-btn advapafo-signin-passkey"
+					data-advapafo-passkey-login-btn="1"
 					aria-label="<?php esc_attr_e( 'Sign in with a passkey (Face ID, Touch ID, or security key)', 'advanced-passkey-login' ); ?>"
 					<?php
 					if ( $redirect_to ) :
 						?>
 						data-redirect="<?php echo esc_attr( $redirect_to ); ?>"<?php endif; ?>>
-				<span class="pkflow-passkey-icon" aria-hidden="true">
+				<span class="advapafo-passkey-icon" aria-hidden="true">
 					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M12.4 2.7a2.5 2.5 0 0 1 3.4 0l5.5 5.5a2.5 2.5 0 0 1 0 3.4l-3.7 3.7a2.5 2.5 0 0 1-3.4 0L8.7 9.8a2.5 2.5 0 0 1 0-3.4z"/>
 						<path d="m14 7 3 3"/>
@@ -376,7 +376,7 @@ class PKFLOW_Shortcodes {
 				</span>
 				<?php echo esc_html( $label ); ?>
 			</button>
-			<p class="pkflow-login-message pkflow-is-hidden"
+			<p class="advapafo-login-message advapafo-is-hidden"
 				aria-live="polite"></p>
 		</div>
 		<?php
@@ -384,11 +384,11 @@ class PKFLOW_Shortcodes {
 	}
 
 	/**
-	 * [pkflow_register_button]
+	 * [advapafo_register_button]
 	 */
 
 	public function render_register_button( $atts ): string {
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) || ! PKFLOW_Passkeys::is_enabled() ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) || ! ADVAPAFO_Passkeys::is_enabled() ) {
 			return '';
 		}
 
@@ -402,7 +402,7 @@ class PKFLOW_Shortcodes {
 
 		$user = wp_get_current_user();
 
-		if ( ! PKFLOW_Passkeys::user_is_eligible( $user ) ) {
+		if ( ! ADVAPAFO_Passkeys::user_is_eligible( $user ) ) {
 			return '';
 		}
 
@@ -412,7 +412,7 @@ class PKFLOW_Shortcodes {
 				'class' => '',
 			),
 			$atts,
-			'pkflow_register_button'
+			'advapafo_register_button'
 		);
 
 		$label       = sanitize_text_field( $atts['label'] );
@@ -420,27 +420,27 @@ class PKFLOW_Shortcodes {
 
 		$this->enqueue_profile_assets();
 
-		$wrapper_class = 'pkflow-shortcode-register-wrap' . ( $extra_class ? ' ' . $extra_class : '' );
-		$instance_id   = wp_unique_id( 'pkflow-passkey-register-' );
+		$wrapper_class = 'advapafo-shortcode-register-wrap' . ( $extra_class ? ' ' . $extra_class : '' );
+		$instance_id   = wp_unique_id( 'advapafo-passkey-register-' );
 		$input_id      = $instance_id . '-label';
 		$message_id    = $instance_id . '-message';
 
 		ob_start();
 		?>
 		<div class="<?php echo esc_attr( $wrapper_class ); ?>">
-			<div class="pkflow-profile-register-controls">
+			<div class="advapafo-profile-register-controls">
 				<label for="<?php echo esc_attr( $input_id ); ?>" class="screen-reader-text"><?php esc_html_e( 'Device label (optional)', 'advanced-passkey-login' ); ?></label>
 				<input type="text"
 						id="<?php echo esc_attr( $input_id ); ?>"
-						class="pkflow-profile-label-input"
+						class="advapafo-profile-label-input"
 						placeholder="<?php esc_attr_e( 'Device label (optional)', 'advanced-passkey-login' ); ?>"
 						maxlength="100" />
-				<div class="pkflow-register-actions">
-					<button type="button" class="pkflow-profile-btn" data-pkflow-passkey-register="1" data-pkflow-passkey-input-id="<?php echo esc_attr( $input_id ); ?>" data-pkflow-passkey-message-id="<?php echo esc_attr( $message_id ); ?>" aria-describedby="<?php echo esc_attr( $message_id ); ?>">
+				<div class="advapafo-register-actions">
+					<button type="button" class="advapafo-profile-btn" data-advapafo-passkey-register="1" data-advapafo-passkey-input-id="<?php echo esc_attr( $input_id ); ?>" data-advapafo-passkey-message-id="<?php echo esc_attr( $message_id ); ?>" aria-describedby="<?php echo esc_attr( $message_id ); ?>">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
 						<?php echo esc_html( $label ); ?>
 					</button>
-					<p id="<?php echo esc_attr( $message_id ); ?>" class="pkflow-profile-tip" aria-live="polite"></p>
+					<p id="<?php echo esc_attr( $message_id ); ?>" class="advapafo-profile-tip" aria-live="polite"></p>
 				</div>
 			</div>
 		</div>

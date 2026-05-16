@@ -2,7 +2,7 @@
 /**
  * Advanced Passkeys for Secure Login integration manager.
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Adds optional passkey login modules for popular ecosystem plugins.
  */
-class PKFLOW_Integration_Manager {
+class ADVAPAFO_Integration_Manager {
 	/**
 	 * Integration configuration registry.
 	 *
@@ -141,59 +141,59 @@ class PKFLOW_Integration_Manager {
 	private function build_registry(): array {
 		return array(
 			'woocommerce'     => array(
-				'master_option'     => 'pkflow_enable_woocommerce_support',
+				'master_option'     => 'advapafo_enable_woocommerce_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_woocommerce_active(),
-				'shortcode'         => 'pkflow_woocommerce_login',
+				'shortcode'         => 'advapafo_woocommerce_login',
 				'block'             => 'advanced-passkey-login/woocommerce-login-card',
 			),
 			'edd'             => array(
-				'master_option'     => 'pkflow_enable_edd_support',
+				'master_option'     => 'advapafo_enable_edd_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_edd_active(),
-				'shortcode'         => 'pkflow_edd_login',
+				'shortcode'         => 'advapafo_edd_login',
 				'block'             => 'advanced-passkey-login/edd-login-card',
 			),
 			'memberpress'     => array(
-				'master_option'     => 'pkflow_enable_memberpress_support',
+				'master_option'     => 'advapafo_enable_memberpress_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_memberpress_active(),
-				'shortcode'         => 'pkflow_memberpress_login',
+				'shortcode'         => 'advapafo_memberpress_login',
 				'block'             => 'advanced-passkey-login/memberpress-login-card',
 			),
 			'ultimate_member' => array(
-				'master_option'     => 'pkflow_enable_ultimate_member_support',
+				'master_option'     => 'advapafo_enable_ultimate_member_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_ultimate_member_active(),
-				'shortcode'         => 'pkflow_ultimate_member_login',
+				'shortcode'         => 'advapafo_ultimate_member_login',
 				'block'             => 'advanced-passkey-login/ultimate-member-login-card',
 			),
 			'learndash'       => array(
-				'master_option'     => 'pkflow_enable_learndash_support',
+				'master_option'     => 'advapafo_enable_learndash_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_learndash_active(),
-				'shortcode'         => 'pkflow_learndash_login',
+				'shortcode'         => 'advapafo_learndash_login',
 				'block'             => 'advanced-passkey-login/learndash-login-card',
 			),
 			'buddyboss'       => array(
-				'master_option'     => 'pkflow_enable_buddyboss_support',
+				'master_option'     => 'advapafo_enable_buddyboss_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_buddyboss_active(),
-				'shortcode'         => 'pkflow_buddyboss_login',
+				'shortcode'         => 'advapafo_buddyboss_login',
 				'block'             => 'advanced-passkey-login/buddyboss-login-card',
 			),
 			'gravityforms'    => array(
-				'master_option'     => 'pkflow_enable_gravityforms_support',
+				'master_option'     => 'advapafo_enable_gravityforms_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_gravityforms_active(),
-				'shortcode'         => 'pkflow_gravityforms_login',
+				'shortcode'         => 'advapafo_gravityforms_login',
 				'block'             => 'advanced-passkey-login/gravityforms-login-card',
 			),
 			'pmp'             => array(
-				'master_option'     => 'pkflow_enable_pmp_support',
+				'master_option'     => 'advapafo_enable_pmp_support',
 				'default_master'    => 1,
 				'dependency_active' => $this->is_pmp_active(),
-				'shortcode'         => 'pkflow_pmp_login',
+				'shortcode'         => 'advapafo_pmp_login',
 				'block'             => 'advanced-passkey-login/pmp-login-card',
 			),
 		);
@@ -239,8 +239,8 @@ class PKFLOW_Integration_Manager {
 		register_block_type(
 			'advanced-passkey-login/login-button',
 			array(
-				'editor_script'   => 'pkflow-gutenberg-blocks',
-				'editor_style'    => 'pkflow-gutenberg-blocks',
+				'editor_script'   => 'advapafo-gutenberg-blocks',
+				'editor_style'    => 'advapafo-gutenberg-blocks',
 				'title'           => __( 'Passkey Login Button', 'advanced-passkey-login' ),
 				'category'        => 'widgets',
 				'icon'            => 'shield',
@@ -251,7 +251,7 @@ class PKFLOW_Integration_Manager {
 					$extra_class   = isset( $attributes['class'] ) ? self::sanitize_class_list( (string) $attributes['class'] ) : '';
 					$allow_multiple = ! empty( $attributes['allow_multiple'] ) ? '1' : '0';
 
-					$shortcode = '[pkflow_login_button label="' . esc_attr( $label ) . '" allow_multiple="' . $allow_multiple . '"';
+					$shortcode = '[advapafo_login_button label="' . esc_attr( $label ) . '" allow_multiple="' . $allow_multiple . '"';
 					if ( '' !== $redirect_to ) {
 						$shortcode .= ' redirect_to="' . esc_attr( $redirect_to ) . '"';
 					}
@@ -322,8 +322,8 @@ class PKFLOW_Integration_Manager {
 		register_block_type(
 			'advanced-passkey-login/register-button',
 			array(
-				'editor_script'   => 'pkflow-gutenberg-blocks',
-				'editor_style'    => 'pkflow-gutenberg-blocks',
+				'editor_script'   => 'advapafo-gutenberg-blocks',
+				'editor_style'    => 'advapafo-gutenberg-blocks',
 				'title'           => __( 'Passkey Register Button', 'advanced-passkey-login' ),
 				'category'        => 'widgets',
 				'icon'            => 'shield',
@@ -332,7 +332,7 @@ class PKFLOW_Integration_Manager {
 					$label       = isset( $attributes['label'] ) ? sanitize_text_field( (string) $attributes['label'] ) : __( 'Register a Passkey', 'advanced-passkey-login' );
 					$extra_class = isset( $attributes['class'] ) ? self::sanitize_class_list( (string) $attributes['class'] ) : '';
 
-					$shortcode = '[pkflow_register_button label="' . esc_attr( $label ) . '"';
+					$shortcode = '[advapafo_register_button label="' . esc_attr( $label ) . '"';
 					if ( '' !== $extra_class ) {
 						$shortcode .= ' class="' . esc_attr( $extra_class ) . '"';
 					}
@@ -380,14 +380,14 @@ class PKFLOW_Integration_Manager {
 		register_block_type(
 			'advanced-passkey-login/passkey-profile',
 			array(
-				'editor_script'   => 'pkflow-gutenberg-blocks',
-				'editor_style'    => 'pkflow-gutenberg-blocks',
+				'editor_script'   => 'advapafo-gutenberg-blocks',
+				'editor_style'    => 'advapafo-gutenberg-blocks',
 				'title'           => __( 'Account Passkeys', 'advanced-passkey-login' ),
 				'category'        => 'widgets',
 				'icon'            => 'shield',
 				'keywords'        => array( 'passkey', 'profile', 'account' ),
 				'render_callback' => static function () {
-					return do_shortcode( '[pkflow_passkey_profile]' );
+					return do_shortcode( '[advapafo_passkey_profile]' );
 				},
 			)
 		);
@@ -407,8 +407,8 @@ class PKFLOW_Integration_Manager {
 		register_block_type(
 			'advanced-passkey-login/setup-prompt',
 			array(
-				'editor_script'   => 'pkflow-gutenberg-blocks',
-				'editor_style'    => 'pkflow-gutenberg-blocks',
+				'editor_script'   => 'advapafo-gutenberg-blocks',
+				'editor_style'    => 'advapafo-gutenberg-blocks',
 				'title'           => __( 'Passkey Setup Prompt', 'advanced-passkey-login' ),
 				'category'        => 'widgets',
 				'icon'            => 'shield',
@@ -420,7 +420,7 @@ class PKFLOW_Integration_Manager {
 					$extra_class  = isset( $attributes['class'] ) ? self::sanitize_class_list( (string) $attributes['class'] ) : '';
 					$force_show   = ! empty( $attributes['force_show'] ) ? '1' : '0';
 
-					$shortcode  = '[pkflow_passkey_prompt title="' . esc_attr( $title ) . '" message="' . esc_attr( $message ) . '" button_label="' . esc_attr( $button_label ) . '" force_show="' . $force_show . '"';
+					$shortcode  = '[advapafo_passkey_prompt title="' . esc_attr( $title ) . '" message="' . esc_attr( $message ) . '" button_label="' . esc_attr( $button_label ) . '" force_show="' . $force_show . '"';
 					if ( '' !== $extra_class ) {
 						$shortcode .= ' class="' . esc_attr( $extra_class ) . '"';
 					}
@@ -538,14 +538,14 @@ class PKFLOW_Integration_Manager {
 
 				$label   = sanitize_text_field( (string) $atts['label'] );
 				$context = sanitize_key( (string) $atts['context'] );
-				$classes = 'pkflow-integration-passkey pkflow-integration-passkey--' . esc_attr( $integration_key );
+				$classes = 'advapafo-integration-passkey advapafo-integration-passkey--' . esc_attr( $integration_key );
 
 				if ( 'auto-inject' === $context ) {
-					$classes .= ' pkflow-integration-passkey--auto-inject';
+					$classes .= ' advapafo-integration-passkey--auto-inject';
 				}
 
 				return '<div class="' . $classes . '">'
-					. do_shortcode( '[pkflow_login_button allow_multiple="1" label="' . esc_attr( $label ) . '"]' )
+					. do_shortcode( '[advapafo_login_button allow_multiple="1" label="' . esc_attr( $label ) . '"]' )
 					. '</div>';
 			}
 		);
@@ -568,8 +568,8 @@ class PKFLOW_Integration_Manager {
 		register_block_type(
 			$block_name,
 			array(
-				'editor_script'   => 'pkflow-gutenberg-blocks',
-				'editor_style'    => 'pkflow-gutenberg-blocks',
+				'editor_script'   => 'advapafo-gutenberg-blocks',
+				'editor_style'    => 'advapafo-gutenberg-blocks',
 				'title'           => $this->get_integration_block_title( $integration_key ),
 				'category'        => 'widgets',
 				'icon'            => 'shield',
@@ -638,22 +638,22 @@ class PKFLOW_Integration_Manager {
 	 * Register shared block editor assets.
 	 */
 	private function register_block_editor_script(): void {
-		if ( wp_script_is( 'pkflow-gutenberg-blocks', 'registered' ) ) {
+		if ( wp_script_is( 'advapafo-gutenberg-blocks', 'registered' ) ) {
 			return;
 		}
 
 		wp_register_style(
-			'pkflow-gutenberg-blocks',
-			PKFLOW_PLUGIN_URL . 'admin/css/pkflow-gutenberg-blocks.css',
+			'advapafo-gutenberg-blocks',
+			ADVAPAFO_PLUGIN_URL . 'admin/css/advapafo-gutenberg-blocks.css',
 			array(),
-			PKFLOW_VERSION
+			ADVAPAFO_VERSION
 		);
 
 		wp_register_script(
-			'pkflow-gutenberg-blocks',
-			PKFLOW_PLUGIN_URL . 'admin/js/pkflow-gutenberg-blocks.js',
+			'advapafo-gutenberg-blocks',
+			ADVAPAFO_PLUGIN_URL . 'admin/js/advapafo-gutenberg-blocks.js',
 			array( 'wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor', 'wp-components' ),
-			PKFLOW_VERSION,
+			ADVAPAFO_VERSION,
 			true
 		);
 	}
@@ -669,15 +669,15 @@ class PKFLOW_Integration_Manager {
 		$this->register_block_editor_script();
 
 		wp_localize_script(
-			'pkflow-gutenberg-blocks',
-			'PKFLOWIntegrationBlocks',
+			'advapafo-gutenberg-blocks',
+			'ADVAPAFOIntegrationBlocks',
 			array(
 				'blocks' => array_values( $this->registered_blocks ),
 			)
 		);
 
-		wp_enqueue_style( 'pkflow-gutenberg-blocks' );
-		wp_enqueue_script( 'pkflow-gutenberg-blocks' );
+		wp_enqueue_style( 'advapafo-gutenberg-blocks' );
+		wp_enqueue_script( 'advapafo-gutenberg-blocks' );
 	}
 
 	/**
@@ -788,7 +788,7 @@ class PKFLOW_Integration_Manager {
 			return $content;
 		}
 
-		$button = do_shortcode( '[pkflow_learndash_login]' );
+		$button = do_shortcode( '[advapafo_learndash_login]' );
 		if ( '' === trim( $button ) ) {
 			return $content;
 		}
@@ -800,42 +800,42 @@ class PKFLOW_Integration_Manager {
 	 * Render BuddyBoss auto-injected passkey prompt.
 	 */
 	public function render_buddyboss_auto_inject(): void {
-		$this->render_integration_auto_inject( 'buddyboss', '[pkflow_buddyboss_login]' );
+		$this->render_integration_auto_inject( 'buddyboss', '[advapafo_buddyboss_login]' );
 	}
 
 	/**
 	 * Render WooCommerce auto-injected passkey prompt.
 	 */
 	public function render_woocommerce_auto_inject(): void {
-		$this->render_integration_auto_inject( 'woocommerce', '[pkflow_woocommerce_login]' );
+		$this->render_integration_auto_inject( 'woocommerce', '[advapafo_woocommerce_login]' );
 	}
 
 	/**
 	 * Render EDD auto-injected passkey prompt.
 	 */
 	public function render_edd_auto_inject(): void {
-		$this->render_integration_auto_inject( 'edd', '[pkflow_edd_login]' );
+		$this->render_integration_auto_inject( 'edd', '[advapafo_edd_login]' );
 	}
 
 	/**
 	 * Render MemberPress auto-injected passkey prompt.
 	 */
 	public function render_memberpress_auto_inject(): void {
-		$this->render_integration_auto_inject( 'memberpress', '[pkflow_memberpress_login]' );
+		$this->render_integration_auto_inject( 'memberpress', '[advapafo_memberpress_login]' );
 	}
 
 	/**
 	 * Render Ultimate Member auto-injected passkey prompt.
 	 */
 	public function render_ultimate_member_auto_inject(): void {
-		$this->render_integration_auto_inject( 'ultimate_member', '[pkflow_ultimate_member_login]' );
+		$this->render_integration_auto_inject( 'ultimate_member', '[advapafo_ultimate_member_login]' );
 	}
 
 	/**
 	 * Render Paid Memberships Pro auto-injected passkey prompt.
 	 */
 	public function render_pmp_auto_inject(): void {
-		$this->render_integration_auto_inject( 'pmp', '[pkflow_pmp_login]' );
+		$this->render_integration_auto_inject( 'pmp', '[advapafo_pmp_login]' );
 	}
 
 	/**
@@ -855,7 +855,7 @@ class PKFLOW_Integration_Manager {
 			return;
 		}
 
-		$output = do_shortcode( '[pkflow_gravityforms_login]' );
+		$output = do_shortcode( '[advapafo_gravityforms_login]' );
 		if ( '' === trim( $output ) ) {
 			return;
 		}
@@ -947,12 +947,12 @@ class PKFLOW_Integration_Manager {
 			return;
 		}
 
-		pkflow_register_gravityforms_passkey_field_class();
-		if ( ! class_exists( 'PKFLOW_GF_Field_Passkey' ) ) {
+		advapafo_register_gravityforms_passkey_field_class();
+		if ( ! class_exists( 'ADVAPAFO_GF_Field_Passkey' ) ) {
 			return;
 		}
 
-		GF_Fields::register( new PKFLOW_GF_Field_Passkey() );
+		GF_Fields::register( new ADVAPAFO_GF_Field_Passkey() );
 	}
 
 	/**
@@ -1111,16 +1111,16 @@ class PKFLOW_Integration_Manager {
 /**
  * Register Gravity Forms custom field class lazily after GF loads.
  */
-function pkflow_register_gravityforms_passkey_field_class(): void {
+function advapafo_register_gravityforms_passkey_field_class(): void {
 	// phpcs:disable Universal.Files.SeparateFunctionsFromOO.Mixed,Generic.Files.OneObjectStructurePerFile.MultipleFound
-	if ( ! class_exists( 'GF_Field' ) || class_exists( 'PKFLOW_GF_Field_Passkey' ) ) {
+	if ( ! class_exists( 'GF_Field' ) || class_exists( 'ADVAPAFO_GF_Field_Passkey' ) ) {
 		return;
 	}
 
 	/**
 	 * Gravity Forms field that renders the passkey login control.
 	 */
-	class PKFLOW_GF_Field_Passkey extends GF_Field {
+	class ADVAPAFO_GF_Field_Passkey extends GF_Field {
 		/**
 		 * Gravity Forms field type key.
 		 *
@@ -1177,7 +1177,7 @@ function pkflow_register_gravityforms_passkey_field_class(): void {
 		 */
 		public function get_field_input( $form, $value = '', $entry = null ) {
 			unset( $form, $value, $entry );
-			return do_shortcode( '[pkflow_gravityforms_login]' );
+			return do_shortcode( '[advapafo_gravityforms_login]' );
 		}
 	}
 	// phpcs:enable Universal.Files.SeparateFunctionsFromOO.Mixed,Generic.Files.OneObjectStructurePerFile.MultipleFound

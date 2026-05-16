@@ -1,4 +1,4 @@
-/* global PKFLOWLogin */
+/* global ADVAPAFOLogin */
 (function () {
     'use strict';
 
@@ -57,11 +57,11 @@
     // ── DOM helpers ─────────────────────────────────────────────────────────
 
     function getMessageNode(btn) {
-        var root = btn && btn.closest ? btn.closest('.pkflow-login-passkey-wrap, .pkflow-shortcode-login-wrap') : null;
+        var root = btn && btn.closest ? btn.closest('.advapafo-login-passkey-wrap, .advapafo-shortcode-login-wrap') : null;
         if (!root) {
-            return document.getElementById('pkflow-passkey-login-message');
+            return document.getElementById('advapafo-passkey-login-message');
         }
-        return root.querySelector('.pkflow-login-message') || document.getElementById('pkflow-passkey-login-message');
+        return root.querySelector('.advapafo-login-message') || document.getElementById('advapafo-passkey-login-message');
     }
 
     function isWpLoginContext(btn) {
@@ -74,7 +74,7 @@
             return true;
         }
 
-        return !!btn.closest('#pkflow-login-passkey-block') || !!btn.closest('#loginform');
+        return !!btn.closest('#advapafo-login-passkey-block') || !!btn.closest('#loginform');
     }
 
     function getOrCreateWpLoginNoticeNode() {
@@ -84,10 +84,10 @@
             return null;
         }
 
-        var node = document.getElementById('pkflow-login-notice');
+        var node = document.getElementById('advapafo-login-notice');
         if (!node) {
             node = document.createElement('div');
-            node.id = 'pkflow-login-notice';
+            node.id = 'advapafo-login-notice';
             node.className = 'notice notice-error';
             node.setAttribute('role', 'alert');
             node.setAttribute('aria-live', 'assertive');
@@ -110,7 +110,7 @@
             var inlineNode = getMessageNode(btn);
             if (inlineNode) {
                 inlineNode.textContent = '';
-                inlineNode.classList.add('pkflow-is-hidden');
+                inlineNode.classList.add('advapafo-is-hidden');
             }
 
             return;
@@ -119,12 +119,12 @@
         var node = getMessageNode(btn);
         if (!node) return;
         node.textContent = text;
-        node.classList.toggle('pkflow-is-hidden', !text);
+        node.classList.toggle('advapafo-is-hidden', !text);
     }
 
     function relocateLoginPasskeyBlock() {
         var form = document.getElementById('loginform');
-        var block = document.getElementById('pkflow-login-passkey-block');
+        var block = document.getElementById('advapafo-login-passkey-block');
         if (!form || !block) return;
 
         var submitRow = form.querySelector('p.submit');
@@ -139,10 +139,10 @@
     function setButtonState(btn, busy) {
         if (!btn) return;
         btn.disabled = busy;
-        btn.classList.toggle('pkflow-btn-busy', busy);
+        btn.classList.toggle('advapafo-btn-busy', busy);
         if (busy) {
             btn.setAttribute('data-original-html', btn.innerHTML);
-            btn.textContent = PKFLOWLogin.messages.signingIn || 'Signing in…';
+            btn.textContent = ADVAPAFOLogin.messages.signingIn || 'Signing in…';
         } else {
             var orig = btn.getAttribute('data-original-html');
             if (orig) btn.innerHTML = orig;
@@ -200,13 +200,13 @@
         if (msg && /did not match the expected pattern/i.test(msg)) {
             return 'Your passkey request data was invalid. Please refresh this page and try again.';
         }
-        return msg || PKFLOWLogin.messages.genericError;
+        return msg || ADVAPAFOLogin.messages.genericError;
     }
 
     // ── AJAX ────────────────────────────────────────────────────────────────
 
     async function postForm(data) {
-        var resp = await fetch(PKFLOWLogin.ajaxUrl, {
+        var resp = await fetch(ADVAPAFOLogin.ajaxUrl, {
             method: 'POST',
             credentials: 'same-origin',
             body: data,
@@ -222,7 +222,7 @@
         }
 
         if (!resp.ok) {
-            throw new Error((payload && payload.data && payload.data.message) || PKFLOWLogin.messages.genericError);
+            throw new Error((payload && payload.data && payload.data.message) || ADVAPAFOLogin.messages.genericError);
         }
 
         return payload;
@@ -234,8 +234,8 @@
         setMessage(btn, '');
 
         var beginData = new FormData();
-        beginData.append('action', 'pkflow_begin_login');
-        beginData.append('nonce',  PKFLOWLogin.nonce);
+        beginData.append('action', 'advapafo_begin_login');
+        beginData.append('nonce',  ADVAPAFOLogin.nonce);
 
         var identifier = getLoginIdentifier();
         if (identifier) {
@@ -244,15 +244,15 @@
 
         var beginResp = await postForm(beginData);
         if (!beginResp || !beginResp.success) {
-            throw new Error((beginResp && beginResp.data && beginResp.data.message) || PKFLOWLogin.messages.genericError);
+            throw new Error((beginResp && beginResp.data && beginResp.data.message) || ADVAPAFOLogin.messages.genericError);
         }
 
         var options    = hydrateGetOptions(beginResp.data.options);
         var credential = await navigator.credentials.get(options);
 
         var finishData = new FormData();
-        finishData.append('action',            'pkflow_finish_login');
-        finishData.append('nonce',             PKFLOWLogin.nonce);
+        finishData.append('action',            'advapafo_finish_login');
+        finishData.append('nonce',             ADVAPAFOLogin.nonce);
         finishData.append('token',             beginResp.data.token);
         finishData.append('id',                bufferToB64url(credential.rawId));
         finishData.append('clientDataJSON',    bufferToB64url(credential.response.clientDataJSON));
@@ -270,7 +270,7 @@
 
         var finishResp = await postForm(finishData);
         if (!finishResp || !finishResp.success || !finishResp.data || !finishResp.data.redirect) {
-            throw new Error((finishResp && finishResp.data && finishResp.data.message) || PKFLOWLogin.messages.genericError);
+            throw new Error((finishResp && finishResp.data && finishResp.data.message) || ADVAPAFOLogin.messages.genericError);
         }
 
         var redirectUrl = finishResp.data.redirect;
@@ -290,23 +290,23 @@
     function init() {
         relocateLoginPasskeyBlock();
 
-        var buttons = Array.prototype.slice.call(document.querySelectorAll('#pkflow-signin-passkey, [data-pkflow-passkey-login-btn="1"]'));
+        var buttons = Array.prototype.slice.call(document.querySelectorAll('#advapafo-signin-passkey, [data-advapafo-passkey-login-btn="1"]'));
         if (!buttons.length) return;
 
         // Graceful degradation for unsupported browsers
         if (!window.PublicKeyCredential || !navigator.credentials || !navigator.credentials.get) {
             buttons.forEach(function (btn) {
                 btn.disabled = true;
-                btn.classList.add('pkflow-btn-disabled');
+                btn.classList.add('advapafo-btn-disabled');
                 btn.setAttribute('aria-disabled', 'true');
-                btn.title = PKFLOWLogin.messages.notSupported;
-                setMessage(btn, PKFLOWLogin.messages.notSupported);
+                btn.title = ADVAPAFOLogin.messages.notSupported;
+                setMessage(btn, ADVAPAFOLogin.messages.notSupported);
             });
             return;
         }
 
         buttons.forEach(function (btn) {
-            btn.classList.remove('pkflow-btn-disabled');
+            btn.classList.remove('advapafo-btn-disabled');
             btn.removeAttribute('aria-disabled');
         });
 

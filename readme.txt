@@ -21,8 +21,8 @@ Passkeys are phishing-resistant by design. There is no password to steal, no cre
 * One-click "Sign in with Passkey" button on the WordPress login screen
 * Register and manage passkeys from your user profile page
 * Supports Face ID, Touch ID, Windows Hello, YubiKey, iCloud Keychain, and Google Password Manager
-* Includes `[pkflow_passkey_profile]` shortcode for logged-in passkey management UI
-* Includes `[pkflow_passkey_prompt]` shortcode for conditional passkey enrollment prompts
+* Includes `[advapafo_passkey_profile]` shortcode for logged-in passkey management UI
+* Includes `[advapafo_passkey_prompt]` shortcode for conditional passkey enrollment prompts
 * Includes plugin-aware integration modules for WooCommerce, Easy Digital Downloads, MemberPress, Ultimate Member, LearnDash, BuddyBoss, Gravity Forms, and PMPro
 * Integration-specific shortcodes and Gutenberg blocks are registered automatically when supported plugins are active
 * Integration modules can auto-inject passkey entry points on supported login and checkout surfaces
@@ -72,7 +72,7 @@ Passkeys are phishing-resistant by design. There is no password to steal, no cre
 
 = HTTPS requirement =
 
-Passkeys require a secure (HTTPS) connection. The plugin will display a warning and refuse to serve passkey flows over plain HTTP. If you are testing locally without HTTPS you can add `define( 'PKFLOW_ALLOW_HTTP', true );` to `wp-config.php` — **never use this in production**.
+Passkeys require a secure (HTTPS) connection. The plugin will display a warning and refuse to serve passkey flows over plain HTTP. If you are testing locally without HTTPS you can add `define( 'ADVAPAFO_ALLOW_HTTP', true );` to `wp-config.php` — **never use this in production**.
 
 == Frequently Asked Questions ==
 
@@ -99,20 +99,20 @@ Yes — in **Settings > Advanced Passkeys for Secure Login > Eligible Roles**. B
 = Which shortcodes are available? =
 
 Core shortcodes:
-* `[pkflow_login_button]`
-* `[pkflow_register_button]`
-* `[pkflow_passkey_profile]`
-* `[pkflow_passkey_prompt]`
+* `[advapafo_login_button]`
+* `[advapafo_register_button]`
+* `[advapafo_passkey_profile]`
+* `[advapafo_passkey_prompt]`
 
 Integration shortcodes (registered when the related plugin is active and the module is enabled):
-* `[pkflow_woocommerce_login]`
-* `[pkflow_edd_login]`
-* `[pkflow_memberpress_login]`
-* `[pkflow_ultimate_member_login]`
-* `[pkflow_learndash_login]`
-* `[pkflow_buddyboss_login]`
-* `[pkflow_gravityforms_login]`
-* `[pkflow_pmp_login]`
+* `[advapafo_woocommerce_login]`
+* `[advapafo_edd_login]`
+* `[advapafo_memberpress_login]`
+* `[advapafo_ultimate_member_login]`
+* `[advapafo_learndash_login]`
+* `[advapafo_buddyboss_login]`
+* `[advapafo_gravityforms_login]`
+* `[advapafo_pmp_login]`
 
 = Which integration Gutenberg blocks are available? =
 
@@ -128,7 +128,7 @@ When a supported integration plugin is active and enabled, Advanced Passkeys for
 
 = What happens if I deactivate or delete the plugin? =
 
-Deactivation leaves all data intact. Deletion (uninstall) drops the `wp_wpk_credentials`, `wp_wpk_rate_limits`, and `wp_wpk_logs` tables and removes all `pkflow_*` options.
+Deactivation leaves all data intact. Deletion (uninstall) drops the `wp_wpk_credentials`, `wp_wpk_rate_limits`, and `wp_wpk_logs` tables and removes all `advapafo_*` options.
 
 = Is the plugin multisite compatible? =
 
@@ -136,7 +136,7 @@ Yes. Tables are created per-site (using `$wpdb->prefix`) and network activation 
 
 = Can I use a custom RP ID for subdomain setups? =
 
-Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
+Yes — add `define( 'ADVAPAFO_RP_ID', 'example.com' );` to `wp-config.php`.
 
 == Screenshots ==
 
@@ -178,7 +178,7 @@ Yes — add `define( 'PKFLOW_RP_ID', 'example.com' );` to `wp-config.php`.
 * Added: Scheduled daily cleanup of expired rate-limit rows and old log entries
 * Added: Challenge timeout setting in Settings > Advanced Passkeys for Secure Login > Advanced
 * Added: Login redirect URL field in settings (fallback after passkey login)
-* Added: `[pkflow_login_button]` and `[pkflow_register_button]` shortcodes
+* Added: `[advapafo_login_button]` and `[advapafo_register_button]` shortcodes
 * Added: Log retention period setting (days)
 * Improved: `get_challenge_ttl()` now reads from the settings UI
 

@@ -21,11 +21,11 @@
     color: var(--wpkpro-ink);
 }
 
-.pkflow-layout.pkflow-layout--dashboard {
+.advapafo-layout.advapafo-layout--dashboard {
     grid-template-columns: minmax(0, 1fr);
 }
 
-.pkflow-layout.pkflow-layout--dashboard .pkflow-main-panel {
+.advapafo-layout.advapafo-layout--dashboard .advapafo-main-panel {
     max-width: none;
     width: 100%;
 }

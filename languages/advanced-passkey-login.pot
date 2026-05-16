@@ -16,9 +16,9 @@ msgstr ""
 
 #. Plugin Name of the plugin
 #: advanced-passkey-login.php
-#: includes/class-pkflow-settings.php:155
-#: includes/class-pkflow-settings.php:156
-#: includes/class-pkflow-settings.php:577
+#: includes/class-advapafo-settings.php:155
+#: includes/class-advapafo-settings.php:156
+#: includes/class-advapafo-settings.php:577
 msgid "Advanced Passkeys for Secure Login"
 msgstr ""
 
@@ -51,8 +51,8 @@ msgid "Advanced Passkeys for Secure Login requires WordPress 6.0 or higher. Plea
 msgstr ""
 
 #: advanced-passkey-login.php:268
-#: includes/class-pkflow-settings.php:595
-#: includes/class-pkflow-settings.php:730
+#: includes/class-advapafo-settings.php:595
+#: includes/class-advapafo-settings.php:730
 msgid "Settings"
 msgstr ""
 
@@ -64,925 +64,925 @@ msgstr ""
 msgid "Plugin Page"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:244
-#: includes/class-pkflow-integration-manager.php:270
+#: includes/class-advapafo-integration-manager.php:244
+#: includes/class-advapafo-integration-manager.php:270
 msgid "Passkey Login Button"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:249
-#: includes/class-pkflow-integration-manager.php:272
-#: includes/class-pkflow-integration-manager.php:279
-#: includes/class-pkflow-integration-manager.php:299
-#: includes/class-pkflow-integration-manager.php:532
-#: includes/class-pkflow-integration-manager.php:578
-#: includes/class-pkflow-integration-manager.php:597
-#: includes/class-pkflow-integration-manager.php:604
-#: includes/class-pkflow-integration-manager.php:616
-#: includes/class-pkflow-login-form.php:63
-#: includes/class-pkflow-shortcodes.php:309
-#: admin/js/pkflow-gutenberg-blocks.js:101
-#: admin/js/pkflow-gutenberg-blocks.js:113
+#: includes/class-advapafo-integration-manager.php:249
+#: includes/class-advapafo-integration-manager.php:272
+#: includes/class-advapafo-integration-manager.php:279
+#: includes/class-advapafo-integration-manager.php:299
+#: includes/class-advapafo-integration-manager.php:532
+#: includes/class-advapafo-integration-manager.php:578
+#: includes/class-advapafo-integration-manager.php:597
+#: includes/class-advapafo-integration-manager.php:604
+#: includes/class-advapafo-integration-manager.php:616
+#: includes/class-advapafo-login-form.php:63
+#: includes/class-advapafo-shortcodes.php:309
+#: admin/js/advapafo-gutenberg-blocks.js:101
+#: admin/js/advapafo-gutenberg-blocks.js:113
 msgid "Sign in with Passkey"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:271
+#: includes/class-advapafo-integration-manager.php:271
 msgid "Render a passkey sign-in button."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:298
-#: includes/class-pkflow-integration-manager.php:368
-#: includes/class-pkflow-integration-manager.php:480
-#: includes/class-pkflow-integration-manager.php:615
+#: includes/class-advapafo-integration-manager.php:298
+#: includes/class-advapafo-integration-manager.php:368
+#: includes/class-advapafo-integration-manager.php:480
+#: includes/class-advapafo-integration-manager.php:615
 msgid "Button label"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:304
+#: includes/class-advapafo-integration-manager.php:304
 msgid "Redirect URL"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:306
+#: includes/class-advapafo-integration-manager.php:306
 msgid "Optional URL to redirect users after a successful passkey login."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:311
-#: includes/class-pkflow-integration-manager.php:374
-#: includes/class-pkflow-integration-manager.php:486
+#: includes/class-advapafo-integration-manager.php:311
+#: includes/class-advapafo-integration-manager.php:374
+#: includes/class-advapafo-integration-manager.php:486
 msgid "Extra CSS classes"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:312
-#: includes/class-pkflow-integration-manager.php:375
-#: includes/class-pkflow-integration-manager.php:487
+#: includes/class-advapafo-integration-manager.php:312
+#: includes/class-advapafo-integration-manager.php:375
+#: includes/class-advapafo-integration-manager.php:487
 msgid "my-custom-class"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:317
+#: includes/class-advapafo-integration-manager.php:317
 msgid "Allow multiple login buttons on the same page"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:327
-#: includes/class-pkflow-integration-manager.php:348
+#: includes/class-advapafo-integration-manager.php:327
+#: includes/class-advapafo-integration-manager.php:348
 msgid "Passkey Register Button"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:332
-#: includes/class-pkflow-integration-manager.php:350
-#: includes/class-pkflow-integration-manager.php:357
-#: includes/class-pkflow-integration-manager.php:369
-#: includes/class-pkflow-integration-manager.php:419
-#: includes/class-pkflow-integration-manager.php:438
-#: includes/class-pkflow-integration-manager.php:453
-#: includes/class-pkflow-integration-manager.php:481
-#: includes/class-pkflow-shortcodes.php:176
-#: includes/class-pkflow-shortcodes.php:411
+#: includes/class-advapafo-integration-manager.php:332
+#: includes/class-advapafo-integration-manager.php:350
+#: includes/class-advapafo-integration-manager.php:357
+#: includes/class-advapafo-integration-manager.php:369
+#: includes/class-advapafo-integration-manager.php:419
+#: includes/class-advapafo-integration-manager.php:438
+#: includes/class-advapafo-integration-manager.php:453
+#: includes/class-advapafo-integration-manager.php:481
+#: includes/class-advapafo-shortcodes.php:176
+#: includes/class-advapafo-shortcodes.php:411
 msgid "Register a Passkey"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:349
+#: includes/class-advapafo-integration-manager.php:349
 msgid "Render a passkey registration button for eligible signed-in users."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:385
-#: includes/class-pkflow-integration-manager.php:397
-#: includes/class-pkflow-settings.php:1960
+#: includes/class-advapafo-integration-manager.php:385
+#: includes/class-advapafo-integration-manager.php:397
+#: includes/class-advapafo-settings.php:1960
 msgid "Account Passkeys"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:398
+#: includes/class-advapafo-integration-manager.php:398
 msgid "Render the account passkey management section."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:399
+#: includes/class-advapafo-integration-manager.php:399
 msgid "Manage Passkeys"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:412
-#: includes/class-pkflow-integration-manager.php:436
+#: includes/class-advapafo-integration-manager.php:412
+#: includes/class-advapafo-integration-manager.php:436
 msgid "Passkey Setup Prompt"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:417
-#: includes/class-pkflow-integration-manager.php:445
-#: includes/class-pkflow-integration-manager.php:469
-#: includes/class-pkflow-shortcodes.php:174
+#: includes/class-advapafo-integration-manager.php:417
+#: includes/class-advapafo-integration-manager.php:445
+#: includes/class-advapafo-integration-manager.php:469
+#: includes/class-advapafo-shortcodes.php:174
 msgid "Upgrade your account security with a passkey"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:418
-#: includes/class-pkflow-integration-manager.php:449
-#: includes/class-pkflow-integration-manager.php:475
-#: includes/class-pkflow-shortcodes.php:175
+#: includes/class-advapafo-integration-manager.php:418
+#: includes/class-advapafo-integration-manager.php:449
+#: includes/class-advapafo-integration-manager.php:475
+#: includes/class-advapafo-shortcodes.php:175
 msgid "Use Face ID, Touch ID, Windows Hello, or a hardware key for fast passwordless sign-in."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:437
+#: includes/class-advapafo-integration-manager.php:437
 msgid "Render a passkey onboarding card for eligible logged-in users."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:468
+#: includes/class-advapafo-integration-manager.php:468
 msgid "Card title"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:474
+#: includes/class-advapafo-integration-manager.php:474
 msgid "Card message"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:492
+#: includes/class-advapafo-integration-manager.php:492
 msgid "Force show for administrators (debug)"
 msgstr ""
 
 #. translators: %s integration label.
-#: includes/class-pkflow-integration-manager.php:594
+#: includes/class-advapafo-integration-manager.php:594
 #, php-format
 msgid "Render a passkey sign-in card for %s flows."
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:621
+#: includes/class-advapafo-integration-manager.php:621
 msgid "Render context"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:624
+#: includes/class-advapafo-integration-manager.php:624
 msgid "Manual"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:628
+#: includes/class-advapafo-integration-manager.php:628
 msgid "Auto-inject styling"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:691
+#: includes/class-advapafo-integration-manager.php:691
 msgid "LearnDash"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:692
+#: includes/class-advapafo-integration-manager.php:692
 msgid "BuddyBoss"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:693
+#: includes/class-advapafo-integration-manager.php:693
 msgid "Gravity Forms"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:694
+#: includes/class-advapafo-integration-manager.php:694
 msgid "PMPro"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:695
+#: includes/class-advapafo-integration-manager.php:695
 msgid "WooCommerce"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:696
+#: includes/class-advapafo-integration-manager.php:696
 msgid "Easy Digital Downloads"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:697
+#: includes/class-advapafo-integration-manager.php:697
 msgid "MemberPress"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:698
+#: includes/class-advapafo-integration-manager.php:698
 msgid "Ultimate Member"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:701
-#: includes/class-pkflow-settings.php:775
+#: includes/class-advapafo-integration-manager.php:701
+#: includes/class-advapafo-settings.php:775
 msgid "Integration"
 msgstr ""
 
 #. translators: %s integration label.
-#: includes/class-pkflow-integration-manager.php:713
+#: includes/class-advapafo-integration-manager.php:713
 #, php-format
 msgid "%s Passkey Login"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:1137
+#: includes/class-advapafo-integration-manager.php:1137
 msgid "Passkey Field"
 msgstr ""
 
-#: includes/class-pkflow-integration-manager.php:1158
+#: includes/class-advapafo-integration-manager.php:1158
 msgid "Renders a passkey sign-in control for Gravity Forms-powered flows."
 msgstr ""
 
-#: includes/class-pkflow-login-form.php:46
+#: includes/class-advapafo-login-form.php:46
 msgid "or"
 msgstr ""
 
-#: includes/class-pkflow-login-form.php:47
+#: includes/class-advapafo-login-form.php:47
 msgid "OR"
 msgstr ""
 
-#: includes/class-pkflow-login-form.php:55
-#: includes/class-pkflow-shortcodes.php:365
+#: includes/class-advapafo-login-form.php:55
+#: includes/class-advapafo-shortcodes.php:365
 msgid "Sign in with a passkey (Face ID, Touch ID, or security key)"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:247
+#: includes/class-advapafo-passkeys.php:247
 msgid "Advanced Passkeys for Secure Login: The WebAuthn library is missing. Run composer install in the advanced-passkey-login plugin directory."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:293
+#: includes/class-advapafo-passkeys.php:293
 msgid "Set up a passkey for faster, more secure sign-ins."
 msgstr ""
 
 #. translators: %s profile URL
-#: includes/class-pkflow-passkeys.php:298
+#: includes/class-advapafo-passkeys.php:298
 #, php-format
 msgid " <a href=\"%s\">Register a passkey now</a> — sign in with Face ID, Touch ID, or a security key, no password needed."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:334
-#: includes/class-pkflow-passkeys.php:554
+#: includes/class-advapafo-passkeys.php:334
+#: includes/class-advapafo-passkeys.php:554
 msgid "Passkeys"
 msgstr ""
 
 #. translators: %d passkey count, %s username
-#: includes/class-pkflow-passkeys.php:374
+#: includes/class-advapafo-passkeys.php:374
 #, php-format
 msgid "%1$d passkey(s) for %2$s — click to manage"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:482
-#: includes/class-pkflow-shortcodes.php:94
+#: includes/class-advapafo-passkeys.php:482
+#: includes/class-advapafo-shortcodes.php:94
 msgid "e.g. iPhone 15, YubiKey 5"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:483
-#: includes/class-pkflow-shortcodes.php:95
+#: includes/class-advapafo-passkeys.php:483
+#: includes/class-advapafo-shortcodes.php:95
 msgid "Starting passkey registration…"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:484
-#: includes/class-pkflow-shortcodes.php:96
+#: includes/class-advapafo-passkeys.php:484
+#: includes/class-advapafo-shortcodes.php:96
 msgid "Passkey registered successfully."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:485
-#: includes/class-pkflow-shortcodes.php:97
+#: includes/class-advapafo-passkeys.php:485
+#: includes/class-advapafo-shortcodes.php:97
 msgid "Passkey registration failed. Try again."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:486
-#: includes/class-pkflow-shortcodes.php:98
+#: includes/class-advapafo-passkeys.php:486
+#: includes/class-advapafo-shortcodes.php:98
 msgid "This browser does not support passkeys."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:487
-#: includes/class-pkflow-shortcodes.php:99
+#: includes/class-advapafo-passkeys.php:487
+#: includes/class-advapafo-shortcodes.php:99
 msgid "Tip: open this page on your phone to save a passkey to iCloud Keychain or Google Password Manager."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:488
-#: includes/class-pkflow-shortcodes.php:100
+#: includes/class-advapafo-passkeys.php:488
+#: includes/class-advapafo-shortcodes.php:100
 msgid "Revoke this passkey? You will need to re-register to use it again."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:489
-#: includes/class-pkflow-shortcodes.php:101
+#: includes/class-advapafo-passkeys.php:489
+#: includes/class-advapafo-shortcodes.php:101
 msgid "Failed to revoke passkey."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:490
-#: includes/class-pkflow-shortcodes.php:102
+#: includes/class-advapafo-passkeys.php:490
+#: includes/class-advapafo-shortcodes.php:102
 msgid "You have reached the maximum number of passkeys. Revoke an existing one to add a new one."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:517
-#: includes/class-pkflow-shortcodes.php:345
+#: includes/class-advapafo-passkeys.php:517
+#: includes/class-advapafo-shortcodes.php:345
 msgid "Passkeys are unavailable here. Use HTTPS (or localhost) in a passkey-capable browser, or sign in with your password."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:518
-#: includes/class-pkflow-shortcodes.php:346
+#: includes/class-advapafo-passkeys.php:518
+#: includes/class-advapafo-shortcodes.php:346
 msgid "Passkey sign-in failed. Please try again or use your password."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:519
-#: includes/class-pkflow-shortcodes.php:347
+#: includes/class-advapafo-passkeys.php:519
+#: includes/class-advapafo-shortcodes.php:347
 msgid "Signing in…"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:548
+#: includes/class-advapafo-passkeys.php:548
 msgid "unlimited"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:555
+#: includes/class-advapafo-passkeys.php:555
 msgid "Sign in with your fingerprint, face, or a hardware security key — no password needed."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:559
+#: includes/class-advapafo-passkeys.php:559
 msgid "passkeys"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:567
+#: includes/class-advapafo-passkeys.php:567
 msgid "Register new passkey"
 msgstr ""
 
 #. translators: %d number of passkeys
-#: includes/class-pkflow-passkeys.php:575
+#: includes/class-advapafo-passkeys.php:575
 #, php-format
 msgid "You have reached the maximum of %d passkeys. Revoke one to add another."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:583
-#: includes/class-pkflow-passkeys.php:587
-#: includes/class-pkflow-shortcodes.php:432
-#: includes/class-pkflow-shortcodes.php:436
+#: includes/class-advapafo-passkeys.php:583
+#: includes/class-advapafo-passkeys.php:587
+#: includes/class-advapafo-shortcodes.php:432
+#: includes/class-advapafo-shortcodes.php:436
 msgid "Device label (optional)"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:591
+#: includes/class-advapafo-passkeys.php:591
 msgid "Register New Passkey"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:593
+#: includes/class-advapafo-passkeys.php:593
 msgid "Tip: open this page on your phone to save to iCloud Keychain or Google Password Manager."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:604
+#: includes/class-advapafo-passkeys.php:604
 msgid "Only one passkey registered. Add a backup on another device to avoid getting locked out."
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:611
+#: includes/class-advapafo-passkeys.php:611
 msgid "Label"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:612
+#: includes/class-advapafo-passkeys.php:612
 msgid "Registered"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:613
+#: includes/class-advapafo-passkeys.php:613
 msgid "Last Used"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:615
+#: includes/class-advapafo-passkeys.php:615
 msgid "Action"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:623
-#: includes/class-pkflow-settings.php:1099
-#: includes/class-pkflow-settings.php:1105
-#: includes/class-pkflow-settings.php:1108
+#: includes/class-advapafo-passkeys.php:623
+#: includes/class-advapafo-settings.php:1099
+#: includes/class-advapafo-settings.php:1105
+#: includes/class-advapafo-settings.php:1108
 msgid "Passkey"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:626
+#: includes/class-advapafo-passkeys.php:626
 msgid "Never"
 msgstr ""
 
-#: includes/class-pkflow-passkeys.php:630
+#: includes/class-advapafo-passkeys.php:630
 msgid "Revoke"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:109
-#: includes/class-pkflow-settings.php:522
+#: includes/class-advapafo-settings.php:109
+#: includes/class-advapafo-settings.php:522
 msgid "Settings saved."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:462
+#: includes/class-advapafo-settings.php:462
 msgid "You do not have permission to access this page."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:555
-msgid "PKFLOW Notice Debug"
+#: includes/class-advapafo-settings.php:555
+msgid "ADVAPAFO Notice Debug"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:576
+#: includes/class-advapafo-settings.php:576
 msgid "Welcome to"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:581
+#: includes/class-advapafo-settings.php:581
 msgid "A premium passwordless authentication control center built for WordPress."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:587
+#: includes/class-advapafo-settings.php:587
 msgid "Ready"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:593
+#: includes/class-advapafo-settings.php:593
 msgid "Advanced Passkeys for Secure Login settings tabs"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:594
-#: includes/class-pkflow-settings.php:1004
+#: includes/class-advapafo-settings.php:594
+#: includes/class-advapafo-settings.php:1004
 msgid "Dashboard"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:596
-#: includes/class-pkflow-settings.php:1860
+#: includes/class-advapafo-settings.php:596
+#: includes/class-advapafo-settings.php:1860
 msgid "Advanced"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:597
-#: includes/class-pkflow-settings.php:1992
+#: includes/class-advapafo-settings.php:597
+#: includes/class-advapafo-settings.php:1992
 msgid "Shortcodes"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:612
+#: includes/class-advapafo-settings.php:612
 msgid "Changes apply immediately after saving."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:613
+#: includes/class-advapafo-settings.php:613
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:620
+#: includes/class-advapafo-settings.php:620
 msgid "Advanced Passkeys for Secure Login quick actions"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:731
+#: includes/class-advapafo-settings.php:731
 msgid "Everyday passkey controls"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:733
+#: includes/class-advapafo-settings.php:733
 msgid "Recommended defaults"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:738
-#: includes/class-pkflow-settings.php:744
+#: includes/class-advapafo-settings.php:738
+#: includes/class-advapafo-settings.php:744
 msgid "Enable passkeys"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:739
+#: includes/class-advapafo-settings.php:739
 msgid "Allow eligible users to register and sign in with secure device passkeys."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:750
-#: includes/class-pkflow-settings.php:756
+#: includes/class-advapafo-settings.php:750
+#: includes/class-advapafo-settings.php:756
 msgid "Show setup alert on profile"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:751
+#: includes/class-advapafo-settings.php:751
 msgid "Show or hide the admin alert that reminds users to set up a passkey on their profile page."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:768
+#: includes/class-advapafo-settings.php:768
 msgid "Integration modules"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:769
+#: includes/class-advapafo-settings.php:769
 msgid "Control each integration independently with master and auto-inject switches."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:786
+#: includes/class-advapafo-settings.php:786
 msgid "Installed"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:786
+#: includes/class-advapafo-settings.php:786
 msgid "Not installed"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:789
+#: includes/class-advapafo-settings.php:789
 msgid "Enable this to add passkey blocks, shortcodes, and auto sign-in prompts."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:794
+#: includes/class-advapafo-settings.php:794
 msgid "Enable module"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:798
+#: includes/class-advapafo-settings.php:798
 msgid "Enable integration module"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:813
+#: includes/class-advapafo-settings.php:813
 msgid "Eligible user roles"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:814
+#: includes/class-advapafo-settings.php:814
 msgid "Choose which WordPress roles can create and use passkeys."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:830
+#: includes/class-advapafo-settings.php:830
 msgid "Passkeys per user"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:833
+#: includes/class-advapafo-settings.php:833
 msgid "Maximum number of passkeys each user can register. Use 0 for no limit."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:838
+#: includes/class-advapafo-settings.php:838
 msgid "User verification"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:839
-#: includes/class-pkflow-shortcodes.php:273
+#: includes/class-advapafo-settings.php:839
+#: includes/class-advapafo-shortcodes.php:273
 msgid "Recommended"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:842
+#: includes/class-advapafo-settings.php:842
 msgid "Required — biometric or device PIN"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:843
+#: includes/class-advapafo-settings.php:843
 msgid "Preferred — use when available"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:844
+#: includes/class-advapafo-settings.php:844
 msgid "Discouraged — presence only"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:846
+#: includes/class-advapafo-settings.php:846
 msgid "Required verification gives the strongest account protection."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:924
-#: includes/class-pkflow-settings.php:1096
+#: includes/class-advapafo-settings.php:924
+#: includes/class-advapafo-settings.php:1096
 msgid "Other"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1005
+#: includes/class-advapafo-settings.php:1005
 msgid "Security activity overview"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1011
+#: includes/class-advapafo-settings.php:1011
 msgid "Users with passkeys"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1015
+#: includes/class-advapafo-settings.php:1015
 msgid "Passkeys stored"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1019
+#: includes/class-advapafo-settings.php:1019
 msgid "Activities"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1023
+#: includes/class-advapafo-settings.php:1023
 msgid "Blocked attempts"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1031
+#: includes/class-advapafo-settings.php:1031
 msgid "Overview of Authenticators"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1036
+#: includes/class-advapafo-settings.php:1036
 msgid "Authenticator Distribution"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1037
+#: includes/class-advapafo-settings.php:1037
 msgid "Top providers"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1040
-#: includes/class-pkflow-settings.php:1048
+#: includes/class-advapafo-settings.php:1040
+#: includes/class-advapafo-settings.php:1048
 msgid "No authenticator records yet."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1067
+#: includes/class-advapafo-settings.php:1067
 msgid "Last Login Activity"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1072
+#: includes/class-advapafo-settings.php:1072
 msgid "Login Activity Trend"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1073
+#: includes/class-advapafo-settings.php:1073
 msgid "Last 14 days"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1080
+#: includes/class-advapafo-settings.php:1080
 msgid "No login activity recorded yet."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1094
-#: includes/class-pkflow-settings.php:1596
-#: includes/class-pkflow-settings.php:1630
+#: includes/class-advapafo-settings.php:1094
+#: includes/class-advapafo-settings.php:1596
+#: includes/class-advapafo-settings.php:1630
 msgid "Info"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1102
+#: includes/class-advapafo-settings.php:1102
 msgid "Password"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1111
+#: includes/class-advapafo-settings.php:1111
 msgid "Security Policy"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1126
+#: includes/class-advapafo-settings.php:1126
 msgid "Unknown Authenticator"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1137
+#: includes/class-advapafo-settings.php:1137
 msgid "User activity"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1329
+#: includes/class-advapafo-settings.php:1329
 msgid "just now"
 msgstr ""
 
 #. translators: %s human time diff
-#: includes/class-pkflow-settings.php:1334
+#: includes/class-advapafo-settings.php:1334
 #, php-format
 msgid "%s ago"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1603
+#: includes/class-advapafo-settings.php:1603
 msgid "Successful"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1610
+#: includes/class-advapafo-settings.php:1610
 msgid "Blocked"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1617
-#: includes/class-pkflow-settings.php:1624
+#: includes/class-advapafo-settings.php:1617
+#: includes/class-advapafo-settings.php:1624
 msgid "Failed"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1861
+#: includes/class-advapafo-settings.php:1861
 msgid "Technical configuration"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1867
-#: includes/class-pkflow-settings.php:1873
+#: includes/class-advapafo-settings.php:1867
+#: includes/class-advapafo-settings.php:1873
 msgid "Show login OR separator"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1868
+#: includes/class-advapafo-settings.php:1868
 msgid "Display the centered OR divider above the passkey button on wp-login.php."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1879
+#: includes/class-advapafo-settings.php:1879
 msgid "Relying Party Name"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1881
+#: includes/class-advapafo-settings.php:1881
 msgid "The name users see in their passkey prompt. Leave blank to use the site name."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1884
+#: includes/class-advapafo-settings.php:1884
 msgid "Relying Party ID"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1886
+#: includes/class-advapafo-settings.php:1886
 msgid "Usually your root domain. Leave blank unless you know you need to customize it."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1893
+#: includes/class-advapafo-settings.php:1893
 msgid "Passkey challenge timeouts"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1894
+#: includes/class-advapafo-settings.php:1894
 msgid "Control how long users have to complete passkey login or registration after a challenge is issued."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1896
+#: includes/class-advapafo-settings.php:1896
 msgid "Seconds"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1900
+#: includes/class-advapafo-settings.php:1900
 msgid "Login challenge timeout"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1902
+#: includes/class-advapafo-settings.php:1902
 msgid "How long a user has to complete passkey sign-in."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1905
+#: includes/class-advapafo-settings.php:1905
 msgid "Registration challenge timeout"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1907
+#: includes/class-advapafo-settings.php:1907
 msgid "How long a user has to finish passkey registration."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1915
+#: includes/class-advapafo-settings.php:1915
 msgid "Rate limiting"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1916
+#: includes/class-advapafo-settings.php:1916
 msgid "Protect authentication endpoints from repeated failed attempts."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1918
+#: includes/class-advapafo-settings.php:1918
 msgid "Protected"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1922
+#: includes/class-advapafo-settings.php:1922
 msgid "Failure window"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1924
-#: includes/class-pkflow-settings.php:1934
+#: includes/class-advapafo-settings.php:1924
+#: includes/class-advapafo-settings.php:1934
 msgid "Seconds."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1927
+#: includes/class-advapafo-settings.php:1927
 msgid "Max failures"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1929
+#: includes/class-advapafo-settings.php:1929
 msgid "Attempts before lockout."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1932
+#: includes/class-advapafo-settings.php:1932
 msgid "Lockout duration"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1948
+#: includes/class-advapafo-settings.php:1948
 msgid "Login Form"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1950
+#: includes/class-advapafo-settings.php:1950
 msgid "Display a passkey login form on any page."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1951
+#: includes/class-advapafo-settings.php:1951
 msgid "Best for custom login pages."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1954
+#: includes/class-advapafo-settings.php:1954
 msgid "Register Button"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1956
+#: includes/class-advapafo-settings.php:1956
 msgid "Let signed-in users register a new passkey."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1957
+#: includes/class-advapafo-settings.php:1957
 msgid "Best for account and onboarding pages."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1962
+#: includes/class-advapafo-settings.php:1962
 msgid "Show a user-facing passkey management area."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1963
+#: includes/class-advapafo-settings.php:1963
 msgid "Best for profile or dashboard pages."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1966
+#: includes/class-advapafo-settings.php:1966
 msgid "Conditional Prompt"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1968
+#: includes/class-advapafo-settings.php:1968
 msgid "Prompt eligible users to set up passwordless login."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1969
+#: includes/class-advapafo-settings.php:1969
 msgid "Best after login or checkout."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1984
+#: includes/class-advapafo-settings.php:1984
 msgid "Integration-specific passkey entry point."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1985
+#: includes/class-advapafo-settings.php:1985
 msgid "Shown only when the related plugin is active."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1993
+#: includes/class-advapafo-settings.php:1993
 msgid "Drop-in passkey experiences"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:1994
+#: includes/class-advapafo-settings.php:1994
 msgid "Prefer visual editing? Use matching Gutenberg blocks for login, registration, profile prompts, and active integrations or drop in shortcodes wherever you need them."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2009
+#: includes/class-advapafo-settings.php:2009
 msgid "Shortcode quick start guide"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2011
+#: includes/class-advapafo-settings.php:2011
 msgid "Quick start: shortcode guide"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2012
+#: includes/class-advapafo-settings.php:2012
 msgid "Paste a shortcode into any page, post, or block that supports shortcodes. Then add options to control labels, redirects, and behavior."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2017
+#: includes/class-advapafo-settings.php:2017
 msgid "How to add one"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2019
+#: includes/class-advapafo-settings.php:2019
 msgid "Open the page where you want passkey UI to appear."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2020
+#: includes/class-advapafo-settings.php:2020
 msgid "Add a Shortcode block (or paste into classic content)."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2021
+#: includes/class-advapafo-settings.php:2021
 msgid "Paste a shortcode from the cards above and update the page."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2026
+#: includes/class-advapafo-settings.php:2026
 msgid "Most useful options"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2028
+#: includes/class-advapafo-settings.php:2028
 msgid "Change button text."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2029
+#: includes/class-advapafo-settings.php:2029
 msgid "Send users to a specific URL after sign-in."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2030
+#: includes/class-advapafo-settings.php:2030
 msgid "Add your own CSS class for styling."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2031
+#: includes/class-advapafo-settings.php:2031
 msgid "Allow more than one login button on a page (0 or 1)."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2032
+#: includes/class-advapafo-settings.php:2032
 msgid "Set prompt CTA text for passkey setup prompts."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2038
+#: includes/class-advapafo-settings.php:2038
 msgid "Copy-and-paste examples"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2041
+#: includes/class-advapafo-settings.php:2041
 msgid "Custom login button + redirect"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2045
+#: includes/class-advapafo-settings.php:2045
 msgid "Multiple login buttons on one page"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2049
+#: includes/class-advapafo-settings.php:2049
 msgid "Custom register button label"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2053
+#: includes/class-advapafo-settings.php:2053
 msgid "Prompt users to set up passkeys"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2068
+#: includes/class-advapafo-settings.php:2068
 msgid "Quick setup"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2070
+#: includes/class-advapafo-settings.php:2070
 msgid "Activate the plugin"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2071
+#: includes/class-advapafo-settings.php:2071
 msgid "Enable passkeys in Settings"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2072
+#: includes/class-advapafo-settings.php:2072
 msgid "Choose eligible roles"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2073
+#: includes/class-advapafo-settings.php:2073
 msgid "Register your first passkey in Your Profile"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2074
+#: includes/class-advapafo-settings.php:2074
 msgid "Sign out and test the login button"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2084
+#: includes/class-advapafo-settings.php:2084
 msgid "Active integrations"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2085
+#: includes/class-advapafo-settings.php:2085
 msgid "Passkey modules, shortcodes, and Gutenberg blocks are available for these detected plugins."
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2105
+#: includes/class-advapafo-settings.php:2105
 msgid "Maintainer links"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2106
+#: includes/class-advapafo-settings.php:2106
 msgid "Maintained by mbuiux"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2111
+#: includes/class-advapafo-settings.php:2111
 msgid "WordPress.org"
 msgstr ""
 
-#: includes/class-pkflow-settings.php:2119
+#: includes/class-advapafo-settings.php:2119
 msgid "GitHub"
 msgstr ""
 
-#: includes/class-pkflow-shortcodes.php:271
+#: includes/class-advapafo-shortcodes.php:271
 msgid "Passkey setup prompt"
 msgstr ""
 
-#: includes/class-pkflow-shortcodes.php:277
+#: includes/class-advapafo-shortcodes.php:277
 msgid "Biometric login in seconds"
 msgstr ""
 
-#: includes/class-pkflow-shortcodes.php:278
+#: includes/class-advapafo-shortcodes.php:278
 msgid "Stronger protection than passwords"
 msgstr ""
 
-#: includes/class-pkflow-shortcodes.php:279
+#: includes/class-advapafo-shortcodes.php:279
 msgid "Works across your trusted devices"
 msgstr ""
 
-#: admin/js/pkflow-gutenberg-blocks.js:106
-#: admin/js/pkflow-gutenberg-blocks.js:114
+#: admin/js/advapafo-gutenberg-blocks.js:106
+#: admin/js/advapafo-gutenberg-blocks.js:114
 msgid "Passkey Login"
 msgstr ""
 
-#: admin/js/pkflow-gutenberg-blocks.js:107
+#: admin/js/advapafo-gutenberg-blocks.js:107
 msgid "Render a passkey sign-in control."
 msgstr ""
 
-#: admin/js/pkflow-gutenberg-blocks.js:115
+#: admin/js/advapafo-gutenberg-blocks.js:115
 msgid "Preview of the passkey CTA shown for this block."
 msgstr ""
 
-#: admin/js/pkflow-gutenberg-blocks.js:126
+#: admin/js/advapafo-gutenberg-blocks.js:126
 msgid "Block settings"
 msgstr ""

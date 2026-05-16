@@ -13,8 +13,8 @@
     var ToggleControl = wp.components.ToggleControl;
     var SelectControl = wp.components.SelectControl;
 
-    var registry = (window.PKFLOWIntegrationBlocks && Array.isArray(window.PKFLOWIntegrationBlocks.blocks))
-        ? window.PKFLOWIntegrationBlocks.blocks
+    var registry = (window.ADVAPAFOIntegrationBlocks && Array.isArray(window.ADVAPAFOIntegrationBlocks.blocks))
+        ? window.ADVAPAFOIntegrationBlocks.blocks
         : [];
 
     if (!registry.length) {
@@ -116,7 +116,7 @@
 
                 return createElement(
                     'div',
-                    { className: 'pkflow-block-editor-card' },
+                    { className: 'advapafo-block-editor-card' },
                     createElement(
                         InspectorControls,
                         null,
@@ -131,8 +131,8 @@
                             })
                         )
                     ),
-                    createElement('p', { className: 'pkflow-block-editor-card__title' }, title),
-                    createElement('p', { className: 'pkflow-block-editor-card__hint' }, hint),
+                    createElement('p', { className: 'advapafo-block-editor-card__title' }, title),
+                    createElement('p', { className: 'advapafo-block-editor-card__hint' }, hint),
                     createElement('button', {
                         type: 'button',
                         className: 'button button-primary',

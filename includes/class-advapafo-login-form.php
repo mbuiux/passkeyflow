@@ -1,9 +1,9 @@
 <?php
 // phpcs:ignoreFile WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
 /**
- * PKFLOW_Login_Form — injects the passkey button into wp-login.php.
+ * ADVAPAFO_Login_Form — injects the passkey button into wp-login.php.
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Renders passkey controls on the default WordPress login form.
  */
-class PKFLOW_Login_Form {
+class ADVAPAFO_Login_Form {
 	/**
 	 * Register login form hooks.
 	 */
@@ -27,7 +27,7 @@ class PKFLOW_Login_Form {
 	 * Only shown when the WebAuthn library is available and passkeys are enabled.
 	 */
 	public function render_passkey_button(): void {
-		if ( ! class_exists( 'PKFLOW_Passkeys' ) || ! PKFLOW_Passkeys::is_enabled() ) {
+		if ( ! class_exists( 'ADVAPAFO_Passkeys' ) || ! ADVAPAFO_Passkeys::is_enabled() ) {
 			return;
 		}
 
@@ -35,23 +35,23 @@ class PKFLOW_Login_Form {
 			return;
 		}
 
-		$show_sep = (int) get_option( 'pkflow_show_separator', 1 ) === 1;
+		$show_sep = (int) get_option( 'advapafo_show_separator', 1 ) === 1;
 
 		?>
 
-		<div id="pkflow-login-passkey-block">
+		<div id="advapafo-login-passkey-block">
 			<?php if ( $show_sep ) : ?>
-			<div class="pkflow-login-separator" role="separator" aria-label="<?php esc_attr_e( 'or', 'advanced-passkey-login' ); ?>">
+			<div class="advapafo-login-separator" role="separator" aria-label="<?php esc_attr_e( 'or', 'advanced-passkey-login' ); ?>">
 				<span><?php esc_html_e( 'OR', 'advanced-passkey-login' ); ?></span>
 			</div>
 			<?php endif; ?>
 
-			<div class="<?php echo esc_attr( 'pkflow-login-passkey-wrap' . ( $show_sep ? '' : ' pkflow-no-separator' ) ); ?>">
+			<div class="<?php echo esc_attr( 'advapafo-login-passkey-wrap' . ( $show_sep ? '' : ' advapafo-no-separator' ) ); ?>">
 				<button type="button"
-						id="pkflow-signin-passkey"
-						class="button button-large pkflow-passkey-btn"
+						id="advapafo-signin-passkey"
+						class="button button-large advapafo-passkey-btn"
 						aria-label="<?php esc_attr_e( 'Sign in with a passkey (Face ID, Touch ID, or security key)', 'advanced-passkey-login' ); ?>">
-					<span class="pkflow-passkey-icon" aria-hidden="true">
+					<span class="advapafo-passkey-icon" aria-hidden="true">
 						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M12.4 2.7a2.5 2.5 0 0 1 3.4 0l5.5 5.5a2.5 2.5 0 0 1 0 3.4l-3.7 3.7a2.5 2.5 0 0 1-3.4 0L8.7 9.8a2.5 2.5 0 0 1 0-3.4z"/>
 							<path d="m14 7 3 3"/>
@@ -60,8 +60,8 @@ class PKFLOW_Login_Form {
 					</span>
 					<?php esc_html_e( 'Sign in with Passkey', 'advanced-passkey-login' ); ?>
 				</button>
-				<p id="pkflow-passkey-login-message"
-					class="pkflow-login-message pkflow-is-hidden"
+				<p id="advapafo-passkey-login-message"
+					class="advapafo-login-message advapafo-is-hidden"
 					aria-live="polite"
 					></p>
 			</div>

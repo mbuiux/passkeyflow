@@ -20,9 +20,9 @@ Advanced Passkeys for Secure Login replaces passwords with passkeys — cryptogr
 - Passkey registration and authentication via the **WebAuthn Level 2** spec
 - Works with **Face ID, Touch ID, Windows Hello, Android biometrics, YubiKey** and any FIDO2 authenticator
 - Drop-in passkey button on `wp-login.php` — no template edits required
-- `[pkflow_login_button]` and `[pkflow_register_button]` shortcodes for front-end placement
-- `[pkflow_passkey_profile]` shortcode for logged-in passkey management UI
-- `[pkflow_passkey_prompt]` shortcode for conditional passkey enrollment prompts
+- `[advapafo_login_button]` and `[advapafo_register_button]` shortcodes for front-end placement
+- `[advapafo_passkey_profile]` shortcode for logged-in passkey management UI
+- `[advapafo_passkey_prompt]` shortcode for conditional passkey enrollment prompts
 - Integration-aware passkey modules for **WooCommerce, Easy Digital Downloads, MemberPress, Ultimate Member, LearnDash, BuddyBoss, Gravity Forms, and PMPro**
 - Integration shortcodes and Gutenberg blocks auto-register when supported plugins are active
 - Integration modules also auto-inject passkey entry points into supported login and checkout surfaces when enabled
@@ -81,18 +81,18 @@ Then symlink or copy the folder into your WordPress plugins directory and activa
 advanced-passkey-login/
 ├── admin/
 │   ├── css/
-│   │   └── pkflow-admin.css          # All admin + login UI styles
+│   │   └── advapafo-admin.css          # All admin + login UI styles
 │   └── js/
-│       ├── pkflow-login.js           # Login page WebAuthn flow
-│       ├── pkflow-profile.js         # Profile page registration + revoke flow
-│       ├── pkflow-dashboard.js       # Dashboard tab charts and activity rendering
-│       └── pkflow-gutenberg-blocks.js # Integration block registration in editor
+│       ├── advapafo-login.js           # Login page WebAuthn flow
+│       ├── advapafo-profile.js         # Profile page registration + revoke flow
+│       ├── advapafo-dashboard.js       # Dashboard tab charts and activity rendering
+│       └── advapafo-gutenberg-blocks.js # Integration block registration in editor
 ├── includes/
-│   ├── class-pkflow-passkeys.php     # Core WebAuthn engine, AJAX handlers, rate limiting
-│   ├── class-pkflow-settings.php     # Settings page, tabs, field renderers
-│   ├── class-pkflow-login-form.php   # Injects passkey button on wp-login.php
-│   ├── class-pkflow-shortcodes.php   # [pkflow_login_button] and [pkflow_register_button]
-│   └── class-pkflow-integration-manager.php # Integration modules, shortcodes, and blocks
+│   ├── class-advapafo-passkeys.php     # Core WebAuthn engine, AJAX handlers, rate limiting
+│   ├── class-advapafo-settings.php     # Settings page, tabs, field renderers
+│   ├── class-advapafo-login-form.php   # Injects passkey button on wp-login.php
+│   ├── class-advapafo-shortcodes.php   # [advapafo_login_button] and [advapafo_register_button]
+│   └── class-advapafo-integration-manager.php # Integration modules, shortcodes, and blocks
 ├── languages/                     # Translation files (.pot)
 ├── vendor/                        # Composer dependencies
 ├── composer.json
@@ -124,18 +124,18 @@ All three tables are dropped on plugin uninstall via `uninstall.php`.
 Add any of these to `wp-config.php` to override database settings at the server level:
 
 ```php
-define( 'PKFLOW_CHALLENGE_TTL',  120 );          // Challenge timeout in seconds (default: 300)
-define( 'PKFLOW_ENABLE_LOGGING', true );          // Enable activity logging to wp_wpk_logs
-define( 'PKFLOW_RP_ID',          'example.com' ); // Override the WebAuthn Relying Party ID
-define( 'PKFLOW_RP_NAME',        'My Site' );     // Override the RP display name
-define( 'PKFLOW_ALLOW_HTTP',     true );          // Allow passkeys over HTTP (dev only — never in production)
+define( 'ADVAPAFO_CHALLENGE_TTL',  120 );          // Challenge timeout in seconds (default: 300)
+define( 'ADVAPAFO_ENABLE_LOGGING', true );          // Enable activity logging to wp_wpk_logs
+define( 'ADVAPAFO_RP_ID',          'example.com' ); // Override the WebAuthn Relying Party ID
+define( 'ADVAPAFO_RP_NAME',        'My Site' );     // Override the RP display name
+define( 'ADVAPAFO_ALLOW_HTTP',     true );          // Allow passkeys over HTTP (dev only — never in production)
 ```
 
 ---
 
 ## Shortcodes
 
-### `[pkflow_login_button]`
+### `[advapafo_login_button]`
 
 Renders the passkey sign-in button for logged-out visitors.
 
@@ -146,10 +146,10 @@ Renders the passkey sign-in button for logged-out visitors.
 | `class` | — | Extra CSS class(es) on the wrapper |
 
 ```
-[pkflow_login_button label="Sign in with your passkey" redirect_to="/dashboard"]
+[advapafo_login_button label="Sign in with your passkey" redirect_to="/dashboard"]
 ```
 
-### `[pkflow_register_button]`
+### `[advapafo_register_button]`
 
 Renders the passkey registration button for logged-in eligible users.
 
@@ -159,18 +159,18 @@ Renders the passkey registration button for logged-in eligible users.
 | `class` | — | Extra CSS class(es) on the wrapper |
 
 ```
-[pkflow_register_button label="Add a passkey to your account"]
+[advapafo_register_button label="Add a passkey to your account"]
 ```
 
-### `[pkflow_passkey_profile]`
+### `[advapafo_passkey_profile]`
 
 Renders passkey profile management for logged-in, eligible users.
 
 ```text
-[pkflow_passkey_profile]
+[advapafo_passkey_profile]
 ```
 
-### `[pkflow_passkey_prompt]`
+### `[advapafo_passkey_prompt]`
 
 Renders a conditional passkey setup prompt for logged-in, eligible users.
 
@@ -182,21 +182,21 @@ Supported attributes:
 - `force_show`
 
 ```text
-[pkflow_passkey_prompt title="Secure your account" button_label="Set up passkey"]
+[advapafo_passkey_prompt title="Secure your account" button_label="Set up passkey"]
 ```
 
 ### Integration Shortcodes
 
 These are registered only when the related plugin is active and its module is enabled:
 
-- `[pkflow_woocommerce_login]`
-- `[pkflow_edd_login]`
-- `[pkflow_memberpress_login]`
-- `[pkflow_ultimate_member_login]`
-- `[pkflow_learndash_login]`
-- `[pkflow_buddyboss_login]`
-- `[pkflow_gravityforms_login]`
-- `[pkflow_pmp_login]`
+- `[advapafo_woocommerce_login]`
+- `[advapafo_edd_login]`
+- `[advapafo_memberpress_login]`
+- `[advapafo_ultimate_member_login]`
+- `[advapafo_learndash_login]`
+- `[advapafo_buddyboss_login]`
+- `[advapafo_gravityforms_login]`
+- `[advapafo_pmp_login]`
 
 ### Integration Gutenberg Blocks
 
@@ -274,7 +274,7 @@ See [readme.txt](readme.txt) for the full changelog in WordPress.org format.
 - Daily cron cleanup (expired rate limits + old log entries)
 - Challenge TTL setting (30–600 s)
 - Login redirect URL setting
-- `[pkflow_login_button]` and `[pkflow_register_button]` shortcodes
+- `[advapafo_login_button]` and `[advapafo_register_button]` shortcodes
 
 ### 1.0.0
 - Initial release

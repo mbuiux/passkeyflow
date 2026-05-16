@@ -1,6 +1,6 @@
 <?php
 /**
- * PKFLOW_Passkeys — core WebAuthn engine.
+ * ADVAPAFO_Passkeys — core WebAuthn engine.
  *
  * Handles:
  *  - DB table creation (credentials + rate limits)
@@ -10,14 +10,20 @@
  *  - Per-user passkey cap (0 means unlimited)
  *
  * Extension points (filters / actions):
- *  - Filter  pkflow_is_eligible_user          ( bool, WP_User )
- *  - Filter  pkflow_max_passkeys_per_user      ( int,  WP_User )
- *  - Filter  pkflow_login_redirect             ( string redirect_url, WP_User )
- *  - Action  pkflow_passkey_registered         ( int user_id, string credential_hash )
- *  - Action  pkflow_passkey_login_success      ( int user_id, string credential_hash, string device_info )
- *  - Action  pkflow_passkey_revoked            ( int user_id, int credential_id )
+ *  - Filter  advapafo_is_eligible_user          ( bool, WP_User )
+ *  - Filter  advapafo_max_passkeys_per_user      ( int,  WP_User )
+ *  - Filter  advapafo_login_redirect             ( string redirect_url, WP_User )
+ *  - Filter  advapafo_passkey_allow_session_establishment ( bool, WP_User, string credential_hash )
+ *  - Filter  advapafo_passkey_remember_me        ( bool remember, WP_User )
+ *  - Filter  advapafo_passkey_fire_wp_login      ( bool, WP_User )
+ *  - Filter  advapafo_passkey_emit_wp_login_failed ( bool, WP_User, string credential_hash, string reason )
+ *  - Action  advapafo_passkey_registered         ( int user_id, string credential_hash )
+ *  - Action  advapafo_passkey_login_success      ( int user_id, string credential_hash, string device_info )
+ *  - Action  advapafo_passkey_session_established ( int user_id, bool remember )
+ *  - Action  advapafo_passkey_login_failed       ( int user_id, string credential_hash, string reason )
+ *  - Action  advapafo_passkey_revoked            ( int user_id, int credential_id )
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
@@ -32,7 +38,21 @@ use lbuchs\WebAuthn\WebAuthn;
 /**
  * Passkey registration/authentication and credential lifecycle manager.
  */
-class PKFLOW_Passkeys {
+class ADVAPAFO_Passkeys {
+	/**
+	 * Short-lived context for one-time passkey wp_signon bridging.
+	 *
+	 * @var array<string, string|int>|null
+	 */
+	private $passkey_signon_context = null;
+
+	/**
+	 * Number of passkey wp_signon bridge attempts in the current request.
+	 *
+	 * @var int
+	 */
+	private $passkey_signon_attempts = 0;
+
 	/**
 	 * Singleton instance.
 	 *
@@ -41,8 +61,8 @@ class PKFLOW_Passkeys {
 
 	private static $instance = null;
 
-	const TABLE_CREDENTIALS    = 'pkflow_credentials';
-	const TABLE_RATE_LIMITS    = 'pkflow_rate_limits';
+	const TABLE_CREDENTIALS    = 'advapafo_credentials';
+	const TABLE_RATE_LIMITS    = 'advapafo_rate_limits';
 	const DEFAULT_MAX_PASSKEYS = 0;
 
 	// ──────────────────────────────────────────────────────────
@@ -55,10 +75,10 @@ class PKFLOW_Passkeys {
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		if ( defined( 'PKFLOW_ENABLED' ) ) {
-			return (bool) PKFLOW_ENABLED;
+		if ( defined( 'ADVAPAFO_ENABLED' ) ) {
+			return (bool) ADVAPAFO_ENABLED;
 		}
-		return (int) get_option( 'pkflow_enabled', 1 ) === 1;
+		return (int) get_option( 'advapafo_enabled', 1 ) === 1;
 	}
 
 	/**
@@ -69,8 +89,8 @@ class PKFLOW_Passkeys {
 	 * @return bool
 	 */
 	public static function user_is_eligible( WP_User $user ): bool {
-		$allowed_roles = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
-		$eligible      = apply_filters( 'pkflow_is_eligible_user', null, $user );
+		$allowed_roles = (array) get_option( 'advapafo_eligible_roles', array( 'administrator' ) );
+		$eligible      = apply_filters( 'advapafo_is_eligible_user', null, $user );
 		if ( null !== $eligible ) {
 			return (bool) $eligible;
 		}
@@ -93,9 +113,9 @@ class PKFLOW_Passkeys {
 		self::$instance = $this;
 
 		// One-time schema patch: remove raw AAGUID storage from the shared credentials table.
-		if ( is_admin() && current_user_can( 'manage_options' ) && (int) get_option( 'pkflow_credentials_schema_v2', 0 ) !== 1 ) {
+		if ( is_admin() && current_user_can( 'manage_options' ) && (int) get_option( 'advapafo_credentials_schema_v2', 0 ) !== 1 ) {
 			self::ensure_credentials_schema_v2();
-			update_option( 'pkflow_credentials_schema_v2', 1, false );
+			update_option( 'advapafo_credentials_schema_v2', 1, false );
 		}
 
 		// Profile hooks.
@@ -112,21 +132,21 @@ class PKFLOW_Passkeys {
 
 		// Admin: passkey setup nudge notice.
 		add_action( 'admin_notices', array( $this, 'render_setup_notice' ) );
-		add_action( 'wp_ajax_pkflow_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
+		add_action( 'wp_ajax_advapafo_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
 
 		// Cron: scheduled cleanup.
-		add_action( 'pkflow_scheduled_cleanup', array( $this, 'run_scheduled_cleanup' ) );
+		add_action( 'advapafo_scheduled_cleanup', array( $this, 'run_scheduled_cleanup' ) );
 
 		// AJAX — authenticated (registration + revocation).
-		add_action( 'wp_ajax_pkflow_begin_registration', array( $this, 'ajax_begin_registration' ) );
-		add_action( 'wp_ajax_pkflow_finish_registration', array( $this, 'ajax_finish_registration' ) );
-		add_action( 'wp_ajax_pkflow_revoke_credential', array( $this, 'ajax_revoke_credential' ) );
+		add_action( 'wp_ajax_advapafo_begin_registration', array( $this, 'ajax_begin_registration' ) );
+		add_action( 'wp_ajax_advapafo_finish_registration', array( $this, 'ajax_finish_registration' ) );
+		add_action( 'wp_ajax_advapafo_revoke_credential', array( $this, 'ajax_revoke_credential' ) );
 
 		// AJAX — public + authenticated (login).
-		add_action( 'wp_ajax_nopriv_pkflow_begin_login', array( $this, 'ajax_begin_login' ) );
-		add_action( 'wp_ajax_pkflow_begin_login', array( $this, 'ajax_begin_login' ) );
-		add_action( 'wp_ajax_nopriv_pkflow_finish_login', array( $this, 'ajax_finish_login' ) );
-		add_action( 'wp_ajax_pkflow_finish_login', array( $this, 'ajax_finish_login' ) );
+		add_action( 'wp_ajax_nopriv_advapafo_begin_login', array( $this, 'ajax_begin_login' ) );
+		add_action( 'wp_ajax_advapafo_begin_login', array( $this, 'ajax_begin_login' ) );
+		add_action( 'wp_ajax_nopriv_advapafo_finish_login', array( $this, 'ajax_finish_login' ) );
+		add_action( 'wp_ajax_advapafo_finish_login', array( $this, 'ajax_finish_login' ) );
 	}
 
 	/**
@@ -182,7 +202,7 @@ class PKFLOW_Passkeys {
             KEY window_expires_at (window_expires_at)
         ) $charset;";
 
-		$logs     = $wpdb->prefix . 'pkflow_logs';
+		$logs     = $wpdb->prefix . 'advapafo_logs';
 		$sql_logs = "CREATE TABLE $logs (
             id             BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             event_type     VARCHAR(64) NOT NULL,
@@ -200,7 +220,7 @@ class PKFLOW_Passkeys {
 		dbDelta( $sql_logs );
 
 		self::ensure_credentials_schema_v2();
-		update_option( 'pkflow_credentials_schema_v2', 1, false );
+		update_option( 'advapafo_credentials_schema_v2', 1, false );
 	}
 
 	/**
@@ -229,7 +249,7 @@ class PKFLOW_Passkeys {
 		global $wpdb;
 		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . self::TABLE_CREDENTIALS ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
 		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . self::TABLE_RATE_LIMITS );  // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
-		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'pkflow_logs' );               // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'advapafo_logs' );               // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
 	}
 
 	// ──────────────────────────────────────────────────────────
@@ -267,7 +287,7 @@ class PKFLOW_Passkeys {
 			}
 		}
 
-		if ( ! (int) get_option( 'pkflow_show_setup_notice', 1 ) ) {
+		if ( ! (int) get_option( 'advapafo_show_setup_notice', 1 ) ) {
 			return;
 		}
 
@@ -276,7 +296,7 @@ class PKFLOW_Passkeys {
 			return;
 		}
 
-		$dismissed_key = 'pkflow_notice_dismissed_' . (int) $user->ID;
+		$dismissed_key = 'advapafo_notice_dismissed_' . (int) $user->ID;
 		if ( get_user_meta( (int) $user->ID, $dismissed_key, true ) ) {
 			return;
 		}
@@ -285,10 +305,10 @@ class PKFLOW_Passkeys {
 			return;
 		}
 
-		$profile_url = admin_url( 'profile.php#pkflow-profile-section' );
-		$nonce       = wp_create_nonce( 'pkflow_dismiss_notice' );
+		$profile_url = admin_url( 'profile.php#advapafo-profile-section' );
+		$nonce       = wp_create_nonce( 'advapafo_dismiss_notice' );
 		?>
-		<div class="notice notice-info is-dismissible pkflow-setup-notice" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+		<div class="notice notice-info is-dismissible advapafo-setup-notice" data-nonce="<?php echo esc_attr( $nonce ); ?>">
 			<p>
 				<strong><?php esc_html_e( 'Set up a passkey for faster, more secure sign-ins.', 'advanced-passkey-login' ); ?></strong>
 				<?php
@@ -310,7 +330,11 @@ class PKFLOW_Passkeys {
 	 * Handle setup-notice dismissal AJAX request.
 	 */
 	public function ajax_dismiss_notice(): void {
-		if ( ! check_ajax_referer( 'pkflow_dismiss_notice', 'nonce', false ) ) {
+		if ( ! $this->is_post_request() ) {
+			wp_send_json_error( null, 405 );
+		}
+
+		if ( ! check_ajax_referer( 'advapafo_dismiss_notice', 'nonce', false ) ) {
 			wp_send_json_error( null, 403 );
 		}
 
@@ -327,7 +351,7 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( null, 403 );
 		}
 
-		update_user_meta( $user_id, 'pkflow_notice_dismissed_' . $user_id, 1 );
+		update_user_meta( $user_id, 'advapafo_notice_dismissed_' . $user_id, 1 );
 		wp_send_json_success();
 	}
 
@@ -342,7 +366,7 @@ class PKFLOW_Passkeys {
 	 * @return array<string, string>
 	 */
 	public function users_column_header( array $columns ): array {
-		$columns['pkflow_passkeys'] = __( 'Passkeys', 'advanced-passkey-login' );
+		$columns['advapafo_passkeys'] = __( 'Passkeys', 'advanced-passkey-login' );
 		return $columns;
 	}
 
@@ -355,24 +379,24 @@ class PKFLOW_Passkeys {
 	 * @return string
 	 */
 	public function users_column_content( string $output, string $column_name, int $user_id ): string {
-		if ( 'pkflow_passkeys' !== $column_name ) {
+		if ( 'advapafo_passkeys' !== $column_name ) {
 			return $output;
 		}
 
 		$user = get_user_by( 'id', $user_id );
 		if ( ! $user || ! $this->is_eligible_user( $user ) ) {
-			return '<span class="pkflow-user-passkeys-muted">—</span>';
+			return '<span class="advapafo-user-passkeys-muted">—</span>';
 		}
 
 		$count = $this->count_user_credentials( $user_id );
 		if ( 0 === $count ) {
-			return '<span class="pkflow-user-passkeys-muted">0</span>';
+			return '<span class="advapafo-user-passkeys-muted">0</span>';
 		}
 
 		$url = add_query_arg(
 			array(
 				'user_id' => $user_id,
-				'anchor'  => 'pkflow-profile-section',
+				'anchor'  => 'advapafo-profile-section',
 			),
 			admin_url( 'user-edit.php' )
 		);
@@ -398,7 +422,7 @@ class PKFLOW_Passkeys {
 	 * @return array<string, string>
 	 */
 	public function users_column_sortable( array $columns ): array {
-		$columns['pkflow_passkeys'] = 'pkflow_passkeys';
+		$columns['advapafo_passkeys'] = 'advapafo_passkeys';
 		return $columns;
 	}
 
@@ -410,8 +434,8 @@ class PKFLOW_Passkeys {
 	 * Schedule recurring cleanup cron hook.
 	 */
 	public static function schedule_cron(): void {
-		if ( ! wp_next_scheduled( 'pkflow_scheduled_cleanup' ) ) {
-			wp_schedule_event( time(), 'daily', 'pkflow_scheduled_cleanup' );
+		if ( ! wp_next_scheduled( 'advapafo_scheduled_cleanup' ) ) {
+			wp_schedule_event( time(), 'daily', 'advapafo_scheduled_cleanup' );
 		}
 	}
 
@@ -420,14 +444,14 @@ class PKFLOW_Passkeys {
 	 */
 	public static function unschedule_cron(): void {
 		if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
-			wp_clear_scheduled_hook( 'pkflow_scheduled_cleanup' );
+			wp_clear_scheduled_hook( 'advapafo_scheduled_cleanup' );
 			return;
 		}
 
-		$timestamp = wp_next_scheduled( 'pkflow_scheduled_cleanup' );
+		$timestamp = wp_next_scheduled( 'advapafo_scheduled_cleanup' );
 		while ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'pkflow_scheduled_cleanup' );
-			$timestamp = wp_next_scheduled( 'pkflow_scheduled_cleanup' );
+			wp_unschedule_event( $timestamp, 'advapafo_scheduled_cleanup' );
+			$timestamp = wp_next_scheduled( 'advapafo_scheduled_cleanup' );
 		}
 	}
 
@@ -444,8 +468,8 @@ class PKFLOW_Passkeys {
 		);
 
 		// Purge log rows older than the configured retention window.
-		$keep_days = max( 7, (int) get_option( 'pkflow_log_retention_days', 90 ) );
-		$log_table = esc_sql( $wpdb->prefix . 'pkflow_logs' );
+		$keep_days = max( 7, (int) get_option( 'advapafo_log_retention_days', 90 ) );
+		$log_table = esc_sql( $wpdb->prefix . 'advapafo_logs' );
 		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- maintenance delete on plugin-owned log table.
 			$wpdb->prepare( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				"DELETE FROM {$log_table} WHERE log_timestamp < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -470,9 +494,9 @@ class PKFLOW_Passkeys {
 
 		$screen_uid = get_current_user_id();
 		if ( 'user-edit.php' === $hook ) {
-			global $user_id;
-			if ( isset( $user_id ) ) {
-				$screen_uid = absint( $user_id );
+			$advapafo_requested_user_id = filter_input( INPUT_GET, 'user_id', FILTER_SANITIZE_NUMBER_INT );
+			if ( null !== $advapafo_requested_user_id && false !== $advapafo_requested_user_id ) {
+				$screen_uid = absint( $advapafo_requested_user_id );
 			}
 		}
 
@@ -487,19 +511,19 @@ class PKFLOW_Passkeys {
 		}
 
 		wp_enqueue_script(
-			'pkflow-profile',
-			PKFLOW_PLUGIN_URL . 'admin/js/pkflow-profile.js',
+			'advapafo-profile',
+			ADVAPAFO_PLUGIN_URL . 'admin/js/advapafo-profile.js',
 			array(),
-			PKFLOW_VERSION,
+			ADVAPAFO_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'pkflow-profile',
-			'PKFLOWProfile',
+			'advapafo-profile',
+			'ADVAPAFOProfile',
 			array(
 				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'pkflow_profile' ),
+				'nonce'    => wp_create_nonce( 'advapafo_profile' ),
 				'messages' => array(
 					'labelPlaceholder' => __( 'e.g. iPhone 15, YubiKey 5', 'advanced-passkey-login' ),
 					'starting'         => __( 'Starting passkey registration…', 'advanced-passkey-login' ),
@@ -514,7 +538,7 @@ class PKFLOW_Passkeys {
 			)
 		);
 
-		wp_enqueue_style( 'pkflow-admin', PKFLOW_PLUGIN_URL . 'admin/css/pkflow-admin.css', array(), PKFLOW_VERSION );
+		wp_enqueue_style( 'advapafo-admin', ADVAPAFO_PLUGIN_URL . 'admin/css/advapafo-admin.css', array(), ADVAPAFO_VERSION );
 	}
 
 	/**
@@ -522,19 +546,19 @@ class PKFLOW_Passkeys {
 	 */
 	public function enqueue_login_assets(): void {
 		wp_enqueue_script(
-			'pkflow-login',
-			PKFLOW_PLUGIN_URL . 'admin/js/pkflow-login.js',
+			'advapafo-login',
+			ADVAPAFO_PLUGIN_URL . 'admin/js/advapafo-login.js',
 			array(),
-			PKFLOW_VERSION,
+			ADVAPAFO_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'pkflow-login',
-			'PKFLOWLogin',
+			'advapafo-login',
+			'ADVAPAFOLogin',
 			array(
 				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'pkflow_login' ),
+				'nonce'    => wp_create_nonce( 'advapafo_login' ),
 				'messages' => array(
 					'notSupported' => __( 'Passkeys are unavailable here. Use HTTPS (or localhost) in a passkey-capable browser, or sign in with your password.', 'advanced-passkey-login' ),
 					'genericError' => __( 'Passkey sign-in failed. Please try again or use your password.', 'advanced-passkey-login' ),
@@ -543,7 +567,7 @@ class PKFLOW_Passkeys {
 			)
 		);
 
-		wp_enqueue_style( 'pkflow-login', PKFLOW_PLUGIN_URL . 'admin/css/pkflow-admin.css', array(), PKFLOW_VERSION );
+		wp_enqueue_style( 'advapafo-login', ADVAPAFO_PLUGIN_URL . 'admin/css/advapafo-admin.css', array(), ADVAPAFO_VERSION );
 	}
 
 	// ──────────────────────────────────────────────────────────
@@ -569,28 +593,28 @@ class PKFLOW_Passkeys {
 		$at_limit     = count( $credentials ) >= $max_passkeys;
 		$max_display  = $max_passkeys >= 999999 ? __( 'unlimited', 'advanced-passkey-login' ) : (string) $max_passkeys;
 		?>
-		<div class="pkflow-profile-section" id="pkflow-profile-section">
+		<div class="advapafo-profile-section" id="advapafo-profile-section">
 
-			<div class="pkflow-profile-header">
+			<div class="advapafo-profile-header">
 				<div>
 					<h2><?php esc_html_e( 'Passkeys', 'advanced-passkey-login' ); ?></h2>
 					<p><?php esc_html_e( 'Sign in with your fingerprint, face, or a hardware security key — no password needed.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<span class="pkflow-profile-count">
+				<span class="advapafo-profile-count">
 					<?php echo esc_html( count( $credentials ) ); ?>&thinsp;/&thinsp;<?php echo esc_html( $max_display ); ?>
-					<span class="pkflow-profile-count-label"><?php esc_html_e( 'passkeys', 'advanced-passkey-login' ); ?></span>
+					<span class="advapafo-profile-count-label"><?php esc_html_e( 'passkeys', 'advanced-passkey-login' ); ?></span>
 				</span>
 			</div>
 
-			<div class="pkflow-profile-card">
+			<div class="advapafo-profile-card">
 
-				<div class="pkflow-profile-register-row">
-					<div class="pkflow-profile-register-header">
-						<span class="pkflow-profile-register-title"><?php esc_html_e( 'Register new passkey', 'advanced-passkey-login' ); ?></span>
+				<div class="advapafo-profile-register-row">
+					<div class="advapafo-profile-register-header">
+						<span class="advapafo-profile-register-title"><?php esc_html_e( 'Register new passkey', 'advanced-passkey-login' ); ?></span>
 					</div>
 
 					<?php if ( $at_limit ) : ?>
-						<div class="pkflow-profile-limit-notice">
+						<div class="advapafo-profile-limit-notice">
 							<?php
 							printf(
 								/* translators: %d number of passkeys */
@@ -598,57 +622,57 @@ class PKFLOW_Passkeys {
 								(int) $max_passkeys
 							);
 							?>
-							<?php do_action( 'pkflow_profile_limit_reached_cta', $user ); ?>
+							<?php do_action( 'advapafo_profile_limit_reached_cta', $user ); ?>
 						</div>
 					<?php else : ?>
-						<div class="pkflow-profile-register-controls">
-							<label for="pkflow-passkey-label" class="screen-reader-text"><?php esc_html_e( 'Device label (optional)', 'advanced-passkey-login' ); ?></label>
+						<div class="advapafo-profile-register-controls">
+							<label for="advapafo-passkey-label" class="screen-reader-text"><?php esc_html_e( 'Device label (optional)', 'advanced-passkey-login' ); ?></label>
 							<input type="text"
-									id="pkflow-passkey-label"
-									class="pkflow-profile-label-input"
+									id="advapafo-passkey-label"
+									class="advapafo-profile-label-input"
 									placeholder="<?php esc_attr_e( 'Device label (optional)', 'advanced-passkey-login' ); ?>"
 									maxlength="100" />
-							<button type="button" class="pkflow-profile-btn" id="pkflow-passkey-register">
+							<button type="button" class="advapafo-profile-btn" id="advapafo-passkey-register">
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
 								<?php esc_html_e( 'Register New Passkey', 'advanced-passkey-login' ); ?>
 							</button>
-							<p class="pkflow-profile-tip"><?php esc_html_e( 'Tip: open this page on your phone to save to iCloud Keychain or Google Password Manager.', 'advanced-passkey-login' ); ?></p>
-							<p id="pkflow-passkey-profile-message" class="pkflow-inline-message" role="alert" aria-live="assertive"></p>
+							<p class="advapafo-profile-tip"><?php esc_html_e( 'Tip: open this page on your phone to save to iCloud Keychain or Google Password Manager.', 'advanced-passkey-login' ); ?></p>
+							<p id="advapafo-passkey-profile-message" class="advapafo-inline-message" role="alert" aria-live="assertive"></p>
 						</div>
 					<?php endif; ?>
 				</div>
 
 				<?php if ( ! empty( $credentials ) ) : ?>
-				<div class="pkflow-profile-creds">
+				<div class="advapafo-profile-creds">
 					<?php if ( 1 === count( $credentials ) ) : ?>
-						<div class="pkflow-profile-warning">
+						<div class="advapafo-profile-warning">
 							<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 							<?php esc_html_e( 'Only one passkey registered. Add a backup on another device to avoid getting locked out.', 'advanced-passkey-login' ); ?>
 						</div>
 					<?php endif; ?>
 
-					<table class="pkflow-creds-table">
+					<table class="advapafo-creds-table">
 						<thead>
 							<tr>
 								<th><?php esc_html_e( 'Label', 'advanced-passkey-login' ); ?></th>
 								<th><?php esc_html_e( 'Registered', 'advanced-passkey-login' ); ?></th>
 								<th><?php esc_html_e( 'Last Used', 'advanced-passkey-login' ); ?></th>
-								<?php do_action( 'pkflow_profile_table_header', $user ); ?>
+								<?php do_action( 'advapafo_profile_table_header', $user ); ?>
 								<th><?php esc_html_e( 'Action', 'advanced-passkey-login' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php foreach ( $credentials as $cred ) : ?>
 								<tr data-credential-id="<?php echo esc_attr( (string) $cred->id ); ?>">
-									<td class="pkflow-creds-label">
-										<span class="pkflow-creds-dot" aria-hidden="true"></span>
+									<td class="advapafo-creds-label">
+										<span class="advapafo-creds-dot" aria-hidden="true"></span>
 										<?php echo esc_html( '' !== (string) $cred->credential_label ? (string) $cred->credential_label : __( 'Passkey', 'advanced-passkey-login' ) ); ?>
 									</td>
 									<td><?php echo esc_html( $this->format_utc_datetime_for_display( (string) $cred->created_at ) ); ?></td>
 									<td><?php echo null !== $cred->last_used_at ? esc_html( $this->format_utc_datetime_for_display( (string) $cred->last_used_at ) ) : esc_html__( 'Never', 'advanced-passkey-login' ); ?></td>
-									<?php do_action( 'pkflow_profile_table_row', $cred, $user ); ?>
+									<?php do_action( 'advapafo_profile_table_row', $cred, $user ); ?>
 									<td>
-										<button class="pkflow-revoke-btn pkflow-passkey-revoke" type="button">
+										<button class="advapafo-revoke-btn advapafo-passkey-revoke" type="button">
 											<?php esc_html_e( 'Revoke', 'advanced-passkey-login' ); ?>
 										</button>
 									</td>
@@ -659,8 +683,8 @@ class PKFLOW_Passkeys {
 				</div>
 				<?php endif; ?>
 
-			</div><!-- .pkflow-profile-card -->
-		</div><!-- .pkflow-profile-section -->
+			</div><!-- .advapafo-profile-card -->
+		</div><!-- .advapafo-profile-section -->
 		<?php
 	}
 
@@ -672,6 +696,10 @@ class PKFLOW_Passkeys {
 	 * Start passkey registration ceremony.
 	 */
 	public function ajax_begin_registration(): void {
+		if ( ! $this->is_post_request() ) {
+			wp_send_json_error( array( 'message' => 'Invalid request method.' ), 405 );
+		}
+
 		if ( ! is_user_logged_in() ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized' ), 403 );
 		}
@@ -686,7 +714,7 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
 		}
 
-		if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'advapafo_profile', 'nonce', false ) ) {
 			$this->record_failure( 'reg_begin_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
@@ -732,7 +760,7 @@ class PKFLOW_Passkeys {
 
 			$token = wp_generate_password( 32, false, false );
 			set_transient(
-				'pkflow_reg_' . $token,
+				'advapafo_reg_' . $token,
 				array(
 					'user_id'   => (int) $user->ID,
 					'challenge' => base64_encode( $web_authn->getChallenge()->getBinaryString() ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- WebAuthn challenge binary is stored in transient-safe format.
@@ -768,6 +796,10 @@ class PKFLOW_Passkeys {
 	 * @throws \RuntimeException When WebAuthn registration payload validation fails.
 	 */
 	public function ajax_finish_registration(): void {
+		if ( ! $this->is_post_request() ) {
+			wp_send_json_error( array( 'message' => 'Invalid request method.' ), 405 );
+		}
+
 		if ( ! is_user_logged_in() ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized' ), 403 );
 		}
@@ -782,7 +814,7 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
 		}
 
-		if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'advapafo_profile', 'nonce', false ) ) {
 			$this->record_failure( 'reg_finish_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
@@ -804,19 +836,19 @@ class PKFLOW_Passkeys {
 		}
 
 		$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
-		if ( empty( $token ) || ! preg_match( '/\A[a-zA-Z0-9]{20,64}\z/', $token ) ) {
+		if ( ! $this->is_valid_token( $token ) ) {
 			$this->record_failure( 'reg_finish_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Registration session expired.' ), 400 );
 		}
 
-		$state = get_transient( 'pkflow_reg_' . $token );
+		$state = get_transient( 'advapafo_reg_' . $token );
 		if ( ! $state || empty( $state['challenge'] ) || (int) $user->ID !== (int) $state['user_id'] ) {
 			$this->record_failure( 'reg_finish_ip', $ip );
 			$this->record_failure( 'reg_finish_user', (int) $user->ID );
 			wp_send_json_error( array( 'message' => 'Registration session expired.' ), 400 );
 		}
 
-		delete_transient( 'pkflow_reg_' . $token );
+		delete_transient( 'advapafo_reg_' . $token );
 
 		$client_data = isset( $_POST['clientDataJSON'] ) ? sanitize_text_field( wp_unslash( $_POST['clientDataJSON'] ) ) : '';
 		$attestation = isset( $_POST['attestationObject'] ) ? sanitize_text_field( wp_unslash( $_POST['attestationObject'] ) ) : '';
@@ -839,10 +871,10 @@ class PKFLOW_Passkeys {
 			}
 		}
 
-		if ( '' === $client_data || '' === $attestation ) {
+		if ( ! $this->is_valid_b64url_payload( $client_data ) || ! $this->is_valid_b64url_payload( $attestation ) ) {
 			$this->record_failure( 'reg_finish_ip', $ip );
 			$this->record_failure( 'reg_finish_user', (int) $user->ID );
-			wp_send_json_error( array( 'message' => 'Incomplete passkey response.' ), 400 );
+			wp_send_json_error( array( 'message' => 'Invalid passkey response.' ), 400 );
 		}
 
 		try {
@@ -905,7 +937,7 @@ class PKFLOW_Passkeys {
 			 * @param int    $user_id         WordPress user ID.
 			 * @param string $credential_hash SHA-256 hash of the credential ID.
 			 */
-			do_action( 'pkflow_passkey_registered', (int) $user->ID, $cred_hash );
+			do_action( 'advapafo_passkey_registered', (int) $user->ID, $cred_hash );
 
 			$this->clear_failures( 'reg_finish_ip', $ip );
 			$this->clear_failures( 'reg_finish_user', (int) $user->ID );
@@ -934,6 +966,10 @@ class PKFLOW_Passkeys {
 	 * Revoke an existing passkey credential.
 	 */
 	public function ajax_revoke_credential(): void {
+		if ( ! $this->is_post_request() ) {
+			wp_send_json_error( array( 'message' => 'Invalid request method.' ), 405 );
+		}
+
 		if ( ! is_user_logged_in() ) {
 			wp_send_json_error( array( 'message' => 'Unauthorized' ), 403 );
 		}
@@ -948,7 +984,7 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
 		}
 
-		if ( ! check_ajax_referer( 'pkflow_profile', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'advapafo_profile', 'nonce', false ) ) {
 			$this->record_failure( 'revoke_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
@@ -1001,7 +1037,7 @@ class PKFLOW_Passkeys {
 		 * @param int $user_id       WordPress user ID.
 		 * @param int $credential_id DB row ID of the revoked credential.
 		 */
-		do_action( 'pkflow_passkey_revoked', (int) $cred->user_id, $cred_row_id );
+		do_action( 'advapafo_passkey_revoked', (int) $cred->user_id, $cred_row_id );
 
 		wp_send_json_success( array( 'message' => 'Passkey revoked.' ) );
 	}
@@ -1015,6 +1051,10 @@ class PKFLOW_Passkeys {
 	 */
 	public function ajax_begin_login(): void {
 		$ip = $this->get_client_ip();
+		if ( ! $this->is_post_request() ) {
+			$this->record_failure( 'login_begin_ip', $ip );
+			wp_send_json_error( array( 'message' => 'Invalid request method.' ), 405 );
+		}
 
 		if ( $this->is_locked_out( 'login_begin_ip', $ip ) ) {
 			$this->log_event( 'login_rate_limited', array( 'ip' => $ip ) );
@@ -1026,16 +1066,21 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
 		}
 
-		if ( ! check_ajax_referer( 'pkflow_login', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'advapafo_login', 'nonce', false ) ) {
 			$this->record_failure( 'login_begin_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
 
 		$login       = isset( $_POST['login'] ) ? sanitize_text_field( wp_unslash( $_POST['login'] ) ) : '';
-		$login_key   = '';
-		$state_uid   = 0;
-		$cred_rows   = array();
 		$generic_err = 'Passkey sign-in could not be started. Please try again.';
+		if ( '' !== $login && ! $this->is_valid_login_identifier( $login ) ) {
+			$this->record_failure( 'login_begin_ip', $ip );
+			wp_send_json_error( array( 'message' => $generic_err ), 400 );
+		}
+
+		$login_key = '';
+		$state_uid = 0;
+		$cred_rows = array();
 
 		// Optional: username-based flow (non-discoverable / legacy credentials).
 		if ( '' !== $login ) {
@@ -1080,7 +1125,7 @@ class PKFLOW_Passkeys {
 
 			$token = wp_generate_password( 32, false, false );
 			set_transient(
-				'pkflow_login_' . $token,
+				'advapafo_login_' . $token,
 				array(
 					'user_id'   => $state_uid,
 					'challenge' => base64_encode( $web_authn->getChallenge()->getBinaryString() ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- WebAuthn challenge binary is stored in transient-safe format.
@@ -1121,6 +1166,10 @@ class PKFLOW_Passkeys {
 	 */
 	public function ajax_finish_login(): void {
 		$ip = $this->get_client_ip();
+		if ( ! $this->is_post_request() ) {
+			$this->record_failure( 'login_finish_ip', $ip );
+			wp_send_json_error( array( 'message' => 'Invalid request method.' ), 405 );
+		}
 
 		if ( $this->is_locked_out( 'login_finish_ip', $ip ) ) {
 			$this->log_event( 'login_rate_limited', array( 'ip' => $ip ) );
@@ -1132,18 +1181,18 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Passkeys require HTTPS.' ), 400 );
 		}
 
-		if ( ! check_ajax_referer( 'pkflow_login', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'advapafo_login', 'nonce', false ) ) {
 			$this->record_failure( 'login_finish_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Invalid request.' ), 403 );
 		}
 
 		$token = isset( $_POST['token'] ) ? sanitize_text_field( wp_unslash( $_POST['token'] ) ) : '';
-		if ( '' === $token || ! preg_match( '/\A[a-zA-Z0-9]{20,64}\z/', $token ) ) {
+		if ( ! $this->is_valid_token( $token ) ) {
 			$this->record_failure( 'login_finish_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Login session expired.' ), 400 );
 		}
 
-		$state = get_transient( 'pkflow_login_' . $token );
+		$state = get_transient( 'advapafo_login_' . $token );
 		if ( ! $state || empty( $state['challenge'] ) || ! isset( $state['user_id'] ) ) {
 			$this->record_failure( 'login_finish_ip', $ip );
 			wp_send_json_error( array( 'message' => 'Login session expired.' ), 400 );
@@ -1156,7 +1205,7 @@ class PKFLOW_Passkeys {
 			wp_send_json_error( array( 'message' => 'Too many attempts. Please wait and try again.' ), 429 );
 		}
 
-		delete_transient( 'pkflow_login_' . $token );
+		delete_transient( 'advapafo_login_' . $token );
 
 		$cred_id     = isset( $_POST['id'] ) ? sanitize_text_field( wp_unslash( $_POST['id'] ) ) : '';
 		$client_data = isset( $_POST['clientDataJSON'] ) ? sanitize_text_field( wp_unslash( $_POST['clientDataJSON'] ) ) : '';
@@ -1164,12 +1213,18 @@ class PKFLOW_Passkeys {
 		$signature   = isset( $_POST['signature'] ) ? sanitize_text_field( wp_unslash( $_POST['signature'] ) ) : '';
 		$user_handle = isset( $_POST['userHandle'] ) ? sanitize_text_field( wp_unslash( $_POST['userHandle'] ) ) : '';
 
-		if ( '' === $cred_id || '' === $client_data || '' === $auth_data || '' === $signature ) {
+		if (
+			! $this->is_valid_b64url_payload( $cred_id )
+			|| ! $this->is_valid_b64url_payload( $client_data )
+			|| ! $this->is_valid_b64url_payload( $auth_data )
+			|| ! $this->is_valid_b64url_payload( $signature )
+			|| ( '' !== $user_handle && ! $this->is_valid_b64url_payload( $user_handle ) )
+		) {
 			$this->record_failure( 'login_finish_ip', $ip );
 			if ( $state_uid > 0 ) {
 				$this->record_failure( 'login_finish_user', $state_uid );
 			}
-			wp_send_json_error( array( 'message' => 'Incomplete passkey response.' ), 400 );
+			wp_send_json_error( array( 'message' => 'Invalid passkey response.' ), 400 );
 		}
 
 		global $wpdb;
@@ -1251,9 +1306,13 @@ class PKFLOW_Passkeys {
 				throw new \RuntimeException( 'User is not eligible for passkey login' );
 			}
 
-			wp_set_current_user( (int) $user->ID );
-			wp_set_auth_cookie( (int) $user->ID, false );
-			do_action( 'wp_login', $user->user_login, $user ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core WordPress hook.
+			$allow_session = (bool) apply_filters( 'advapafo_passkey_allow_session_establishment', true, $user, $cred_hash );
+			if ( ! $allow_session ) {
+				throw new \RuntimeException( 'Passkey session was denied by policy.' );
+			}
+
+			$remember = (bool) apply_filters( 'advapafo_passkey_remember_me', false, $user );
+			$this->establish_authenticated_session( $user, $remember, $cred_hash );
 
 			// Update sign count and last-used timestamp.
 			$next_count = $web_authn->getSignatureCounter();
@@ -1276,6 +1335,8 @@ class PKFLOW_Passkeys {
 				)
 			);
 
+			do_action( 'advapafo_passkey_session_established', (int) $user->ID, $remember );
+
 			/**
 			 * Fires after a successful passkey login.
 			 *
@@ -1283,7 +1344,7 @@ class PKFLOW_Passkeys {
 			 * @param string $credential_hash SHA-256 hash of the credential ID.
 			 * @param string $user_agent       Raw User-Agent string.
 			 */
-			do_action( 'pkflow_passkey_login_success', (int) $user->ID, $cred_hash, sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ) );
+			do_action( 'advapafo_passkey_login_success', (int) $user->ID, $cred_hash, sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ) );
 
 			$this->clear_failures( 'login_finish_ip', $ip );
 			$this->clear_failures( 'login_finish_user', (int) $user->ID );
@@ -1297,8 +1358,8 @@ class PKFLOW_Passkeys {
 			}
 			$redirect = '' !== $request_redirect ? $this->safe_redirect( $request_redirect ) : '';
 
-			if ( '' === $redirect && isset( $_COOKIE['pkflow_redirect_to'] ) ) {
-				$cookie_redirect_raw = wp_unslash( $_COOKIE['pkflow_redirect_to'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized via esc_url_raw/safe_redirect.
+			if ( '' === $redirect && isset( $_COOKIE['advapafo_redirect_to'] ) ) {
+				$cookie_redirect_raw = wp_unslash( $_COOKIE['advapafo_redirect_to'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized via esc_url_raw/safe_redirect.
 				if ( is_string( $cookie_redirect_raw ) ) {
 					$redirect = $this->safe_redirect( esc_url_raw( $cookie_redirect_raw ) );
 				}
@@ -1308,7 +1369,7 @@ class PKFLOW_Passkeys {
 
 			// Fall back to the settings-page redirect URL.
 			if ( '' === $redirect ) {
-				$settings_redirect = (string) get_option( 'pkflow_login_redirect', '' );
+				$settings_redirect = (string) get_option( 'advapafo_login_redirect', '' );
 				if ( '' !== $settings_redirect ) {
 					$redirect = $this->safe_redirect( $settings_redirect );
 				}
@@ -1326,23 +1387,270 @@ class PKFLOW_Passkeys {
 			 * @param WP_User $user     Logged-in user.
 			 */
 			// Re-validate after filter to prevent open-redirect via third-party hooks.
-			$redirect = $this->safe_redirect( (string) apply_filters( 'pkflow_login_redirect', $redirect, $user ), admin_url() );
+			$redirect = $this->safe_redirect( (string) apply_filters( 'advapafo_login_redirect', $redirect, $user ), admin_url() );
 
 			wp_send_json_success( array( 'redirect' => $redirect ) );
 
 		} catch ( \Throwable $e ) {
+			$failed_user_id = (int) $cred->user_id;
+			$failed_user    = get_user_by( 'id', $failed_user_id );
+			$reason         = (string) $e->getMessage();
+
+			do_action( 'advapafo_passkey_login_failed', $failed_user_id, $cred_hash, $reason );
+
+			if ( $failed_user instanceof WP_User ) {
+				$emit_wp_login_failed = (bool) apply_filters( 'advapafo_passkey_emit_wp_login_failed', false, $failed_user, $cred_hash, $reason );
+				if ( $emit_wp_login_failed ) {
+					do_action( 'wp_login_failed', $failed_user->user_login ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- optional core hook for lockout ecosystem compatibility.
+				}
+			}
+
 			$this->record_failure( 'login_finish_ip', $ip );
 			$this->record_failure( 'login_finish_user', (int) $cred->user_id );
 			$this->record_failure( 'login_finish_cred', $cred_hash );
 			$this->log_event(
 				'login_failed',
 				array(
-					'user_id' => (int) $cred->user_id,
-					'message' => $e->getMessage(),
+					'user_id' => $failed_user_id,
+					'message' => $reason,
 				)
 			);
 			wp_send_json_error( array( 'message' => 'Passkey sign-in failed. Please use another login method.' ), 400 );
 		}
+	}
+
+	/**
+	 * Establish an authenticated session after successful passkey verification.
+	 *
+	 * This is technically required to complete WordPress login for verified users.
+	 * Uses wp_signon() with a one-time transient-backed token so login flows
+	 * through WordPress' native authentication pipeline and security hooks.
+	 *
+	 * @param WP_User $user     Authenticated user.
+	 * @param bool    $remember Whether to issue a persistent login cookie.
+	 * @param string  $credential_hash SHA-256 credential hash for diagnostics.
+	 * @throws \RuntimeException When sign-in cannot be completed.
+	 */
+	private function establish_authenticated_session( WP_User $user, bool $remember = false, string $credential_hash = '' ): void {
+		$user_id      = (int) $user->ID;
+		$max_attempts = defined( 'ADVAPAFO_PASSKEY_SIGNON_MAX_ATTEMPTS' ) ? max( 1, (int) ADVAPAFO_PASSKEY_SIGNON_MAX_ATTEMPTS ) : 1;
+
+		if ( $this->passkey_signon_attempts >= $max_attempts ) {
+			throw new \RuntimeException( 'Passkey sign-in recursion guard triggered.' );
+		}
+
+		++$this->passkey_signon_attempts;
+		$attempt_number = $this->passkey_signon_attempts;
+		$token          = wp_generate_password( 64, false, false );
+
+		$token_hash = hash_hmac( 'sha256', $token, wp_salt( 'auth' ) );
+		$key_seed   = $user_id . '|' . strtolower( (string) $user->user_login ) . '|' . $token;
+		$key_suffix = substr( hash( 'sha256', $key_seed ), 0, 40 );
+		$key        = 'advapafo_signin_' . $key_suffix;
+
+		set_transient(
+			$key,
+			array(
+				'user_id'    => $user_id,
+				'user_login' => strtolower( (string) $user->user_login ),
+				'token_hash' => $token_hash,
+			),
+			MINUTE_IN_SECONDS
+		);
+
+		$this->passkey_signon_context = array(
+			'transient_key' => $key,
+			'user_id'       => $user_id,
+			'user_login'    => strtolower( (string) $user->user_login ),
+		);
+
+		add_filter( 'authenticate', array( $this, 'authenticate_passkey_signon' ), 5, 3 );
+
+		try {
+			$signed_in = wp_signon(
+				array(
+					'user_login'    => (string) $user->user_login,
+					'user_password' => $token,
+					'remember'      => $remember,
+				),
+				is_ssl()
+			);
+		} finally {
+			remove_filter( 'authenticate', array( $this, 'authenticate_passkey_signon' ), 5 );
+			delete_transient( $key );
+			$this->passkey_signon_context  = null;
+			$this->passkey_signon_attempts = max( 0, $this->passkey_signon_attempts - 1 );
+		}
+
+		if ( is_wp_error( $signed_in ) ) {
+			$error_codes = array_values( array_filter( array_map( 'sanitize_key', (array) $signed_in->get_error_codes() ) ) );
+			$primary     = isset( $error_codes[0] ) ? $error_codes[0] : 'unknown';
+
+			$this->log_event(
+				'login_signon_failed',
+				array(
+					'user_id'           => $user_id,
+					'credential_hash'   => $credential_hash,
+					'wp_error_primary'  => $primary,
+					'wp_error_codes'    => $error_codes,
+					'wp_signon_attempt' => $attempt_number,
+				)
+			);
+
+			if ( $this->should_use_signon_fallback( $signed_in, $user, $credential_hash ) ) {
+				$this->log_event(
+					'login_signon_fallback_used',
+					array(
+						'user_id'          => $user_id,
+						'credential_hash'  => $credential_hash,
+						'wp_error_primary' => $primary,
+					)
+				);
+
+				$this->establish_authenticated_session_direct( $user, $remember );
+				return;
+			}
+
+			throw new \RuntimeException( 'WordPress sign-in pipeline rejected authentication.' );
+		}
+
+		if ( ! $signed_in instanceof WP_User || (int) $signed_in->ID !== $user_id ) {
+			throw new \RuntimeException( 'WordPress sign-in returned an unexpected user.' );
+		}
+	}
+
+	/**
+	 * Establish a direct authenticated session as an optional fallback mode.
+	 *
+	 * @param WP_User $user     Authenticated user.
+	 * @param bool    $remember Whether to issue a persistent login cookie.
+	 */
+	private function establish_authenticated_session_direct( WP_User $user, bool $remember ): void {
+		$user_id = (int) $user->ID;
+
+		wp_clear_auth_cookie();
+		wp_set_current_user( $user_id );
+		wp_set_auth_cookie( $user_id, $remember );
+		do_action( 'wp_login', $user->user_login, $user ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core hook emitted for fallback session compatibility.
+	}
+
+	/**
+	 * Determine whether fallback to direct session mode should be used.
+	 *
+	 * @param WP_Error $error           Sign-on pipeline error.
+	 * @param WP_User  $user            Authenticated user.
+	 * @param string   $credential_hash SHA-256 credential hash.
+	 * @return bool
+	 */
+	private function should_use_signon_fallback( WP_Error $error, WP_User $user, string $credential_hash ): bool {
+		$enabled = (bool) apply_filters( 'advapafo_passkey_enable_signon_fallback', false, $error, $user, $credential_hash );
+		if ( ! $enabled ) {
+			return false;
+		}
+
+		$error_codes = array_values( array_filter( array_map( 'sanitize_key', (array) $error->get_error_codes() ) ) );
+		if ( empty( $error_codes ) ) {
+			return false;
+		}
+
+		$deny_patterns = (array) apply_filters(
+			'advapafo_passkey_signon_fallback_deny_patterns',
+			array( 'lock', 'limit', 'blocked', 'captcha', 'otp', '2fa', 'two_factor' ),
+			$user,
+			$credential_hash
+		);
+
+		foreach ( $error_codes as $code ) {
+			foreach ( $deny_patterns as $pattern ) {
+				$pattern = sanitize_key( (string) $pattern );
+				if ( '' !== $pattern && false !== strpos( $code, $pattern ) ) {
+					return false;
+				}
+			}
+		}
+
+		$allowed_codes = (array) apply_filters(
+			'advapafo_passkey_signon_fallback_allowed_codes',
+			array( 'incorrect_password', 'empty_password' ),
+			$user,
+			$credential_hash
+		);
+		$allowed_codes = array_values( array_filter( array_map( 'sanitize_key', $allowed_codes ) ) );
+
+		if ( empty( $allowed_codes ) ) {
+			return false;
+		}
+
+		$has_allowed_match = false;
+		foreach ( $error_codes as $code ) {
+			if ( in_array( $code, $allowed_codes, true ) ) {
+				$has_allowed_match = true;
+				continue;
+			}
+
+			// Hard stop: every WP_Error code must be explicitly allowed.
+			return false;
+		}
+
+		return $has_allowed_match;
+	}
+
+	/**
+	 * Authenticate the one-time passkey sign-in token during wp_signon().
+	 *
+	 * @param WP_User|WP_Error|null $user     Existing authentication state.
+	 * @param string                $username Submitted username.
+	 * @param string                $password Submitted password/token.
+	 * @return WP_User|WP_Error|null
+	 */
+	public function authenticate_passkey_signon( $user, $username, $password ) {
+		if ( $user instanceof WP_User || $user instanceof WP_Error ) {
+			return $user;
+		}
+
+		if ( ! is_array( $this->passkey_signon_context ) ) {
+			return $user;
+		}
+
+		if ( ! is_string( $username ) || ! is_string( $password ) || '' === $password ) {
+			return $user;
+		}
+
+		$context_login = isset( $this->passkey_signon_context['user_login'] ) ? (string) $this->passkey_signon_context['user_login'] : '';
+		if ( '' === $context_login || ! hash_equals( $context_login, strtolower( $username ) ) ) {
+			return $user;
+		}
+
+		$context_key = isset( $this->passkey_signon_context['transient_key'] ) ? (string) $this->passkey_signon_context['transient_key'] : '';
+		$state       = '' !== $context_key ? get_transient( $context_key ) : false;
+		if ( ! is_array( $state ) ) {
+			return $user;
+		}
+
+		$state_login = isset( $state['user_login'] ) ? (string) $state['user_login'] : '';
+		if ( '' === $state_login || ! hash_equals( $state_login, strtolower( $username ) ) ) {
+			return $user;
+		}
+
+		$expected_hash = isset( $state['token_hash'] ) ? (string) $state['token_hash'] : '';
+		$given_hash    = hash_hmac( 'sha256', $password, wp_salt( 'auth' ) );
+		if ( '' === $expected_hash || ! hash_equals( $expected_hash, $given_hash ) ) {
+			return $user;
+		}
+
+		$user_id = isset( $state['user_id'] ) ? (int) $state['user_id'] : 0;
+		if ( $user_id < 1 ) {
+			return $user;
+		}
+
+		delete_transient( $context_key );
+
+		$resolved_user = get_user_by( 'id', $user_id );
+		if ( ! $resolved_user instanceof WP_User ) {
+			return $user;
+		}
+
+		return $resolved_user;
 	}
 
 	// ──────────────────────────────────────────────────────────
@@ -1369,8 +1677,8 @@ class PKFLOW_Passkeys {
 	 * @return string
 	 */
 	private function get_rp_id(): string {
-		if ( defined( 'PKFLOW_RP_ID' ) && PKFLOW_RP_ID ) {
-			return (string) PKFLOW_RP_ID;
+		if ( defined( 'ADVAPAFO_RP_ID' ) && ADVAPAFO_RP_ID ) {
+			return (string) ADVAPAFO_RP_ID;
 		}
 		return (string) wp_parse_url( home_url(), PHP_URL_HOST );
 	}
@@ -1381,10 +1689,10 @@ class PKFLOW_Passkeys {
 	 * @return string
 	 */
 	private function get_rp_name(): string {
-		if ( defined( 'PKFLOW_RP_NAME' ) && PKFLOW_RP_NAME ) {
-			return (string) PKFLOW_RP_NAME;
+		if ( defined( 'ADVAPAFO_RP_NAME' ) && ADVAPAFO_RP_NAME ) {
+			return (string) ADVAPAFO_RP_NAME;
 		}
-		$name = get_option( 'pkflow_rp_name', '' );
+		$name = get_option( 'advapafo_rp_name', '' );
 		return '' !== $name ? (string) $name : (string) get_bloginfo( 'name' );
 	}
 
@@ -1394,10 +1702,10 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_challenge_ttl(): int {
-		if ( defined( 'PKFLOW_CHALLENGE_TTL' ) && (int) PKFLOW_CHALLENGE_TTL > 30 ) {
-			return (int) PKFLOW_CHALLENGE_TTL;
+		if ( defined( 'ADVAPAFO_CHALLENGE_TTL' ) && (int) ADVAPAFO_CHALLENGE_TTL > 30 ) {
+			return (int) ADVAPAFO_CHALLENGE_TTL;
 		}
-		$opt = (int) get_option( 'pkflow_challenge_ttl', 0 );
+		$opt = (int) get_option( 'advapafo_challenge_ttl', 0 );
 		if ( $opt >= 30 ) {
 			return min( 600, $opt );
 		}
@@ -1410,7 +1718,7 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_login_challenge_ttl(): int {
-		$opt = (int) get_option( 'pkflow_login_challenge_ttl', 0 );
+		$opt = (int) get_option( 'advapafo_login_challenge_ttl', 0 );
 		if ( $opt >= 30 ) {
 			return min( 1200, $opt );
 		}
@@ -1424,7 +1732,7 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_registration_challenge_ttl(): int {
-		$opt = (int) get_option( 'pkflow_registration_challenge_ttl', 0 );
+		$opt = (int) get_option( 'advapafo_registration_challenge_ttl', 0 );
 		if ( $opt >= 30 ) {
 			return min( 1200, $opt );
 		}
@@ -1438,12 +1746,12 @@ class PKFLOW_Passkeys {
 	 * @return string
 	 */
 	private function get_user_verification(): string {
-		$opt = strtolower( (string) get_option( 'pkflow_user_verification', '' ) );
+		$opt = strtolower( (string) get_option( 'advapafo_user_verification', '' ) );
 		if ( in_array( $opt, array( 'required', 'preferred', 'discouraged' ), true ) ) {
 			return $opt;
 		}
-		if ( defined( 'PKFLOW_USER_VERIFICATION' ) ) {
-			$v = strtolower( (string) PKFLOW_USER_VERIFICATION );
+		if ( defined( 'ADVAPAFO_USER_VERIFICATION' ) ) {
+			$v = strtolower( (string) ADVAPAFO_USER_VERIFICATION );
 			if ( in_array( $v, array( 'required', 'preferred', 'discouraged' ), true ) ) {
 				return $v;
 			}
@@ -1488,12 +1796,12 @@ class PKFLOW_Passkeys {
 		 * @param bool    $eligible Whether the user is eligible.
 		 * @param WP_User $user     The user in question.
 		 */
-		$eligible = apply_filters( 'pkflow_is_eligible_user', null, $user );
+		$eligible = apply_filters( 'advapafo_is_eligible_user', null, $user );
 		if ( null !== $eligible ) {
 			return (bool) $eligible;
 		}
 
-		$allowed_roles = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
+		$allowed_roles = (array) get_option( 'advapafo_eligible_roles', array( 'administrator' ) );
 		return ! empty( array_intersect( (array) $user->roles, $allowed_roles ) );
 	}
 
@@ -1511,13 +1819,13 @@ class PKFLOW_Passkeys {
 		 * @param int     $max  Current cap.
 		 * @param WP_User $user The user.
 		 */
-		$filtered = apply_filters( 'pkflow_max_passkeys_per_user', null, $user );
+		$filtered = apply_filters( 'advapafo_max_passkeys_per_user', null, $user );
 		if ( null !== $filtered ) {
 			$filtered = (int) $filtered;
 			return $filtered <= 0 ? PHP_INT_MAX : max( 1, $filtered );
 		}
 
-		$setting = (int) get_option( 'pkflow_max_passkeys_per_user', self::DEFAULT_MAX_PASSKEYS );
+		$setting = (int) get_option( 'advapafo_max_passkeys_per_user', self::DEFAULT_MAX_PASSKEYS );
 		return $setting <= 0 ? PHP_INT_MAX : max( 1, $setting );
 	}
 
@@ -1631,7 +1939,7 @@ class PKFLOW_Passkeys {
 	 */
 	private function clear_redirect_cookie(): void {
 		setcookie(
-			'pkflow_redirect_to',
+			'advapafo_redirect_to',
 			'',
 			array(
 				'expires'  => time() - 3600,
@@ -1644,6 +1952,59 @@ class PKFLOW_Passkeys {
 		);
 	}
 
+	/**
+	 * Validate login session token format.
+	 *
+	 * @param string $token Candidate token.
+	 * @return bool
+	 */
+	private function is_valid_token( string $token ): bool {
+		return '' !== $token && 1 === preg_match( '/\A[a-zA-Z0-9]{20,64}\z/', $token );
+	}
+
+	/**
+	 * Validate incoming base64url payload from WebAuthn responses.
+	 *
+	 * @param string $payload Candidate payload string.
+	 * @return bool
+	 */
+	private function is_valid_b64url_payload( string $payload ): bool {
+		$len = strlen( $payload );
+		if ( $len < 8 || $len > 8192 ) {
+			return false;
+		}
+
+		return 1 === preg_match( '/\A[A-Za-z0-9_-]+\z/', $payload );
+	}
+
+	/**
+	 * Validate a submitted login identifier before lookup.
+	 *
+	 * @param string $login Candidate login identifier.
+	 * @return bool
+	 */
+	private function is_valid_login_identifier( string $login ): bool {
+		$len = strlen( $login );
+		if ( $len < 1 || $len > 254 ) {
+			return false;
+		}
+
+		return 1 === preg_match( '/\A[^\r\n\t\0]+\z/', $login );
+	}
+
+	/**
+	 * Check whether the current request method is POST.
+	 *
+	 * @return bool
+	 */
+	private function is_post_request(): bool {
+		$request_method = isset( $_SERVER['REQUEST_METHOD'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- request method is sanitized immediately for strict comparison.
+			: '';
+
+		return 'POST' === strtoupper( $request_method );
+	}
+
 	// ──────────────────────────────────────────────────────────
 	// Private helpers — Rate limiting
 	// ──────────────────────────────────────────────────────────
@@ -1654,17 +2015,17 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_rate_window(): int {
-		$opt = (int) get_option( 'pkflow_rate_limit_window', 0 );
+		$opt = (int) get_option( 'advapafo_rate_limit_window', 0 );
 		if ( $opt >= 60 ) {
 			return min( 3600, $opt );
 		}
 		// Backward compatibility with pre-1.1 option keys.
-		$opt = (int) get_option( 'pkflow_rate_window', 0 );
+		$opt = (int) get_option( 'advapafo_rate_window', 0 );
 		if ( $opt >= 60 ) {
 			return min( 3600, $opt );
 		}
-		if ( defined( 'PKFLOW_RATE_WINDOW' ) && (int) PKFLOW_RATE_WINDOW >= 60 ) {
-			return (int) PKFLOW_RATE_WINDOW;
+		if ( defined( 'ADVAPAFO_RATE_WINDOW' ) && (int) ADVAPAFO_RATE_WINDOW >= 60 ) {
+			return (int) ADVAPAFO_RATE_WINDOW;
 		}
 		return 300;
 	}
@@ -1675,17 +2036,17 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_rate_max_attempts(): int {
-		$opt = (int) get_option( 'pkflow_rate_limit_max_failures', 0 );
+		$opt = (int) get_option( 'advapafo_rate_limit_max_failures', 0 );
 		if ( $opt >= 1 ) {
 			return min( 50, $opt );
 		}
 		// Backward compatibility with pre-1.1 option keys.
-		$opt = (int) get_option( 'pkflow_rate_max_attempts', 0 );
+		$opt = (int) get_option( 'advapafo_rate_max_attempts', 0 );
 		if ( $opt >= 1 ) {
 			return min( 50, $opt );
 		}
-		if ( defined( 'PKFLOW_RATE_MAX_ATTEMPTS' ) && (int) PKFLOW_RATE_MAX_ATTEMPTS >= 1 ) {
-			return (int) PKFLOW_RATE_MAX_ATTEMPTS;
+		if ( defined( 'ADVAPAFO_RATE_MAX_ATTEMPTS' ) && (int) ADVAPAFO_RATE_MAX_ATTEMPTS >= 1 ) {
+			return (int) ADVAPAFO_RATE_MAX_ATTEMPTS;
 		}
 		return 5;
 	}
@@ -1696,17 +2057,17 @@ class PKFLOW_Passkeys {
 	 * @return int
 	 */
 	private function get_rate_lockout(): int {
-		$opt = (int) get_option( 'pkflow_rate_limit_lockout', 0 );
+		$opt = (int) get_option( 'advapafo_rate_limit_lockout', 0 );
 		if ( $opt >= 60 ) {
 			return min( 86400, $opt );
 		}
 		// Backward compatibility with pre-1.1 option keys.
-		$opt = (int) get_option( 'pkflow_rate_lockout', 0 );
+		$opt = (int) get_option( 'advapafo_rate_lockout', 0 );
 		if ( $opt >= 60 ) {
 			return min( 86400, $opt );
 		}
-		if ( defined( 'PKFLOW_RATE_LOCKOUT' ) && (int) PKFLOW_RATE_LOCKOUT >= 60 ) {
-			return (int) PKFLOW_RATE_LOCKOUT;
+		if ( defined( 'ADVAPAFO_RATE_LOCKOUT' ) && (int) ADVAPAFO_RATE_LOCKOUT >= 60 ) {
+			return (int) ADVAPAFO_RATE_LOCKOUT;
 		}
 		return 900;
 	}
@@ -1719,7 +2080,7 @@ class PKFLOW_Passkeys {
 	 * @return string
 	 */
 	private function bucket_key( string $prefix, string $identifier ): string {
-		return 'pkflow_' . hash_hmac( 'sha256', $prefix . '|' . $identifier, wp_salt( 'auth' ) );
+		return 'advapafo_' . hash_hmac( 'sha256', $prefix . '|' . $identifier, wp_salt( 'auth' ) );
 	}
 
 	/**
@@ -1872,7 +2233,7 @@ class PKFLOW_Passkeys {
 		}
 
 		// Allow HTTP only for local/dev-style environments when explicitly enabled.
-		if ( defined( 'PKFLOW_ALLOW_HTTP' ) && PKFLOW_ALLOW_HTTP ) {
+		if ( defined( 'ADVAPAFO_ALLOW_HTTP' ) && ADVAPAFO_ALLOW_HTTP ) {
 			if ( function_exists( 'wp_get_environment_type' ) && 'production' === wp_get_environment_type() ) {
 				return false;
 			}
@@ -1908,11 +2269,11 @@ class PKFLOW_Passkeys {
 	 * @param array<string, mixed> $data  Event payload.
 	 */
 	private function log_event( string $event, array $data = array() ): void {
-		if ( defined( 'PKFLOW_ENABLE_LOGGING' ) && ! PKFLOW_ENABLE_LOGGING ) {
+		if ( defined( 'ADVAPAFO_ENABLE_LOGGING' ) && ! ADVAPAFO_ENABLE_LOGGING ) {
 			return;
 		}
 
-		if ( ! (bool) get_option( 'pkflow_activity_logging_enabled', true ) ) {
+		if ( ! (bool) get_option( 'advapafo_activity_logging_enabled', true ) ) {
 			return;
 		}
 
@@ -1940,7 +2301,7 @@ class PKFLOW_Passkeys {
 
 		global $wpdb;
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- append-only logging table write.
-			$wpdb->prefix . 'pkflow_logs',
+			$wpdb->prefix . 'advapafo_logs',
 			array(
 				'event_type'    => $event,
 				'log_timestamp' => gmdate( 'Y-m-d H:i:s' ),

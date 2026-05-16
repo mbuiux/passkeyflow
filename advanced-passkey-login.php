@@ -14,104 +14,104 @@
  * Tested up to: 6.9
  * Requires PHP: 8.0
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PKFLOW_VERSION', '1.1.5' );
-define( 'PKFLOW_PLUGIN_FILE', __FILE__ );
-define( 'PKFLOW_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'PKFLOW_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'ADVAPAFO_VERSION', '1.1.5' );
+define( 'ADVAPAFO_PLUGIN_FILE', __FILE__ );
+define( 'ADVAPAFO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'ADVAPAFO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 // Allow env-based constant injection (same pattern used in planning-center-sso).
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound -- dynamic constant names are constrained to PKFLOW_* entries in this allowlist.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound -- dynamic constant names are constrained to ADVAPAFO_* entries in this allowlist.
 foreach ( array(
-	'PKFLOW_ALLOW_HTTP',
-	'PKFLOW_RP_ID',
-	'PKFLOW_RP_NAME',
-	'PKFLOW_CHALLENGE_TTL',
-	'PKFLOW_USER_VERIFICATION',
-	'PKFLOW_RATE_WINDOW',
-	'PKFLOW_RATE_MAX_ATTEMPTS',
-	'PKFLOW_RATE_LOCKOUT',
-	'PKFLOW_ENABLE_LOGGING',
-) as $pkflow_env_const ) {
-	if ( ! defined( $pkflow_env_const ) ) {
-		$pkflow_env_value = getenv( $pkflow_env_const );
-		if ( false !== $pkflow_env_value && '' !== $pkflow_env_value ) {
-			define( $pkflow_env_const, $pkflow_env_value );
+	'ADVAPAFO_ALLOW_HTTP',
+	'ADVAPAFO_RP_ID',
+	'ADVAPAFO_RP_NAME',
+	'ADVAPAFO_CHALLENGE_TTL',
+	'ADVAPAFO_USER_VERIFICATION',
+	'ADVAPAFO_RATE_WINDOW',
+	'ADVAPAFO_RATE_MAX_ATTEMPTS',
+	'ADVAPAFO_RATE_LOCKOUT',
+	'ADVAPAFO_ENABLE_LOGGING',
+) as $advapafo_env_const ) {
+	if ( ! defined( $advapafo_env_const ) ) {
+		$advapafo_env_value = getenv( $advapafo_env_const );
+		if ( false !== $advapafo_env_value && '' !== $advapafo_env_value ) {
+			define( $advapafo_env_const, $advapafo_env_value );
 		}
 	}
 }
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound
-unset( $pkflow_env_const, $pkflow_env_value );
+unset( $advapafo_env_const, $advapafo_env_value );
 
 // ──────────────────────────────────────────────────────────────
 // Composer autoload (lbuchs/webauthn)
 // ──────────────────────────────────────────────────────────────
-$pkflow_autoload = PKFLOW_PLUGIN_DIR . 'vendor/autoload.php';
-if ( PHP_VERSION_ID >= 80000 && file_exists( $pkflow_autoload ) ) {
-	$pkflow_should_load_autoloader = true;
+$advapafo_autoload = ADVAPAFO_PLUGIN_DIR . 'vendor/autoload.php';
+if ( PHP_VERSION_ID >= 80000 && file_exists( $advapafo_autoload ) ) {
+	$advapafo_should_load_autoloader = true;
 
-	$pkflow_autoload_real = PKFLOW_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
-	if ( file_exists( $pkflow_autoload_real ) ) {
-		$pkflow_autoload_real_src = file_get_contents( $pkflow_autoload_real ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local filesystem read for composer class detection.
-		if ( is_string( $pkflow_autoload_real_src ) && preg_match( '/class\s+(ComposerAutoloaderInit[0-9a-fA-F_]+)/', $pkflow_autoload_real_src, $m ) ) {
+	$advapafo_autoload_real = ADVAPAFO_PLUGIN_DIR . 'vendor/composer/autoload_real.php';
+	if ( file_exists( $advapafo_autoload_real ) ) {
+		$advapafo_autoload_real_src = file_get_contents( $advapafo_autoload_real ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local filesystem read for composer class detection.
+		if ( is_string( $advapafo_autoload_real_src ) && preg_match( '/class\s+(ComposerAutoloaderInit[0-9a-fA-F_]+)/', $advapafo_autoload_real_src, $m ) ) {
 			if ( ! empty( $m[1] ) && class_exists( (string) $m[1], false ) ) {
-				$pkflow_should_load_autoloader = false;
+				$advapafo_should_load_autoloader = false;
 			}
 		}
 	}
 
-	if ( $pkflow_should_load_autoloader ) {
-		require_once $pkflow_autoload;
+	if ( $advapafo_should_load_autoloader ) {
+		require_once $advapafo_autoload;
 	}
 }
-unset( $pkflow_autoload, $pkflow_should_load_autoloader, $pkflow_autoload_real, $pkflow_autoload_real_src );
+unset( $advapafo_autoload, $advapafo_should_load_autoloader, $advapafo_autoload_real, $advapafo_autoload_real_src );
 
 /**
- * Run one-time option normalization tasks for pkflow_* keys.
+ * Run one-time option normalization tasks for advapafo_* keys.
  */
-function pkflow_migrate_legacy_options_once(): void {
-	if ( (int) get_option( 'pkflow_legacy_options_migrated_v1', 0 ) === 1 ) {
+function advapafo_migrate_legacy_options_once(): void {
+	if ( (int) get_option( 'advapafo_legacy_options_migrated_v1', 0 ) === 1 ) {
 		return;
 	}
 
 	// Legacy free builds commonly stored a default cap of 5; move to unlimited.
-	$legacy_cap = (int) get_option( 'pkflow_max_passkeys_per_user', 0 );
+	$legacy_cap = (int) get_option( 'advapafo_max_passkeys_per_user', 0 );
 	if ( 5 === $legacy_cap ) {
-		update_option( 'pkflow_max_passkeys_per_user', 0 );
+		update_option( 'advapafo_max_passkeys_per_user', 0 );
 	}
 
-	update_option( 'pkflow_legacy_options_migrated_v1', 1, false );
+	update_option( 'advapafo_legacy_options_migrated_v1', 1, false );
 }
 
 /**
  * Ensure passkey cap defaults to unlimited for existing installs migrated earlier.
  */
-function pkflow_remove_legacy_passkey_cap_once(): void {
-	if ( (int) get_option( 'pkflow_cap_migrated_v1', 0 ) === 1 ) {
+function advapafo_remove_legacy_passkey_cap_once(): void {
+	if ( (int) get_option( 'advapafo_cap_migrated_v1', 0 ) === 1 ) {
 		return;
 	}
 
-	if ( (int) get_option( 'pkflow_max_passkeys_per_user', 0 ) === 5 ) {
-		update_option( 'pkflow_max_passkeys_per_user', 0 );
+	if ( (int) get_option( 'advapafo_max_passkeys_per_user', 0 ) === 5 ) {
+		update_option( 'advapafo_max_passkeys_per_user', 0 );
 	}
 
-	update_option( 'pkflow_cap_migrated_v1', 1, false );
+	update_option( 'advapafo_cap_migrated_v1', 1, false );
 }
 
 // ──────────────────────────────────────────────────────────────
 // Load classes
 // ──────────────────────────────────────────────────────────────
-require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-passkeys.php';
-require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-settings.php';
-require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-login-form.php';
-require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-shortcodes.php';
-require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-integration-manager.php';
+require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-passkeys.php';
+require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-settings.php';
+require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-login-form.php';
+require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-shortcodes.php';
+require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-integration-manager.php';
 
 // ──────────────────────────────────────────────────────────────
 // Bootstrap
@@ -119,31 +119,31 @@ require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-integration-manager.php'
 /**
  * Initialize plugin services after core/plugin load.
  */
-function pkflow_init() {
-	pkflow_migrate_legacy_options_once();
-	pkflow_remove_legacy_passkey_cap_once();
+function advapafo_init() {
+	advapafo_migrate_legacy_options_once();
+	advapafo_remove_legacy_passkey_cap_once();
 
-	new PKFLOW_Passkeys();
-	new PKFLOW_Login_Form();
-	new PKFLOW_Shortcodes();
-	new PKFLOW_Integration_Manager();
+	new ADVAPAFO_Passkeys();
+	new ADVAPAFO_Login_Form();
+	new ADVAPAFO_Shortcodes();
+	new ADVAPAFO_Integration_Manager();
 
 	if ( is_admin() ) {
-		new PKFLOW_Settings();
+		new ADVAPAFO_Settings();
 	}
 }
-add_action( 'plugins_loaded', 'pkflow_init' );
+add_action( 'plugins_loaded', 'advapafo_init' );
 
 /**
  * Detect whether the plugin is network-activated.
  */
-function pkflow_is_network_active(): bool {
+function advapafo_is_network_active(): bool {
 	if ( ! is_multisite() ) {
 		return false;
 	}
 
 	$active = (array) get_site_option( 'active_sitewide_plugins', array() );
-	return isset( $active[ plugin_basename( PKFLOW_PLUGIN_FILE ) ] );
+	return isset( $active[ plugin_basename( ADVAPAFO_PLUGIN_FILE ) ] );
 }
 
 /**
@@ -152,7 +152,7 @@ function pkflow_is_network_active(): bool {
  * @param bool     $network_wide Whether the plugin is network-activated.
  * @param callable $callback     Callback to run for each relevant site.
  */
-function pkflow_for_each_site( bool $network_wide, callable $callback ): void {
+function advapafo_for_each_site( bool $network_wide, callable $callback ): void {
 	if ( ! is_multisite() || ! $network_wide ) {
 		$callback();
 		return;
@@ -190,31 +190,31 @@ function pkflow_for_each_site( bool $network_wide, callable $callback ): void {
 // ──────────────────────────────────────────────────────────────
 // Activation / deactivation
 // ──────────────────────────────────────────────────────────────
-register_activation_hook( __FILE__, 'pkflow_activate' );
-register_deactivation_hook( __FILE__, 'pkflow_deactivate' );
+register_activation_hook( __FILE__, 'advapafo_activate' );
+register_deactivation_hook( __FILE__, 'advapafo_deactivate' );
 
 /**
  * Activation routine.
  *
  * @param bool $network_wide Whether plugin is being activated network-wide.
  */
-function pkflow_activate( bool $network_wide = false ) {
+function advapafo_activate( bool $network_wide = false ) {
 	if ( version_compare( PHP_VERSION, '8.0', '<' ) ) {
-		deactivate_plugins( plugin_basename( PKFLOW_PLUGIN_FILE ) );
+		deactivate_plugins( plugin_basename( ADVAPAFO_PLUGIN_FILE ) );
 		wp_die( esc_html__( 'Advanced Passkeys for Secure Login requires PHP 8.0 or higher. Please upgrade PHP before activating this plugin.', 'advanced-passkey-login' ) );
 	}
 	if ( version_compare( $GLOBALS['wp_version'], '6.0', '<' ) ) {
-		deactivate_plugins( plugin_basename( PKFLOW_PLUGIN_FILE ) );
+		deactivate_plugins( plugin_basename( ADVAPAFO_PLUGIN_FILE ) );
 		wp_die( esc_html__( 'Advanced Passkeys for Secure Login requires WordPress 6.0 or higher. Please update WordPress before activating this plugin.', 'advanced-passkey-login' ) );
 	}
 
-	require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-passkeys.php';
+	require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-passkeys.php';
 
-	pkflow_for_each_site(
+	advapafo_for_each_site(
 		$network_wide,
 		static function (): void {
-			PKFLOW_Passkeys::create_tables();
-			PKFLOW_Passkeys::schedule_cron();
+			ADVAPAFO_Passkeys::create_tables();
+			ADVAPAFO_Passkeys::schedule_cron();
 		}
 	);
 
@@ -226,13 +226,13 @@ function pkflow_activate( bool $network_wide = false ) {
  *
  * @param bool $network_wide Whether plugin is being deactivated network-wide.
  */
-function pkflow_deactivate( bool $network_wide = false ) {
-	require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-passkeys.php';
+function advapafo_deactivate( bool $network_wide = false ) {
+	require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-passkeys.php';
 
-	pkflow_for_each_site(
+	advapafo_for_each_site(
 		$network_wide,
 		static function (): void {
-			PKFLOW_Passkeys::unschedule_cron();
+			ADVAPAFO_Passkeys::unschedule_cron();
 		}
 	);
 
@@ -244,19 +244,19 @@ function pkflow_deactivate( bool $network_wide = false ) {
  *
  * @param WP_Site $new_site The newly provisioned site.
  */
-function pkflow_multisite_initialize_site( WP_Site $new_site ): void {
-	if ( ! pkflow_is_network_active() ) {
+function advapafo_multisite_initialize_site( WP_Site $new_site ): void {
+	if ( ! advapafo_is_network_active() ) {
 		return;
 	}
 
-	require_once PKFLOW_PLUGIN_DIR . 'includes/class-pkflow-passkeys.php';
+	require_once ADVAPAFO_PLUGIN_DIR . 'includes/class-advapafo-passkeys.php';
 
 	switch_to_blog( (int) $new_site->blog_id );
-	PKFLOW_Passkeys::create_tables();
-	PKFLOW_Passkeys::schedule_cron();
+	ADVAPAFO_Passkeys::create_tables();
+	ADVAPAFO_Passkeys::schedule_cron();
 	restore_current_blog();
 }
-add_action( 'wp_initialize_site', 'pkflow_multisite_initialize_site' );
+add_action( 'wp_initialize_site', 'advapafo_multisite_initialize_site' );
 
 // ──────────────────────────────────────────────────────────────
 // Settings link on Plugins page
@@ -304,8 +304,8 @@ add_action(
 			return;
 		}
 		$warnings = array();
-		if ( defined( 'PKFLOW_ALLOW_HTTP' ) && PKFLOW_ALLOW_HTTP ) {
-			$warnings[] = '<strong>PKFLOW_ALLOW_HTTP</strong> is enabled — insecure transport is allowed. Disable in production.';
+		if ( defined( 'ADVAPAFO_ALLOW_HTTP' ) && ADVAPAFO_ALLOW_HTTP ) {
+			$warnings[] = '<strong>ADVAPAFO_ALLOW_HTTP</strong> is enabled — insecure transport is allowed. Disable in production.';
 		}
 		if ( empty( $warnings ) ) {
 			return;

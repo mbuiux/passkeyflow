@@ -5,7 +5,7 @@
  * Drop this in place of your existing settings class file, or copy the markup
  * methods into your current class if your plugin already wires settings elsewhere.
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName -- legacy file naming kept for backward compatibility.
@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Admin settings page controller and dashboard data presenter.
  */
-class PKFLOW_Settings {
+class ADVAPAFO_Settings {
 	/**
 	 * Settings API option group key.
 	 *
 	 * @var string
 	 */
-	private $option_group = 'pkflow_settings_group';
+	private $option_group = 'advapafo_settings_group';
 
 	/**
 	 * Admin page slug.
@@ -37,7 +37,7 @@ class PKFLOW_Settings {
 	 *
 	 * @var string
 	 */
-	private $notice_transient_prefix = 'pkflow_settings_notice_';
+	private $notice_transient_prefix = 'advapafo_settings_notice_';
 
 	/**
 	 * Build per-user transient key for save notices.
@@ -169,26 +169,26 @@ class PKFLOW_Settings {
 			return;
 		}
 
-		$version = defined( 'PKFLOW_VERSION' ) ? PKFLOW_VERSION : '1.0.0';
+		$version = defined( 'ADVAPAFO_VERSION' ) ? ADVAPAFO_VERSION : '1.0.0';
 		$css_url = '';
 
 		/*
 		 * Support the common Advanced Passkeys for Secure Login plugin structure first:
-		 * /admin/css/pkflow-admin.css. The other paths are fallbacks for simple
+		 * /admin/css/advapafo-admin.css. The other paths are fallbacks for simple
 		 * copy/paste installs and older generated bundles.
 		 */
-		if ( file_exists( plugin_dir_path( __DIR__ ) . 'admin/css/pkflow-admin.css' ) ) {
-			$css_url = plugin_dir_url( __DIR__ ) . 'admin/css/pkflow-admin.css';
-		} elseif ( file_exists( __DIR__ . '/pkflow-admin.css' ) ) {
-			$css_url = plugin_dir_url( __FILE__ ) . 'pkflow-admin.css';
-		} elseif ( file_exists( plugin_dir_path( __DIR__ ) . 'assets/css/pkflow-admin.css' ) ) {
-			$css_url = plugin_dir_url( __DIR__ ) . 'assets/css/pkflow-admin.css';
-		} elseif ( file_exists( plugin_dir_path( __DIR__ ) . 'pkflow-admin.css' ) ) {
-			$css_url = plugin_dir_url( __DIR__ ) . 'pkflow-admin.css';
+		if ( file_exists( plugin_dir_path( __DIR__ ) . 'admin/css/advapafo-admin.css' ) ) {
+			$css_url = plugin_dir_url( __DIR__ ) . 'admin/css/advapafo-admin.css';
+		} elseif ( file_exists( __DIR__ . '/advapafo-admin.css' ) ) {
+			$css_url = plugin_dir_url( __FILE__ ) . 'advapafo-admin.css';
+		} elseif ( file_exists( plugin_dir_path( __DIR__ ) . 'assets/css/advapafo-admin.css' ) ) {
+			$css_url = plugin_dir_url( __DIR__ ) . 'assets/css/advapafo-admin.css';
+		} elseif ( file_exists( plugin_dir_path( __DIR__ ) . 'advapafo-admin.css' ) ) {
+			$css_url = plugin_dir_url( __DIR__ ) . 'advapafo-admin.css';
 		}
 
 		if ( $css_url ) {
-			wp_enqueue_style( 'pkflow-admin', $css_url, array(), $version );
+			wp_enqueue_style( 'advapafo-admin', $css_url, array(), $version );
 		}
 
 		$active_tab = $this->resolve_active_tab();
@@ -196,12 +196,12 @@ class PKFLOW_Settings {
 			return;
 		}
 
-		$dashboard_css = plugin_dir_path( __DIR__ ) . 'admin/css/pkflow-dashboard.css';
+		$dashboard_css = plugin_dir_path( __DIR__ ) . 'admin/css/advapafo-dashboard.css';
 		if ( file_exists( $dashboard_css ) ) {
 			wp_enqueue_style(
-				'pkflow-dashboard',
-				plugin_dir_url( __DIR__ ) . 'admin/css/pkflow-dashboard.css',
-				array( 'pkflow-admin' ),
+				'advapafo-dashboard',
+				plugin_dir_url( __DIR__ ) . 'admin/css/advapafo-dashboard.css',
+				array( 'advapafo-admin' ),
 				$version
 			);
 		}
@@ -210,18 +210,18 @@ class PKFLOW_Settings {
 		$apex_dependency = '';
 		if ( file_exists( $apexcharts_js ) ) {
 			wp_enqueue_script(
-				'pkflow-apexcharts',
+				'advapafo-apexcharts',
 				plugin_dir_url( __DIR__ ) . 'admin/vendor/apexcharts/apexcharts.min.js',
 				array(),
 				'3.49.1',
 				true
 			);
-			$apex_dependency = 'pkflow-apexcharts';
+			$apex_dependency = 'advapafo-apexcharts';
 		} elseif ( wp_script_is( 'apexcharts', 'registered' ) || wp_script_is( 'apexcharts', 'enqueued' ) ) {
 			$apex_dependency = 'apexcharts';
 		}
 
-		$dashboard_js = plugin_dir_path( __DIR__ ) . 'admin/js/pkflow-dashboard.js';
+		$dashboard_js = plugin_dir_path( __DIR__ ) . 'admin/js/advapafo-dashboard.js';
 		if ( file_exists( $dashboard_js ) ) {
 			$dashboard_deps = array();
 			if ( '' !== $apex_dependency ) {
@@ -229,8 +229,8 @@ class PKFLOW_Settings {
 			}
 
 			wp_enqueue_script(
-				'pkflow-dashboard',
-				plugin_dir_url( __DIR__ ) . 'admin/js/pkflow-dashboard.js',
+				'advapafo-dashboard',
+				plugin_dir_url( __DIR__ ) . 'admin/js/advapafo-dashboard.js',
 				$dashboard_deps,
 				$version,
 				true
@@ -244,7 +244,7 @@ class PKFLOW_Settings {
 	public function register_settings() {
 		register_setting(
 			$this->option_group,
-			'pkflow_enabled',
+			'advapafo_enabled',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -254,7 +254,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_show_separator',
+			'advapafo_show_separator',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -264,7 +264,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_show_setup_notice',
+			'advapafo_show_setup_notice',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -274,7 +274,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_woocommerce_support',
+			'advapafo_enable_woocommerce_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -284,7 +284,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_edd_support',
+			'advapafo_enable_edd_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -294,7 +294,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_memberpress_support',
+			'advapafo_enable_memberpress_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -304,7 +304,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_ultimate_member_support',
+			'advapafo_enable_ultimate_member_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -314,7 +314,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_learndash_support',
+			'advapafo_enable_learndash_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -324,7 +324,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_buddyboss_support',
+			'advapafo_enable_buddyboss_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -334,7 +334,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_gravityforms_support',
+			'advapafo_enable_gravityforms_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -344,7 +344,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_enable_pmp_support',
+			'advapafo_enable_pmp_support',
 			array(
 				'type'              => 'boolean',
 				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
@@ -354,7 +354,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_eligible_roles',
+			'advapafo_eligible_roles',
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_roles' ),
@@ -364,7 +364,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_max_passkeys_per_user',
+			'advapafo_max_passkeys_per_user',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_max_passkeys' ),
@@ -374,7 +374,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_user_verification',
+			'advapafo_user_verification',
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( $this, 'sanitize_user_verification' ),
@@ -384,7 +384,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_rp_name',
+			'advapafo_rp_name',
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
@@ -394,7 +394,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_rp_id',
+			'advapafo_rp_id',
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( $this, 'sanitize_rp_id' ),
@@ -404,7 +404,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_login_challenge_ttl',
+			'advapafo_login_challenge_ttl',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_challenge_ttl' ),
@@ -414,7 +414,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_registration_challenge_ttl',
+			'advapafo_registration_challenge_ttl',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_challenge_ttl' ),
@@ -424,7 +424,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_rate_limit_window',
+			'advapafo_rate_limit_window',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_rate_limit_window' ),
@@ -434,7 +434,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_rate_limit_max_failures',
+			'advapafo_rate_limit_max_failures',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_rate_limit_max_failures' ),
@@ -444,7 +444,7 @@ class PKFLOW_Settings {
 
 		register_setting(
 			$this->option_group,
-			'pkflow_rate_limit_lockout',
+			'advapafo_rate_limit_lockout',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_rate_limit_lockout' ),
@@ -507,13 +507,13 @@ class PKFLOW_Settings {
 			}
 		}
 
-		$notice_debug      = filter_input( INPUT_GET, 'pkflow_notice_debug', FILTER_SANITIZE_NUMBER_INT );
-		$raw_debug_nonce   = filter_input( INPUT_GET, 'pkflow_notice_debug_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$notice_debug      = filter_input( INPUT_GET, 'advapafo_notice_debug', FILTER_SANITIZE_NUMBER_INT );
+		$raw_debug_nonce   = filter_input( INPUT_GET, 'advapafo_notice_debug_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		$debug_nonce_valid = false;
 
 		if ( is_string( $raw_debug_nonce ) && '' !== $raw_debug_nonce ) {
 			$debug_nonce       = sanitize_text_field( $raw_debug_nonce );
-			$debug_nonce_valid = wp_verify_nonce( $debug_nonce, 'pkflow_notice_debug' );
+			$debug_nonce_valid = wp_verify_nonce( $debug_nonce, 'advapafo_notice_debug' );
 		}
 
 		$show_debug = current_user_can( 'manage_options' )
@@ -538,75 +538,75 @@ class PKFLOW_Settings {
 			);
 		}
 		?>
-		<div class="wrap pkflow-admin-wrap">
+		<div class="wrap advapafo-admin-wrap">
 			<?php if ( $show_debug ) : ?>
-			<div class="pkflow-debug-banner" role="status" aria-live="polite">
-				<strong><?php esc_html_e( 'PKFLOW Notice Debug', 'advanced-passkey-login' ); ?></strong>
+			<div class="advapafo-debug-banner" role="status" aria-live="polite">
+				<strong><?php esc_html_e( 'ADVAPAFO Notice Debug', 'advanced-passkey-login' ); ?></strong>
 				<pre><?php echo esc_html( wp_json_encode( $debug_payload, JSON_PRETTY_PRINT ) ); ?></pre>
 			</div>
 			<?php endif; ?>
 
 			<?php if ( ! empty( $queued_notices ) ) : ?>
-			<div class="pkflow-notices-wrap">
+			<div class="advapafo-notices-wrap">
 				<?php foreach ( $queued_notices as $notice ) : ?>
-				<div class="pkflow-flash pkflow-flash--<?php echo esc_attr( $notice['type'] ); ?>" role="alert">
+				<div class="advapafo-flash advapafo-flash--<?php echo esc_attr( $notice['type'] ); ?>" role="alert">
 					<p><?php echo wp_kses_post( $notice['message'] ); ?></p>
 				</div>
 				<?php endforeach; ?>
 			</div>
 			<?php endif; ?>
 
-			<div class="pkflow-premium-shell">
-				<header class="pkflow-hero">
-					<div class="pkflow-hero__content">
-						<div class="pkflow-product-mark">
-							<span class="pkflow-product-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"></path><path d="M14 13.12c0 2.38 0 6.38-1 8.88"></path><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"></path><path d="M2 12a10 10 0 0 1 18-6"></path><path d="M2 16h.01"></path><path d="M21.8 16c.2-2 .131-5.354 0-6"></path><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"></path><path d="M8.65 22c.21-.66.45-1.32.57-2"></path><path d="M9 6.8a6 6 0 0 1 9 5.2v2"></path></svg></span>
+			<div class="advapafo-premium-shell">
+				<header class="advapafo-hero">
+					<div class="advapafo-hero__content">
+						<div class="advapafo-product-mark">
+							<span class="advapafo-product-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"></path><path d="M14 13.12c0 2.38 0 6.38-1 8.88"></path><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"></path><path d="M2 12a10 10 0 0 1 18-6"></path><path d="M2 16h.01"></path><path d="M21.8 16c.2-2 .131-5.354 0-6"></path><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"></path><path d="M8.65 22c.21-.66.45-1.32.57-2"></path><path d="M9 6.8a6 6 0 0 1 9 5.2v2"></path></svg></span>
 							<div>
-								<p class="pkflow-eyebrow"><?php esc_html_e( 'Welcome to', 'advanced-passkey-login' ); ?></p>
+								<p class="advapafo-eyebrow"><?php esc_html_e( 'Welcome to', 'advanced-passkey-login' ); ?></p>
 								<h1><?php esc_html_e( 'Advanced Passkeys for Secure Login', 'advanced-passkey-login' ); ?></h1>
 							</div>
 						</div>
-						<p class="pkflow-hero__copy">
+						<p class="advapafo-hero__copy">
 							<?php esc_html_e( 'A premium passwordless authentication control center built for WordPress.', 'advanced-passkey-login' ); ?>
 						</p>
 					</div>
-					<div class="pkflow-hero__actions">
-						<span class="pkflow-status-pill pkflow-status-pill--success">
-							<span class="pkflow-status-dot" aria-hidden="true"></span>
+					<div class="advapafo-hero__actions">
+						<span class="advapafo-status-pill advapafo-status-pill--success">
+							<span class="advapafo-status-dot" aria-hidden="true"></span>
 							<?php esc_html_e( 'Ready', 'advanced-passkey-login' ); ?>
 						</span>
 
 					</div>
 				</header>
 
-				<nav class="pkflow-tabs" aria-label="<?php esc_attr_e( 'Advanced Passkeys for Secure Login settings tabs', 'advanced-passkey-login' ); ?>">
+				<nav class="advapafo-tabs" aria-label="<?php esc_attr_e( 'Advanced Passkeys for Secure Login settings tabs', 'advanced-passkey-login' ); ?>">
 					<?php $this->render_tab_link( $base_url, 'dashboard', __( 'Dashboard', 'advanced-passkey-login' ), $active_tab ); ?>
 					<?php $this->render_tab_link( $base_url, 'settings', __( 'Settings', 'advanced-passkey-login' ), $active_tab ); ?>
 					<?php $this->render_tab_link( $base_url, 'advanced', __( 'Advanced', 'advanced-passkey-login' ), $active_tab ); ?>
 					<?php $this->render_tab_link( $base_url, 'shortcodes', __( 'Shortcodes', 'advanced-passkey-login' ), $active_tab ); ?>
 				</nav>
 
-				<div class="pkflow-layout<?php echo 'dashboard' === $active_tab ? ' pkflow-layout--dashboard' : ''; ?>">
-					<main class="pkflow-main-panel">
+				<div class="advapafo-layout<?php echo 'dashboard' === $active_tab ? ' advapafo-layout--dashboard' : ''; ?>">
+					<main class="advapafo-main-panel">
 						<?php if ( 'dashboard' === $active_tab ) : ?>
 							<?php $this->render_dashboard_tab(); ?>
 						<?php elseif ( 'shortcodes' === $active_tab ) : ?>
 							<?php $this->render_shortcodes_tab(); ?>
 						<?php else : ?>
-							<form method="post" action="options.php" class="pkflow-settings-form">
+							<form method="post" action="options.php" class="advapafo-settings-form">
 								<?php settings_fields( $this->option_group ); ?>
 								<?php $this->render_preserved_hidden_fields( $active_tab ); ?>
 								<?php 'advanced' === $active_tab ? $this->render_advanced_tab() : $this->render_settings_tab(); ?>
-								<footer class="pkflow-form-footer">
+								<footer class="advapafo-form-footer">
 									<p><?php esc_html_e( 'Changes apply immediately after saving.', 'advanced-passkey-login' ); ?></p>
-									<?php submit_button( __( 'Save Settings', 'advanced-passkey-login' ), 'primary pkflow-save-button', 'submit', false ); ?>
+									<?php submit_button( __( 'Save Settings', 'advanced-passkey-login' ), 'primary advapafo-save-button', 'submit', false ); ?>
 								</footer>
 							</form>
 						<?php endif; ?>
 					</main>
 
 					<?php if ( 'dashboard' !== $active_tab ) : ?>
-					<aside class="pkflow-sidebar" aria-label="<?php esc_attr_e( 'Advanced Passkeys for Secure Login quick actions', 'advanced-passkey-login' ); ?>">
+					<aside class="advapafo-sidebar" aria-label="<?php esc_attr_e( 'Advanced Passkeys for Secure Login quick actions', 'advanced-passkey-login' ); ?>">
 						<?php $this->render_sidebar_cards(); ?>
 					</aside>
 					<?php endif; ?>
@@ -627,13 +627,13 @@ class PKFLOW_Settings {
 	 * @param string $active_tab Currently active tab key.
 	 */
 	private function render_tab_link( $base_url, $tab, $label, $active_tab ) {
-		$classes = 'pkflow-tab';
+		$classes = 'advapafo-tab';
 		if ( $tab === $active_tab ) {
 			$classes .= ' is-active';
 		}
 
 		$tab_url = add_query_arg( 'tab', $tab, $base_url );
-		$tab_url = wp_nonce_url( $tab_url, 'pkflow_tab_' . $tab, 'pkflow_tab_nonce' );
+		$tab_url = wp_nonce_url( $tab_url, 'advapafo_tab_' . $tab, 'advapafo_tab_nonce' );
 
 		printf(
 			'<a class="%1$s" href="%2$s">%3$s</a>',
@@ -661,13 +661,13 @@ class PKFLOW_Settings {
 			return 'settings';
 		}
 
-		$raw_nonce = filter_input( INPUT_GET, 'pkflow_tab_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$raw_nonce = filter_input( INPUT_GET, 'advapafo_tab_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! is_string( $raw_nonce ) || '' === $raw_nonce ) {
 			return 'settings';
 		}
 
 		$nonce = sanitize_text_field( $raw_nonce );
-		if ( ! wp_verify_nonce( $nonce, 'pkflow_tab_' . $active_tab ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'advapafo_tab_' . $active_tab ) ) {
 			return 'settings';
 		}
 
@@ -681,17 +681,17 @@ class PKFLOW_Settings {
 	 */
 	private function render_preserved_hidden_fields( $active_tab ) {
 		if ( 'advanced' === $active_tab ) {
-			$enabled              = (bool) get_option( 'pkflow_enabled', true );
-			$show_setup_notice    = (bool) get_option( 'pkflow_show_setup_notice', true );
-			$integration_settings = class_exists( 'PKFLOW_Integration_Manager' ) && method_exists( 'PKFLOW_Integration_Manager', 'get_settings_registry' )
-				? PKFLOW_Integration_Manager::get_settings_registry()
+			$enabled              = (bool) get_option( 'advapafo_enabled', true );
+			$show_setup_notice    = (bool) get_option( 'advapafo_show_setup_notice', true );
+			$integration_settings = class_exists( 'ADVAPAFO_Integration_Manager' ) && method_exists( 'ADVAPAFO_Integration_Manager', 'get_settings_registry' )
+				? ADVAPAFO_Integration_Manager::get_settings_registry()
 				: array();
-			$roles                = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
-			$max_passkeys         = absint( get_option( 'pkflow_max_passkeys_per_user', 0 ) );
-			$verification         = get_option( 'pkflow_user_verification', 'required' );
+			$roles                = (array) get_option( 'advapafo_eligible_roles', array( 'administrator' ) );
+			$max_passkeys         = absint( get_option( 'advapafo_max_passkeys_per_user', 0 ) );
+			$verification         = get_option( 'advapafo_user_verification', 'required' );
 
-			echo '<input type="hidden" name="pkflow_enabled" value="' . esc_attr( $enabled ? '1' : '0' ) . '" />';
-			echo '<input type="hidden" name="pkflow_show_setup_notice" value="' . esc_attr( $show_setup_notice ? '1' : '0' ) . '" />';
+			echo '<input type="hidden" name="advapafo_enabled" value="' . esc_attr( $enabled ? '1' : '0' ) . '" />';
+			echo '<input type="hidden" name="advapafo_show_setup_notice" value="' . esc_attr( $show_setup_notice ? '1' : '0' ) . '" />';
 
 			foreach ( $integration_settings as $integration_setting ) {
 				if ( empty( $integration_setting['master_option'] ) ) {
@@ -709,31 +709,31 @@ class PKFLOW_Settings {
 			}
 
 			foreach ( $roles as $role ) {
-				echo '<input type="hidden" name="pkflow_eligible_roles[]" value="' . esc_attr( sanitize_key( $role ) ) . '" />';
+				echo '<input type="hidden" name="advapafo_eligible_roles[]" value="' . esc_attr( sanitize_key( $role ) ) . '" />';
 			}
-			echo '<input type="hidden" name="pkflow_max_passkeys_per_user" value="' . esc_attr( (string) $max_passkeys ) . '" />';
-			echo '<input type="hidden" name="pkflow_user_verification" value="' . esc_attr( (string) $verification ) . '" />';
+			echo '<input type="hidden" name="advapafo_max_passkeys_per_user" value="' . esc_attr( (string) $max_passkeys ) . '" />';
+			echo '<input type="hidden" name="advapafo_user_verification" value="' . esc_attr( (string) $verification ) . '" />';
 			return;
 		}
 
 		if ( 'settings' === $active_tab ) {
-			$show_separator             = (bool) get_option( 'pkflow_show_separator', true );
-			$rp_name                    = get_option( 'pkflow_rp_name', '' );
-			$rp_id                      = get_option( 'pkflow_rp_id', '' );
-			$login_challenge_ttl        = absint( get_option( 'pkflow_login_challenge_ttl', 300 ) );
-			$registration_challenge_ttl = absint( get_option( 'pkflow_registration_challenge_ttl', 300 ) );
-			$window                     = absint( get_option( 'pkflow_rate_limit_window', 300 ) );
-			$max_failures               = absint( get_option( 'pkflow_rate_limit_max_failures', 5 ) );
-			$lockout                    = absint( get_option( 'pkflow_rate_limit_lockout', 900 ) );
+			$show_separator             = (bool) get_option( 'advapafo_show_separator', true );
+			$rp_name                    = get_option( 'advapafo_rp_name', '' );
+			$rp_id                      = get_option( 'advapafo_rp_id', '' );
+			$login_challenge_ttl        = absint( get_option( 'advapafo_login_challenge_ttl', 300 ) );
+			$registration_challenge_ttl = absint( get_option( 'advapafo_registration_challenge_ttl', 300 ) );
+			$window                     = absint( get_option( 'advapafo_rate_limit_window', 300 ) );
+			$max_failures               = absint( get_option( 'advapafo_rate_limit_max_failures', 5 ) );
+			$lockout                    = absint( get_option( 'advapafo_rate_limit_lockout', 900 ) );
 
-			echo '<input type="hidden" name="pkflow_show_separator" value="' . esc_attr( $show_separator ? '1' : '0' ) . '" />';
-			echo '<input type="hidden" name="pkflow_rp_name" value="' . esc_attr( (string) $rp_name ) . '" />';
-			echo '<input type="hidden" name="pkflow_rp_id" value="' . esc_attr( (string) $rp_id ) . '" />';
-			echo '<input type="hidden" name="pkflow_login_challenge_ttl" value="' . esc_attr( (string) $login_challenge_ttl ) . '" />';
-			echo '<input type="hidden" name="pkflow_registration_challenge_ttl" value="' . esc_attr( (string) $registration_challenge_ttl ) . '" />';
-			echo '<input type="hidden" name="pkflow_rate_limit_window" value="' . esc_attr( (string) $window ) . '" />';
-			echo '<input type="hidden" name="pkflow_rate_limit_max_failures" value="' . esc_attr( (string) $max_failures ) . '" />';
-			echo '<input type="hidden" name="pkflow_rate_limit_lockout" value="' . esc_attr( (string) $lockout ) . '" />';
+			echo '<input type="hidden" name="advapafo_show_separator" value="' . esc_attr( $show_separator ? '1' : '0' ) . '" />';
+			echo '<input type="hidden" name="advapafo_rp_name" value="' . esc_attr( (string) $rp_name ) . '" />';
+			echo '<input type="hidden" name="advapafo_rp_id" value="' . esc_attr( (string) $rp_id ) . '" />';
+			echo '<input type="hidden" name="advapafo_login_challenge_ttl" value="' . esc_attr( (string) $login_challenge_ttl ) . '" />';
+			echo '<input type="hidden" name="advapafo_registration_challenge_ttl" value="' . esc_attr( (string) $registration_challenge_ttl ) . '" />';
+			echo '<input type="hidden" name="advapafo_rate_limit_window" value="' . esc_attr( (string) $window ) . '" />';
+			echo '<input type="hidden" name="advapafo_rate_limit_max_failures" value="' . esc_attr( (string) $max_failures ) . '" />';
+			echo '<input type="hidden" name="advapafo_rate_limit_lockout" value="' . esc_attr( (string) $lockout ) . '" />';
 		}
 	}
 
@@ -741,58 +741,58 @@ class PKFLOW_Settings {
 	 * Render the everyday settings tab.
 	 */
 	private function render_settings_tab() {
-		$enabled           = (bool) get_option( 'pkflow_enabled', true );
-		$show_setup_notice = (bool) get_option( 'pkflow_show_setup_notice', true );
-		$eligible_roles    = (array) get_option( 'pkflow_eligible_roles', array( 'administrator' ) );
-		$max_passkeys      = absint( get_option( 'pkflow_max_passkeys_per_user', 0 ) );
-		$verification      = get_option( 'pkflow_user_verification', 'required' );
+		$enabled           = (bool) get_option( 'advapafo_enabled', true );
+		$show_setup_notice = (bool) get_option( 'advapafo_show_setup_notice', true );
+		$eligible_roles    = (array) get_option( 'advapafo_eligible_roles', array( 'administrator' ) );
+		$max_passkeys      = absint( get_option( 'advapafo_max_passkeys_per_user', 0 ) );
+		$verification      = get_option( 'advapafo_user_verification', 'required' );
 		$roles             = wp_roles()->roles;
 		?>
-		<section class="pkflow-section-header">
+		<section class="advapafo-section-header">
 			<div>
-				<p class="pkflow-eyebrow"><?php esc_html_e( 'Settings', 'advanced-passkey-login' ); ?></p>
+				<p class="advapafo-eyebrow"><?php esc_html_e( 'Settings', 'advanced-passkey-login' ); ?></p>
 				<h2><?php esc_html_e( 'Everyday passkey controls', 'advanced-passkey-login' ); ?></h2>
 			</div>
-			<span class="pkflow-badge"><?php esc_html_e( 'Recommended defaults', 'advanced-passkey-login' ); ?></span>
+			<span class="advapafo-badge"><?php esc_html_e( 'Recommended defaults', 'advanced-passkey-login' ); ?></span>
 		</section>
 
-		<div class="pkflow-card pkflow-card--setting">
-			<div class="pkflow-setting-copy">
+		<div class="advapafo-card advapafo-card--setting">
+			<div class="advapafo-setting-copy">
 				<h3><?php esc_html_e( 'Enable passkeys', 'advanced-passkey-login' ); ?></h3>
 				<p><?php esc_html_e( 'Allow eligible users to register and sign in with secure device passkeys.', 'advanced-passkey-login' ); ?></p>
 			</div>
-			<label class="pkflow-switch">
-				<input type="checkbox" name="pkflow_enabled" value="1" <?php checked( $enabled ); ?> />
-				<span class="pkflow-switch__track"><span class="pkflow-switch__thumb"></span></span>
+			<label class="advapafo-switch">
+				<input type="checkbox" name="advapafo_enabled" value="1" <?php checked( $enabled ); ?> />
+				<span class="advapafo-switch__track"><span class="advapafo-switch__thumb"></span></span>
 				<span class="screen-reader-text"><?php esc_html_e( 'Enable passkeys', 'advanced-passkey-login' ); ?></span>
 			</label>
 		</div>
 
-		<div class="pkflow-card pkflow-card--setting">
-			<div class="pkflow-setting-copy">
+		<div class="advapafo-card advapafo-card--setting">
+			<div class="advapafo-setting-copy">
 				<h3><?php esc_html_e( 'Show setup alert on profile', 'advanced-passkey-login' ); ?></h3>
 				<p><?php esc_html_e( 'Show or hide the admin alert that reminds users to set up a passkey on their profile page.', 'advanced-passkey-login' ); ?></p>
 			</div>
-			<label class="pkflow-switch">
-				<input type="checkbox" name="pkflow_show_setup_notice" value="1" <?php checked( $show_setup_notice ); ?> />
-				<span class="pkflow-switch__track"><span class="pkflow-switch__thumb"></span></span>
+			<label class="advapafo-switch">
+				<input type="checkbox" name="advapafo_show_setup_notice" value="1" <?php checked( $show_setup_notice ); ?> />
+				<span class="advapafo-switch__track"><span class="advapafo-switch__thumb"></span></span>
 				<span class="screen-reader-text"><?php esc_html_e( 'Show setup alert on profile', 'advanced-passkey-login' ); ?></span>
 			</label>
 		</div>
 
 		<?php
-		if ( class_exists( 'PKFLOW_Integration_Manager' ) && method_exists( 'PKFLOW_Integration_Manager', 'get_settings_registry' ) ) {
-			$integration_settings = PKFLOW_Integration_Manager::get_settings_registry();
+		if ( class_exists( 'ADVAPAFO_Integration_Manager' ) && method_exists( 'ADVAPAFO_Integration_Manager', 'get_settings_registry' ) ) {
+			$integration_settings = ADVAPAFO_Integration_Manager::get_settings_registry();
 			if ( ! empty( $integration_settings ) ) {
 				?>
-				<div class="pkflow-card">
-					<div class="pkflow-card__header">
+				<div class="advapafo-card">
+					<div class="advapafo-card__header">
 						<div>
 							<h3><?php esc_html_e( 'Integration modules', 'advanced-passkey-login' ); ?></h3>
 							<p><?php esc_html_e( 'Control each integration independently with master and auto-inject switches.', 'advanced-passkey-login' ); ?></p>
 						</div>
 					</div>
-					<div class="pkflow-integration-settings-grid">
+					<div class="advapafo-integration-settings-grid">
 						<?php
 						foreach ( $integration_settings as $integration_setting ) :
 							$label                = ! empty( $integration_setting['label'] ) ? (string) $integration_setting['label'] : __( 'Integration', 'advanced-passkey-login' );
@@ -802,10 +802,10 @@ class PKFLOW_Settings {
 							$saved_master_enabled = $master_option ? (bool) get_option( $master_option, $default_master ) : false;
 							$master_enabled       = $dependency_active ? $saved_master_enabled : false;
 							?>
-							<article class="pkflow-integration-setting-card<?php echo esc_attr( $dependency_active ? ' is-active' : ' is-missing' ); ?>">
+							<article class="advapafo-integration-setting-card<?php echo esc_attr( $dependency_active ? ' is-active' : ' is-missing' ); ?>">
 								<header>
 									<h4><?php echo esc_html( $label ); ?></h4>
-									<span class="pkflow-integration-status <?php echo esc_attr( $dependency_active ? 'is-active' : 'is-missing' ); ?>">
+									<span class="advapafo-integration-status <?php echo esc_attr( $dependency_active ? 'is-active' : 'is-missing' ); ?>">
 										<?php echo $dependency_active ? esc_html__( 'Installed', 'advanced-passkey-login' ) : esc_html__( 'Not installed', 'advanced-passkey-login' ); ?>
 									</span>
 								</header>
@@ -813,11 +813,11 @@ class PKFLOW_Settings {
 								<?php if ( ! $dependency_active && $master_option ) : ?>
 									<input type="hidden" name="<?php echo esc_attr( $master_option ); ?>" value="0" />
 								<?php endif; ?>
-								<div class="pkflow-integration-toggle-row">
+								<div class="advapafo-integration-toggle-row">
 									<label><?php esc_html_e( 'Enable module', 'advanced-passkey-login' ); ?></label>
-									<label class="pkflow-switch">
+									<label class="advapafo-switch">
 										<input type="checkbox" name="<?php echo esc_attr( $master_option ); ?>" value="1" <?php checked( $master_enabled ); ?> <?php disabled( ! $dependency_active ); ?> />
-										<span class="pkflow-switch__track"><span class="pkflow-switch__thumb"></span></span>
+										<span class="advapafo-switch__track"><span class="advapafo-switch__thumb"></span></span>
 										<span class="screen-reader-text"><?php esc_html_e( 'Enable integration module', 'advanced-passkey-login' ); ?></span>
 									</label>
 								</div>
@@ -830,38 +830,38 @@ class PKFLOW_Settings {
 		}
 		?>
 
-		<div class="pkflow-card">
-			<div class="pkflow-card__header">
+		<div class="advapafo-card">
+			<div class="advapafo-card__header">
 				<div>
 					<h3><?php esc_html_e( 'Eligible user roles', 'advanced-passkey-login' ); ?></h3>
 					<p><?php esc_html_e( 'Choose which WordPress roles can create and use passkeys.', 'advanced-passkey-login' ); ?></p>
 				</div>
 			</div>
-			<div class="pkflow-role-grid">
+			<div class="advapafo-role-grid">
 				<?php foreach ( $roles as $role_key => $role ) : ?>
-					<label class="pkflow-role-chip">
-						<input type="checkbox" name="pkflow_eligible_roles[]" value="<?php echo esc_attr( $role_key ); ?>" <?php checked( in_array( $role_key, $eligible_roles, true ) ); ?> />
+					<label class="advapafo-role-chip">
+						<input type="checkbox" name="advapafo_eligible_roles[]" value="<?php echo esc_attr( $role_key ); ?>" <?php checked( in_array( $role_key, $eligible_roles, true ) ); ?> />
 						<span><?php echo esc_html( translate_user_role( $role['name'] ) ); ?></span>
 					</label>
 				<?php endforeach; ?>
 			</div>
 		</div>
 
-		<div class="pkflow-card pkflow-grid-2">
-			<div class="pkflow-field">
-				<div class="pkflow-label-row">
-					<label for="pkflow_max_passkeys_per_user"><?php esc_html_e( 'Passkeys per user', 'advanced-passkey-login' ); ?></label>
+		<div class="advapafo-card advapafo-grid-2">
+			<div class="advapafo-field">
+				<div class="advapafo-label-row">
+					<label for="advapafo_max_passkeys_per_user"><?php esc_html_e( 'Passkeys per user', 'advanced-passkey-login' ); ?></label>
 				</div>
-				<input id="pkflow_max_passkeys_per_user" class="regular-text" type="number" min="0" max="999999" name="pkflow_max_passkeys_per_user" value="<?php echo esc_attr( $max_passkeys ); ?>" />
+				<input id="advapafo_max_passkeys_per_user" class="regular-text" type="number" min="0" max="999999" name="advapafo_max_passkeys_per_user" value="<?php echo esc_attr( $max_passkeys ); ?>" />
 				<p><?php esc_html_e( 'Maximum number of passkeys each user can register. Use 0 for no limit.', 'advanced-passkey-login' ); ?></p>
 			</div>
 
-			<div class="pkflow-field">
-				<div class="pkflow-label-row">
-					<label for="pkflow_user_verification"><?php esc_html_e( 'User verification', 'advanced-passkey-login' ); ?></label>
-					<span class="pkflow-badge pkflow-badge--success"><?php esc_html_e( 'Recommended', 'advanced-passkey-login' ); ?></span>
+			<div class="advapafo-field">
+				<div class="advapafo-label-row">
+					<label for="advapafo_user_verification"><?php esc_html_e( 'User verification', 'advanced-passkey-login' ); ?></label>
+					<span class="advapafo-badge advapafo-badge--success"><?php esc_html_e( 'Recommended', 'advanced-passkey-login' ); ?></span>
 				</div>
-				<select id="pkflow_user_verification" name="pkflow_user_verification">
+				<select id="advapafo_user_verification" name="advapafo_user_verification">
 					<option value="required" <?php selected( $verification, 'required' ); ?>><?php esc_html_e( 'Required — biometric or device PIN', 'advanced-passkey-login' ); ?></option>
 					<option value="preferred" <?php selected( $verification, 'preferred' ); ?>><?php esc_html_e( 'Preferred — use when available', 'advanced-passkey-login' ); ?></option>
 					<option value="discouraged" <?php selected( $verification, 'discouraged' ); ?>><?php esc_html_e( 'Discouraged — presence only', 'advanced-passkey-login' ); ?></option>
@@ -1238,7 +1238,7 @@ class PKFLOW_Settings {
 	private function get_credentials_table_for_audit(): string {
 		global $wpdb;
 		$candidates = array(
-			$wpdb->prefix . 'pkflow_credentials',
+			$wpdb->prefix . 'advapafo_credentials',
 		);
 
 		foreach ( $candidates as $candidate ) {
@@ -1371,7 +1371,7 @@ class PKFLOW_Settings {
 
 		$limit  = max( 1, absint( $limit ) );
 		$offset = max( 0, absint( $offset ) );
-		$tables = array( $wpdb->prefix . 'pkflow_logs' );
+		$tables = array( $wpdb->prefix . 'advapafo_logs' );
 
 		$where_sql    = '';
 		$where_params = array();
@@ -1418,7 +1418,7 @@ class PKFLOW_Settings {
 		$limit      = max( 1, min( 2000, absint( $limit ) ) );
 		$cutoff_utc = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
-		$tables       = array( $wpdb->prefix . 'pkflow_logs' );
+		$tables       = array( $wpdb->prefix . 'advapafo_logs' );
 		$where_sql    = '';
 		$where_params = array();
 		$table_sql    = '';
@@ -1461,7 +1461,7 @@ class PKFLOW_Settings {
 		global $wpdb;
 		$total = 0;
 
-		$tables = array( $wpdb->prefix . 'pkflow_logs' );
+		$tables = array( $wpdb->prefix . 'advapafo_logs' );
 		foreach ( $tables as $table_name ) {
 			if ( ! $this->table_exists( $table_name ) ) {
 				continue;
@@ -1499,7 +1499,7 @@ class PKFLOW_Settings {
 		}
 
 		$total  = 0;
-		$tables = array( $wpdb->prefix . 'pkflow_logs' );
+		$tables = array( $wpdb->prefix . 'advapafo_logs' );
 		foreach ( $tables as $table_name ) {
 			if ( ! $this->table_exists( $table_name ) ) {
 				continue;
@@ -1674,7 +1674,7 @@ class PKFLOW_Settings {
 			$provider = 'NordPass';
 		}
 
-		$provider = (string) apply_filters( 'pkflow_authenticator_provider_label', $provider, '', $label );
+		$provider = (string) apply_filters( 'advapafo_authenticator_provider_label', $provider, '', $label );
 		return '' !== $provider ? $provider : 'Unknown Authenticator';
 	}
 
@@ -1861,91 +1861,91 @@ class PKFLOW_Settings {
 	 * Render advanced settings tab.
 	 */
 	private function render_advanced_tab() {
-		$show_separator             = (bool) get_option( 'pkflow_show_separator', true );
-		$rp_name                    = get_option( 'pkflow_rp_name', '' );
-		$rp_id                      = get_option( 'pkflow_rp_id', '' );
-		$login_challenge_ttl        = absint( get_option( 'pkflow_login_challenge_ttl', 300 ) );
-		$registration_challenge_ttl = absint( get_option( 'pkflow_registration_challenge_ttl', 300 ) );
-		$window                     = absint( get_option( 'pkflow_rate_limit_window', 300 ) );
-		$max_failures               = absint( get_option( 'pkflow_rate_limit_max_failures', 5 ) );
-		$lockout                    = absint( get_option( 'pkflow_rate_limit_lockout', 900 ) );
+		$show_separator             = (bool) get_option( 'advapafo_show_separator', true );
+		$rp_name                    = get_option( 'advapafo_rp_name', '' );
+		$rp_id                      = get_option( 'advapafo_rp_id', '' );
+		$login_challenge_ttl        = absint( get_option( 'advapafo_login_challenge_ttl', 300 ) );
+		$registration_challenge_ttl = absint( get_option( 'advapafo_registration_challenge_ttl', 300 ) );
+		$window                     = absint( get_option( 'advapafo_rate_limit_window', 300 ) );
+		$max_failures               = absint( get_option( 'advapafo_rate_limit_max_failures', 5 ) );
+		$lockout                    = absint( get_option( 'advapafo_rate_limit_lockout', 900 ) );
 		?>
-		<section class="pkflow-section-header">
+		<section class="advapafo-section-header">
 			<div>
-				<p class="pkflow-eyebrow"><?php esc_html_e( 'Advanced', 'advanced-passkey-login' ); ?></p>
+				<p class="advapafo-eyebrow"><?php esc_html_e( 'Advanced', 'advanced-passkey-login' ); ?></p>
 				<h2><?php esc_html_e( 'Technical configuration', 'advanced-passkey-login' ); ?></h2>
 			</div>
 		</section>
 
-		<div class="pkflow-card pkflow-card--setting">
-			<div class="pkflow-setting-copy">
+		<div class="advapafo-card advapafo-card--setting">
+			<div class="advapafo-setting-copy">
 				<h3><?php esc_html_e( 'Show login OR separator', 'advanced-passkey-login' ); ?></h3>
 				<p><?php esc_html_e( 'Display the centered OR divider above the passkey button on wp-login.php.', 'advanced-passkey-login' ); ?></p>
 			</div>
-			<label class="pkflow-switch">
-				<input type="checkbox" name="pkflow_show_separator" value="1" <?php checked( $show_separator ); ?> />
-				<span class="pkflow-switch__track"><span class="pkflow-switch__thumb"></span></span>
+			<label class="advapafo-switch">
+				<input type="checkbox" name="advapafo_show_separator" value="1" <?php checked( $show_separator ); ?> />
+				<span class="advapafo-switch__track"><span class="advapafo-switch__thumb"></span></span>
 				<span class="screen-reader-text"><?php esc_html_e( 'Show login OR separator', 'advanced-passkey-login' ); ?></span>
 			</label>
 		</div>
 
-		<div class="pkflow-card pkflow-grid-2">
-			<div class="pkflow-field">
-				<label for="pkflow_rp_name"><?php esc_html_e( 'Relying Party Name', 'advanced-passkey-login' ); ?></label>
-				<input id="pkflow_rp_name" class="regular-text" type="text" name="pkflow_rp_name" value="<?php echo esc_attr( $rp_name ); ?>" placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" />
+		<div class="advapafo-card advapafo-grid-2">
+			<div class="advapafo-field">
+				<label for="advapafo_rp_name"><?php esc_html_e( 'Relying Party Name', 'advanced-passkey-login' ); ?></label>
+				<input id="advapafo_rp_name" class="regular-text" type="text" name="advapafo_rp_name" value="<?php echo esc_attr( $rp_name ); ?>" placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" />
 				<p><?php esc_html_e( 'The name users see in their passkey prompt. Leave blank to use the site name.', 'advanced-passkey-login' ); ?></p>
 			</div>
-			<div class="pkflow-field">
-				<label for="pkflow_rp_id"><?php esc_html_e( 'Relying Party ID', 'advanced-passkey-login' ); ?></label>
-				<input id="pkflow_rp_id" class="regular-text" type="text" name="pkflow_rp_id" value="<?php echo esc_attr( $rp_id ); ?>" placeholder="<?php echo esc_attr( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?>" />
+			<div class="advapafo-field">
+				<label for="advapafo_rp_id"><?php esc_html_e( 'Relying Party ID', 'advanced-passkey-login' ); ?></label>
+				<input id="advapafo_rp_id" class="regular-text" type="text" name="advapafo_rp_id" value="<?php echo esc_attr( $rp_id ); ?>" placeholder="<?php echo esc_attr( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?>" />
 				<p><?php esc_html_e( 'Usually your root domain. Leave blank unless you know you need to customize it.', 'advanced-passkey-login' ); ?></p>
 			</div>
 		</div>
 
-		<div class="pkflow-card">
-			<div class="pkflow-card__header">
+		<div class="advapafo-card">
+			<div class="advapafo-card__header">
 				<div>
 					<h3><?php esc_html_e( 'Passkey challenge timeouts', 'advanced-passkey-login' ); ?></h3>
 					<p><?php esc_html_e( 'Control how long users have to complete passkey login or registration after a challenge is issued.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<span class="pkflow-badge"><?php esc_html_e( 'Seconds', 'advanced-passkey-login' ); ?></span>
+				<span class="advapafo-badge"><?php esc_html_e( 'Seconds', 'advanced-passkey-login' ); ?></span>
 			</div>
-			<div class="pkflow-grid-2">
-				<div class="pkflow-field">
-					<label for="pkflow_login_challenge_ttl"><?php esc_html_e( 'Login challenge timeout', 'advanced-passkey-login' ); ?></label>
-					<input id="pkflow_login_challenge_ttl" type="number" min="30" max="1200" name="pkflow_login_challenge_ttl" value="<?php echo esc_attr( $login_challenge_ttl ); ?>" />
+			<div class="advapafo-grid-2">
+				<div class="advapafo-field">
+					<label for="advapafo_login_challenge_ttl"><?php esc_html_e( 'Login challenge timeout', 'advanced-passkey-login' ); ?></label>
+					<input id="advapafo_login_challenge_ttl" type="number" min="30" max="1200" name="advapafo_login_challenge_ttl" value="<?php echo esc_attr( $login_challenge_ttl ); ?>" />
 					<p><?php esc_html_e( 'How long a user has to complete passkey sign-in.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<div class="pkflow-field">
-					<label for="pkflow_registration_challenge_ttl"><?php esc_html_e( 'Registration challenge timeout', 'advanced-passkey-login' ); ?></label>
-					<input id="pkflow_registration_challenge_ttl" type="number" min="30" max="1200" name="pkflow_registration_challenge_ttl" value="<?php echo esc_attr( $registration_challenge_ttl ); ?>" />
+				<div class="advapafo-field">
+					<label for="advapafo_registration_challenge_ttl"><?php esc_html_e( 'Registration challenge timeout', 'advanced-passkey-login' ); ?></label>
+					<input id="advapafo_registration_challenge_ttl" type="number" min="30" max="1200" name="advapafo_registration_challenge_ttl" value="<?php echo esc_attr( $registration_challenge_ttl ); ?>" />
 					<p><?php esc_html_e( 'How long a user has to finish passkey registration.', 'advanced-passkey-login' ); ?></p>
 				</div>
 			</div>
 		</div>
 
-		<div class="pkflow-card">
-			<div class="pkflow-card__header">
+		<div class="advapafo-card">
+			<div class="advapafo-card__header">
 				<div>
 					<h3><?php esc_html_e( 'Rate limiting', 'advanced-passkey-login' ); ?></h3>
 					<p><?php esc_html_e( 'Protect authentication endpoints from repeated failed attempts.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<span class="pkflow-badge pkflow-badge--success"><?php esc_html_e( 'Protected', 'advanced-passkey-login' ); ?></span>
+				<span class="advapafo-badge advapafo-badge--success"><?php esc_html_e( 'Protected', 'advanced-passkey-login' ); ?></span>
 			</div>
-			<div class="pkflow-grid-3">
-				<div class="pkflow-field">
-					<label for="pkflow_rate_limit_window"><?php esc_html_e( 'Failure window', 'advanced-passkey-login' ); ?></label>
-					<input id="pkflow_rate_limit_window" type="number" min="60" max="3600" name="pkflow_rate_limit_window" value="<?php echo esc_attr( $window ); ?>" />
+			<div class="advapafo-grid-3">
+				<div class="advapafo-field">
+					<label for="advapafo_rate_limit_window"><?php esc_html_e( 'Failure window', 'advanced-passkey-login' ); ?></label>
+					<input id="advapafo_rate_limit_window" type="number" min="60" max="3600" name="advapafo_rate_limit_window" value="<?php echo esc_attr( $window ); ?>" />
 					<p><?php esc_html_e( 'Seconds.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<div class="pkflow-field">
-					<label for="pkflow_rate_limit_max_failures"><?php esc_html_e( 'Max failures', 'advanced-passkey-login' ); ?></label>
-					<input id="pkflow_rate_limit_max_failures" type="number" min="1" max="50" name="pkflow_rate_limit_max_failures" value="<?php echo esc_attr( $max_failures ); ?>" />
+				<div class="advapafo-field">
+					<label for="advapafo_rate_limit_max_failures"><?php esc_html_e( 'Max failures', 'advanced-passkey-login' ); ?></label>
+					<input id="advapafo_rate_limit_max_failures" type="number" min="1" max="50" name="advapafo_rate_limit_max_failures" value="<?php echo esc_attr( $max_failures ); ?>" />
 					<p><?php esc_html_e( 'Attempts before lockout.', 'advanced-passkey-login' ); ?></p>
 				</div>
-				<div class="pkflow-field">
-					<label for="pkflow_rate_limit_lockout"><?php esc_html_e( 'Lockout duration', 'advanced-passkey-login' ); ?></label>
-					<input id="pkflow_rate_limit_lockout" type="number" min="60" max="86400" name="pkflow_rate_limit_lockout" value="<?php echo esc_attr( $lockout ); ?>" />
+				<div class="advapafo-field">
+					<label for="advapafo_rate_limit_lockout"><?php esc_html_e( 'Lockout duration', 'advanced-passkey-login' ); ?></label>
+					<input id="advapafo_rate_limit_lockout" type="number" min="60" max="86400" name="advapafo_rate_limit_lockout" value="<?php echo esc_attr( $lockout ); ?>" />
 					<p><?php esc_html_e( 'Seconds.', 'advanced-passkey-login' ); ?></p>
 				</div>
 			</div>
@@ -1961,32 +1961,32 @@ class PKFLOW_Settings {
 		$shortcodes = array(
 			array(
 				'title'       => __( 'Login Form', 'advanced-passkey-login' ),
-				'code'        => '[pkflow_login_button]',
+				'code'        => '[advapafo_login_button]',
 				'description' => __( 'Display a passkey login form on any page.', 'advanced-passkey-login' ),
 				'placement'   => __( 'Best for custom login pages.', 'advanced-passkey-login' ),
 			),
 			array(
 				'title'       => __( 'Register Button', 'advanced-passkey-login' ),
-				'code'        => '[pkflow_register_button]',
+				'code'        => '[advapafo_register_button]',
 				'description' => __( 'Let signed-in users register a new passkey.', 'advanced-passkey-login' ),
 				'placement'   => __( 'Best for account and onboarding pages.', 'advanced-passkey-login' ),
 			),
 			array(
 				'title'       => __( 'Account Passkeys', 'advanced-passkey-login' ),
-				'code'        => '[pkflow_passkey_profile]',
+				'code'        => '[advapafo_passkey_profile]',
 				'description' => __( 'Show a user-facing passkey management area.', 'advanced-passkey-login' ),
 				'placement'   => __( 'Best for profile or dashboard pages.', 'advanced-passkey-login' ),
 			),
 			array(
 				'title'       => __( 'Conditional Prompt', 'advanced-passkey-login' ),
-				'code'        => '[pkflow_passkey_prompt]',
+				'code'        => '[advapafo_passkey_prompt]',
 				'description' => __( 'Prompt eligible users to set up passwordless login.', 'advanced-passkey-login' ),
 				'placement'   => __( 'Best after login or checkout.', 'advanced-passkey-login' ),
 			),
 		);
 
-		if ( class_exists( 'PKFLOW_Integration_Manager' ) && method_exists( 'PKFLOW_Integration_Manager', 'get_integration_shortcodes' ) ) {
-			$integration_shortcodes = PKFLOW_Integration_Manager::get_integration_shortcodes();
+		if ( class_exists( 'ADVAPAFO_Integration_Manager' ) && method_exists( 'ADVAPAFO_Integration_Manager', 'get_integration_shortcodes' ) ) {
+			$integration_shortcodes = ADVAPAFO_Integration_Manager::get_integration_shortcodes();
 
 			foreach ( $integration_shortcodes as $integration_shortcode ) {
 				if ( empty( $integration_shortcode['title'] ) || empty( $integration_shortcode['code'] ) ) {
@@ -2002,17 +2002,17 @@ class PKFLOW_Settings {
 			}
 		}
 		?>
-		<section class="pkflow-section-header">
+		<section class="advapafo-section-header">
 			<div>
-				<p class="pkflow-eyebrow"><?php esc_html_e( 'Shortcodes', 'advanced-passkey-login' ); ?></p>
+				<p class="advapafo-eyebrow"><?php esc_html_e( 'Shortcodes', 'advanced-passkey-login' ); ?></p>
 				<h2><?php esc_html_e( 'Drop-in passkey experiences', 'advanced-passkey-login' ); ?></h2>
-				<p class="pkflow-shortcode-tab-note"><?php esc_html_e( 'Prefer visual editing? Use matching Gutenberg blocks for login, registration, profile prompts, and active integrations or drop in shortcodes wherever you need them.', 'advanced-passkey-login' ); ?></p>
+				<p class="advapafo-shortcode-tab-note"><?php esc_html_e( 'Prefer visual editing? Use matching Gutenberg blocks for login, registration, profile prompts, and active integrations or drop in shortcodes wherever you need them.', 'advanced-passkey-login' ); ?></p>
 			</div>
 		</section>
 
-		<div class="pkflow-shortcode-grid">
+		<div class="advapafo-shortcode-grid">
 			<?php foreach ( $shortcodes as $shortcode ) : ?>
-				<article class="pkflow-shortcode-card">
+				<article class="advapafo-shortcode-card">
 					<h3><?php echo esc_html( $shortcode['title'] ); ?></h3>
 					<p><?php echo esc_html( $shortcode['description'] ); ?></p>
 					<code><?php echo esc_html( $shortcode['code'] ); ?></code>
@@ -2021,13 +2021,13 @@ class PKFLOW_Settings {
 			<?php endforeach; ?>
 		</div>
 
-		<article class="pkflow-shortcode-helper-card" aria-label="<?php esc_attr_e( 'Shortcode quick start guide', 'advanced-passkey-login' ); ?>">
-			<header class="pkflow-shortcode-helper-card__header">
+		<article class="advapafo-shortcode-helper-card" aria-label="<?php esc_attr_e( 'Shortcode quick start guide', 'advanced-passkey-login' ); ?>">
+			<header class="advapafo-shortcode-helper-card__header">
 				<h3><?php esc_html_e( 'Quick start: shortcode guide', 'advanced-passkey-login' ); ?></h3>
 				<p><?php esc_html_e( 'Paste a shortcode into any page, post, or block that supports shortcodes. Then add options to control labels, redirects, and behavior.', 'advanced-passkey-login' ); ?></p>
 			</header>
 
-			<div class="pkflow-shortcode-helper-grid">
+			<div class="advapafo-shortcode-helper-grid">
 				<section>
 					<h4><?php esc_html_e( 'How to add one', 'advanced-passkey-login' ); ?></h4>
 					<ol>
@@ -2039,7 +2039,7 @@ class PKFLOW_Settings {
 
 				<section>
 					<h4><?php esc_html_e( 'Most useful options', 'advanced-passkey-login' ); ?></h4>
-					<ul class="pkflow-shortcode-helper-list">
+					<ul class="advapafo-shortcode-helper-list">
 						<li><code>label</code> <?php esc_html_e( 'Change button text.', 'advanced-passkey-login' ); ?></li>
 						<li><code>redirect_to</code> <?php esc_html_e( 'Send users to a specific URL after sign-in.', 'advanced-passkey-login' ); ?></li>
 						<li><code>class</code> <?php esc_html_e( 'Add your own CSS class for styling.', 'advanced-passkey-login' ); ?></li>
@@ -2049,24 +2049,24 @@ class PKFLOW_Settings {
 				</section>
 			</div>
 
-			<div class="pkflow-shortcode-examples">
+			<div class="advapafo-shortcode-examples">
 				<h4><?php esc_html_e( 'Copy-and-paste examples', 'advanced-passkey-login' ); ?></h4>
-				<div class="pkflow-shortcode-examples__grid">
+				<div class="advapafo-shortcode-examples__grid">
 					<div>
 						<p><?php esc_html_e( 'Custom login button + redirect', 'advanced-passkey-login' ); ?></p>
-						<code>[pkflow_login_button label="Sign in securely" redirect_to="/my-account/"]</code>
+						<code>[advapafo_login_button label="Sign in securely" redirect_to="/my-account/"]</code>
 					</div>
 					<div>
 						<p><?php esc_html_e( 'Multiple login buttons on one page', 'advanced-passkey-login' ); ?></p>
-						<code>[pkflow_login_button allow_multiple="1" class="my-passkey-login"]</code>
+						<code>[advapafo_login_button allow_multiple="1" class="my-passkey-login"]</code>
 					</div>
 					<div>
 						<p><?php esc_html_e( 'Custom register button label', 'advanced-passkey-login' ); ?></p>
-						<code>[pkflow_register_button label="Add this device"]</code>
+						<code>[advapafo_register_button label="Add this device"]</code>
 					</div>
 					<div>
 						<p><?php esc_html_e( 'Prompt users to set up passkeys', 'advanced-passkey-login' ); ?></p>
-						<code>[pkflow_passkey_prompt title="Secure your account" button_label="Set up passkey"]</code>
+						<code>[advapafo_passkey_prompt title="Secure your account" button_label="Set up passkey"]</code>
 					</div>
 				</div>
 			</div>
@@ -2079,9 +2079,9 @@ class PKFLOW_Settings {
 	 */
 	private function render_sidebar_cards() {
 		?>
-		<section class="pkflow-side-card">
+		<section class="advapafo-side-card">
 			<h2><?php esc_html_e( 'Quick setup', 'advanced-passkey-login' ); ?></h2>
-			<ol class="pkflow-checklist">
+			<ol class="advapafo-checklist">
 				<li><?php esc_html_e( 'Activate the plugin', 'advanced-passkey-login' ); ?></li>
 				<li><?php esc_html_e( 'Enable passkeys in Settings', 'advanced-passkey-login' ); ?></li>
 				<li><?php esc_html_e( 'Choose eligible roles', 'advanced-passkey-login' ); ?></li>
@@ -2091,11 +2091,11 @@ class PKFLOW_Settings {
 		</section>
 
 		<?php
-		if ( class_exists( 'PKFLOW_Integration_Manager' ) && method_exists( 'PKFLOW_Integration_Manager', 'get_available_integrations' ) ) {
-			$available_integrations = PKFLOW_Integration_Manager::get_available_integrations();
+		if ( class_exists( 'ADVAPAFO_Integration_Manager' ) && method_exists( 'ADVAPAFO_Integration_Manager', 'get_available_integrations' ) ) {
+			$available_integrations = ADVAPAFO_Integration_Manager::get_available_integrations();
 			if ( ! empty( $available_integrations ) ) {
 				?>
-				<section class="pkflow-side-card">
+				<section class="advapafo-side-card">
 					<h2><?php esc_html_e( 'Active integrations', 'advanced-passkey-login' ); ?></h2>
 					<p><?php esc_html_e( 'Passkey modules, shortcodes, and Gutenberg blocks are available for these detected plugins.', 'advanced-passkey-login' ); ?></p>
 					<ul>
@@ -2117,16 +2117,16 @@ class PKFLOW_Settings {
 	 */
 	private function render_shell_footer() {
 		?>
-		<footer class="pkflow-shell-footer" aria-label="<?php esc_attr_e( 'Maintainer links', 'advanced-passkey-login' ); ?>">
-			<span class="pkflow-shell-footer__label"><?php esc_html_e( 'Maintained by mbuiux', 'advanced-passkey-login' ); ?></span>
-			<a class="pkflow-shell-footer__link" href="https://profiles.wordpress.org/mbuiux/" target="_blank" rel="noopener noreferrer">
-				<span class="pkflow-shell-footer__icon" aria-hidden="true">
+		<footer class="advapafo-shell-footer" aria-label="<?php esc_attr_e( 'Maintainer links', 'advanced-passkey-login' ); ?>">
+			<span class="advapafo-shell-footer__label"><?php esc_html_e( 'Maintained by mbuiux', 'advanced-passkey-login' ); ?></span>
+			<a class="advapafo-shell-footer__link" href="https://profiles.wordpress.org/mbuiux/" target="_blank" rel="noopener noreferrer">
+				<span class="advapafo-shell-footer__icon" aria-hidden="true">
 					<span class="dashicons dashicons-wordpress" aria-hidden="true"></span>
 				</span>
 				<span><?php esc_html_e( 'WordPress.org', 'advanced-passkey-login' ); ?></span>
 			</a>
-			<a class="pkflow-shell-footer__link" href="https://github.com/mbuiux/advanced-passkey-login.git" target="_blank" rel="noopener noreferrer">
-				<span class="pkflow-shell-footer__icon" aria-hidden="true">
+			<a class="advapafo-shell-footer__link" href="https://github.com/mbuiux/advanced-passkey-login.git" target="_blank" rel="noopener noreferrer">
+				<span class="advapafo-shell-footer__icon" aria-hidden="true">
 					<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" focusable="false">
 						<path d="M12 .5C5.65.5.5 5.67.5 12.06c0 5.12 3.3 9.46 7.87 10.99.58.11.79-.26.79-.57v-2.02c-3.2.7-3.88-1.56-3.88-1.56-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.78 2.7 1.27 3.36.97.1-.76.4-1.27.73-1.56-2.56-.29-5.25-1.29-5.25-5.73 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.32 3.18 1.18a10.97 10.97 0 0 1 5.8 0c2.2-1.5 3.17-1.18 3.17-1.18.63 1.58.24 2.75.12 3.04.74.81 1.18 1.84 1.18 3.1 0 4.46-2.69 5.44-5.26 5.72.41.36.78 1.08.78 2.18v3.24c0 .32.21.69.8.57A11.6 11.6 0 0 0 23.5 12.06C23.5 5.67 18.35.5 12 .5Z"/>
 					</svg>

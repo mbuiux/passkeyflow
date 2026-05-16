@@ -6,7 +6,7 @@
  * This file is only executed when the user explicitly deletes the plugin and
  * has opted in via the standard WordPress uninstall process.
  *
- * @package PKFLOW
+ * @package ADVAPAFO
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,36 +22,36 @@ global $wpdb;
 /**
  * Remove all plugin data from the current blog context.
  */
-function pkflow_uninstall_cleanup_current_blog(): void {
+function advapafo_uninstall_cleanup_current_blog(): void {
 	global $wpdb;
 
 	// Drop custom tables.
-	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'pkflow_credentials' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'pkflow_rate_limits' );    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'pkflow_logs' );        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'advapafo_credentials' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'advapafo_rate_limits' );    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->query( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'advapafo_logs' );        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
 	// Remove all plugin options.
 	$options = array(
-		'pkflow_enabled',
-		'pkflow_show_separator',
-		'pkflow_show_setup_notice',
-		'pkflow_eligible_roles',
-		'pkflow_max_passkeys_per_user',
-		'pkflow_user_verification',
-		'pkflow_rp_id',
-		'pkflow_rate_limit_window',
-		'pkflow_rate_limit_max_failures',
-		'pkflow_rate_limit_lockout',
-		'pkflow_rate_window',
-		'pkflow_rate_max_attempts',
-		'pkflow_rate_lockout',
-		'pkflow_challenge_ttl',
-		'pkflow_login_challenge_ttl',
-		'pkflow_registration_challenge_ttl',
-		'pkflow_login_redirect',
-		'pkflow_log_retention_days',
-		'pkflow_rp_name',
-		'pkflow_credentials_schema_v2',
+		'advapafo_enabled',
+		'advapafo_show_separator',
+		'advapafo_show_setup_notice',
+		'advapafo_eligible_roles',
+		'advapafo_max_passkeys_per_user',
+		'advapafo_user_verification',
+		'advapafo_rp_id',
+		'advapafo_rate_limit_window',
+		'advapafo_rate_limit_max_failures',
+		'advapafo_rate_limit_lockout',
+		'advapafo_rate_window',
+		'advapafo_rate_max_attempts',
+		'advapafo_rate_lockout',
+		'advapafo_challenge_ttl',
+		'advapafo_login_challenge_ttl',
+		'advapafo_registration_challenge_ttl',
+		'advapafo_login_redirect',
+		'advapafo_log_retention_days',
+		'advapafo_rp_name',
+		'advapafo_credentials_schema_v2',
 	);
 
 	foreach ( $options as $option ) {
@@ -60,43 +60,43 @@ function pkflow_uninstall_cleanup_current_blog(): void {
 
 	// Remove per-user dismissed-notice meta.
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		"DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'pkflow\_notice\_dismissed\_%'"
+		"DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'advapafo\_notice\_dismissed\_%'"
 	);
 
 	// Remove any transients left behind.
 	$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		"DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_pkflow_%' OR option_name LIKE '_transient_timeout_pkflow_%'"
+		"DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_advapafo_%' OR option_name LIKE '_transient_timeout_advapafo_%'"
 	);
 }
 
 if ( is_multisite() ) {
-	$pkflow_current_blog_id = get_current_blog_id();
+	$advapafo_current_blog_id = get_current_blog_id();
 
-	$pkflow_site_page     = 1;
-	$pkflow_site_per_page = 200;
+	$advapafo_site_page     = 1;
+	$advapafo_site_per_page = 200;
 
 	do {
-		$pkflow_site_ids = get_sites(
+		$advapafo_site_ids = get_sites(
 			array(
 				'fields' => 'ids',
-				'number' => $pkflow_site_per_page,
-				'paged'  => $pkflow_site_page,
+				'number' => $advapafo_site_per_page,
+				'paged'  => $advapafo_site_page,
 			)
 		);
 
-		foreach ( $pkflow_site_ids as $pkflow_site_id ) {
-			switch_to_blog( (int) $pkflow_site_id );
-			pkflow_uninstall_cleanup_current_blog();
+		foreach ( $advapafo_site_ids as $advapafo_site_id ) {
+			switch_to_blog( (int) $advapafo_site_id );
+			advapafo_uninstall_cleanup_current_blog();
 			restore_current_blog();
 		}
 
-			++$pkflow_site_page;
-	} while ( ! empty( $pkflow_site_ids ) );
+			++$advapafo_site_page;
+	} while ( ! empty( $advapafo_site_ids ) );
 
-	if ( get_current_blog_id() !== (int) $pkflow_current_blog_id ) {
-		switch_to_blog( (int) $pkflow_current_blog_id );
+	if ( get_current_blog_id() !== (int) $advapafo_current_blog_id ) {
+		switch_to_blog( (int) $advapafo_current_blog_id );
 		restore_current_blog();
 	}
 } else {
-	pkflow_uninstall_cleanup_current_blog();
+	advapafo_uninstall_cleanup_current_blog();
 }
